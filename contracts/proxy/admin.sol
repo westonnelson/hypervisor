@@ -1,22 +1,12 @@
 pragma solidity 0.7.6;
 
-import "../../interfaces/IHypervisor.sol";
+import "../interfaces/IHypervisor.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Admin {
-    /* user events */
-    event OwnerTransferPrepared(address hypervisor, address newOwner, address admin, uint256 timestamp);
-    event OwnerTransferFullfilled(address hypervisor, address newOwner, address admin, uint256 timestamp);
 
     address public admin;
     address public advisor;
-
-    struct OwnershipData {
-        address newOwner;
-        uint256 lastUpdatedTime;
-    }
-
-    mapping(address => OwnershipData) hypervisorOwner;
 
     modifier onlyAdvisor {
         require(msg.sender == advisor, "only advisor");
@@ -28,7 +18,7 @@ contract Admin {
         _;
     }
 
-    constructor(address _admin, address _advisor) {
+    constructor(address _admin, address _advisor) public {
         admin = _admin;
         advisor = _advisor;
     }
@@ -45,6 +35,39 @@ contract Admin {
         IHypervisor(_hypervisor).rebalance(_baseLower, _baseUpper, _limitLower, _limitUpper, _feeRecipient, swapQuantity);
     }
 
+    function emergencyWithdraw(
+        address _hypervisor,
+        IERC20 token,
+        uint256 amount
+    ) external onlyAdmin {
+        IHypervisor(_hypervisor).emergencyWithdraw(token, amount);
+    }
+
+    function emergencyBurn(
+        address _hypervisor,
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 liquidity
+    ) external onlyAdmin {
+        IHypervisor(_hypervisor).emergencyBurn(tickLower, tickUpper, liquidity);
+    }
+
+    function setDepositMax(address _hypervisor, uint256 _deposit0Max, uint256 _deposit1Max) external onlyAdmin {
+        IHypervisor(_hypervisor).setDepositMax(_deposit0Max, _deposit1Max);
+    }
+
+    function setMaxTotalSupply(address _hypervisor, uint256 _maxTotalSupply) external onlyAdmin {
+        IHypervisor(_hypervisor).setMaxTotalSupply(_maxTotalSupply);
+    }
+
+    function toggleWhitelist(address _hypervisor) external onlyAdmin {
+        IHypervisor(_hypervisor).toggleWhitelist();
+    }
+
+    function appendList(address _hypervisor, address[] memory listed) external onlyAdmin {
+        IHypervisor(_hypervisor).appendList(listed);
+    }
+
     function transferAdmin(address newAdmin) external onlyAdmin {
         admin = newAdmin;
     }
@@ -53,18 +76,8 @@ contract Admin {
         advisor = newAdvisor;
     }
 
-    function prepareHVOwnertransfer(address _hypervisor, address newOwner) external onlyAdmin {
-        require(newOwner != address(0), "newOwner must not be zero");
-        hypervisorOwner[_hypervisor] = OwnershipData(newOwner, block.timestamp + 86400);
-        emit OwnerTransferPrepared(_hypervisor, newOwner, admin, block.timestamp);
-    }
-
-    function fullfillHVOwnertransfer(address _hypervisor, address newOwner) external onlyAdmin {
-        OwnershipData storage data = hypervisorOwner[_hypervisor];
-        require(data.newOwner == newOwner && data.lastUpdatedTime != 0 && data.lastUpdatedTime < block.timestamp);
+    function transferHypervisorOwner(address _hypervisor, address newOwner) external onlyAdmin {
         IHypervisor(_hypervisor).transferOwnership(newOwner);
-        delete hypervisorOwner[_hypervisor];
-        emit OwnerTransferFullfilled(_hypervisor, newOwner, admin, block.timestamp);
     }
 
     function rescueERC20(IERC20 token, address recipient) external onlyAdmin {

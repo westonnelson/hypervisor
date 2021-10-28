@@ -17,5 +17,21 @@ interface IHypervisor {
         int256 swapQuantity
     ) external;
 
+    function setMaxTotalSupply(uint256 _maxTotalSupply) external;
+
+    function setDepositMax(uint256 _deposit0Max, uint256 _deposit1Max) external;
+
+    function appendList(address[] memory listed) external;
+
+    function toggleWhitelist() external;
+
+    function emergencyWithdraw(IERC20 token, uint256 amount) external;
+
+    function emergencyBurn(
+        int24 tickLower,
+        int24 tickUpper,
+        uint128 liquidity
+    ) external;
+
     function transferOwnership(address newOwner) external;
 }
