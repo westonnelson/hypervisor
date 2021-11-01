@@ -75,7 +75,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
     }
 
     // @param deposit0 Amount of token0 transfered from sender to Hypervisor
-    // @param deposit1 Amount of token0 transfered from sender to Hypervisor
+    // @param deposit1 Amount of token1 transfered from sender to Hypervisor
     // @param to Address to which liquidity tokens are minted
     // @return shares Quantity of liquidity tokens minted as a result of deposit
     function deposit(

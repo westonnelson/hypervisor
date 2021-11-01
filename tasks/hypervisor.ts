@@ -12,44 +12,9 @@ import {
     getMaxTick
 } from './shared/utilities'
 
-
-const DAY = 60 * 60 * 24
-
-
-task('deploy-admin', 'Deploy Hypervisor contract')
-  .setAction(async (cliArgs, { ethers, run, network }) => {
-
-    await run('compile')
-
-    // get signer
-
-    const signer = (await ethers.getSigners())[0]
-    console.log('Signer')
-    console.log('  at', signer.address)
-    console.log('  ETH', formatEther(await signer.getBalance()))
-    console.log('Network')
-    console.log('  ', network.name)
-
-    const admin = await deployContract(
-      'Admin',
-      await ethers.getContractFactory('Admin'),
-      signer,
-      [signer.address, "0xC3D6b5443F77f07cEa1bd8A4449F17FcCA7f55fc"]
-    )
-
-    await admin.deployTransaction.wait(5)
-    await run('verify:verify', {
-      address: admin.address,
-      constructorArguments: [signer.address, "0xC3D6b5443F77f07cEa1bd8A4449F17FcCA7f55fc"],
-    })
-
-});
-
 task('deploy-hypervisor-factory', 'Deploy Hypervisor contract')
   .setAction(async (cliArgs, { ethers, run, network }) => {
 
-    //TODO cli args
-    // goerli
     const args = {
       uniswapFactory: "0x1f98431c8ad98523631ae4a59f267346ea31f984",
     };
@@ -88,7 +53,10 @@ task('deploy-hypervisor-factory', 'Deploy Hypervisor contract')
     })
 })
 
-task('deploy-hypervisor', 'Deploy Hypervisor contract')
+task('deploy-hypervisor-orphan', 'Deploy Hypervisor contract without factory')
+  .addParam('pool', 'the uniswap pool address')
+  .addParam('name', 'erc20 name')
+  .addParam('symbol', 'erc2 symbol')
   .setAction(async (cliArgs, { ethers, run, network }) => {
 
     // compile
@@ -102,21 +70,17 @@ task('deploy-hypervisor', 'Deploy Hypervisor contract')
     console.log('  at', signer.address)
     console.log('  ETH', formatEther(await signer.getBalance()))
 
-    //usdceth 3%
     const args = {
-      pool: "0x17c14d2c404d167802b16c450d3c99f88f2c4f4d",
+      pool: cliArgs.pool,
       owner: signer.address,
-      name: "Visor USDC-ETH Uni v3",
-      symbol: "vUSDC-ETHV3-1"
+      name: cliArgs.name,
+      symbol: cliArgs.symbol 
     }
-
 
     console.log('Network')
     console.log('  ', network.name)
     console.log('Task Args')
     console.log(args)
-
-
 
     const hypervisor = await deployContract(
       'Hypervisor',
@@ -133,7 +97,55 @@ task('deploy-hypervisor', 'Deploy Hypervisor contract')
 
   }); 
 
-task('verify-hypervisor', 'Deploy Hypervisor contract')
+task('deploy-hypervisor', 'Deploy Hypervisor contract via the factory')
+  .addParam('factory', 'address of hypervisor factory')
+  .addParam('token0', 'token0 of pair')
+  .addParam('token1', 'token1 of pair')
+  .addParam('fee', 'LOW, MEDIUM, or HIGH')
+  .addParam('name', 'erc20 name')
+  .addParam('symbol', 'erc2 symbol')
+  .setAction(async (cliArgs, { ethers, run, network }) => {
+
+    await run('compile')
+
+    // get signer
+
+    const signer = (await ethers.getSigners())[0]
+    console.log('Signer')
+    console.log('  at', signer.address)
+    console.log('  ETH', formatEther(await signer.getBalance()))
+    
+    const args = {
+      factory: cliArgs.factory,  
+      token0: cliArgs.token0,
+      token1: cliArgs.token1,
+      fee: FeeAmount[cliArgs.fee],
+      name: cliArgs.name,
+      symbol: cliArgs.symbol 
+    };
+
+    console.log('Network')
+    console.log('  ', network.name)
+    console.log('Task Args')
+    console.log(args)
+
+
+    const hypervisorFactory = await ethers.getContractAt(
+      'HypervisorFactory',
+      args.factory,
+      signer,
+    )
+
+    const hypervisor = await hypervisorFactory.createHypervisor(
+      args.token0, args.token1, args.fee, args.name, args.symbol) 
+
+  })
+
+task('verify-hypervisor', 'Verify Hypervisor contract')
+  .addParam('hypervisor', 'the hypervisor to verify')
+  .addParam('pool', 'the uniswap pool address')
+  .addParam('name', 'erc20 name')
+  .addParam('symbol', 'erc2 symbol')
   .setAction(async (cliArgs, { ethers, run, network }) => {
 
     console.log('Network')
@@ -148,29 +160,26 @@ task('verify-hypervisor', 'Deploy Hypervisor contract')
     console.log('  at', signer.address)
     console.log('  ETH', formatEther(await signer.getBalance()))
 
-    const hypervisorAddress = "0x167427158D4b1F6264d4dfaE79dB6f44b321386e";
-
     const args = {
-      pool: "0xc82819f72a9e77e2c0c3a69b3196478f44303cf4",
+      pool: cliArgs.pool,
       owner: signer.address,
-      name: "Visor ETH-USDT Uni v3",
-      symbol: "vETH-USDTV3-1"
-    };
+      name: cliArgs.name,
+      symbol: cliArgs.symbol 
+    }
+
     console.log('Task Args')
     console.log(args)
 
     const hypervisor = await ethers.getContractAt(
       'Hypervisor',
-      hypervisorAddress,
+      cliArgs.hypervisor,
       signer,
     )
-
     await run('verify:verify', {
       address: hypervisor.address,
       constructorArguments: Object.values(args),
     })
 
   });
-
 
 
