@@ -45,8 +45,8 @@ describe.skip('Hypervisors on Mainnet Fork', () => {
     beforeEach('deploy contracts', async () => {
         let hypervisorFactoryFactory = await ethers.getContractFactory('HypervisorFactory')
         hypervisorFactory = (await hypervisorFactoryFactory.deploy(uniswapV3Factory)) as HypervisorFactory
-        await hypervisorFactory.createHypervisor(wethAddress, usdtAddress, FeeAmount.MEDIUM)
-        await hypervisorFactory.createHypervisor(usdcAddress, wethAddress, FeeAmount.MEDIUM)
+        await hypervisorFactory.createHypervisor(wethAddress, usdtAddress, FeeAmount.MEDIUM, "Test Visor", "TVR")
+        await hypervisorFactory.createHypervisor(usdcAddress, wethAddress, FeeAmount.MEDIUM, "Test Visor", "TVR")
         const hypervisorAddress = await hypervisorFactory.getHypervisor(wethAddress, usdtAddress, FeeAmount.MEDIUM)
         const usdcEthHypervisorAddress = await hypervisorFactory.getHypervisor(usdcAddress, wethAddress, FeeAmount.MEDIUM)
         hypervisor = (await ethers.getContractAt('Hypervisor', hypervisorAddress)) as Hypervisor

@@ -27,10 +27,6 @@ import {
 } from "../typechain"
 
 const createFixtureLoader = waffle.createFixtureLoader
-const smallTokenAmount = ethers.utils.parseEther('1000')
-const largeTokenAmount = ethers.utils.parseEther('1000000')
-const veryLargeTokenAmount = ethers.utils.parseEther('10000000000')
-const giantTokenAmount = ethers.utils.parseEther('1000000000000')
 
 describe('Hypervisor', () => {
     const [wallet, alice, bob, carol, other,
@@ -52,9 +48,9 @@ describe('Hypervisor', () => {
     })
 
     beforeEach('deploy contracts', async () => {
-        ({ token0, token1, token2, factory, router, nft, hypervisorFactory } = await loadFixture(hypervisorTestFixture))
-        await hypervisorFactory.createHypervisor(token0.address, token1.address, FeeAmount.MEDIUM)
-        const hypervisorAddress = await hypervisorFactory.getHypervisor(token0.address, token1.address, FeeAmount.MEDIUM)
+        ({ token0, token1, token2, factory, router, nft, hypervisorFactory } = await loadFixture(hypervisorTestFixture));
+        await hypervisorFactory.createHypervisor(token0.address, token1.address, FeeAmount.MEDIUM,"Test Visor", "TVR");
+        const hypervisorAddress = await hypervisorFactory.getHypervisor(token0.address, token1.address, FeeAmount.MEDIUM);
         hypervisor = (await ethers.getContractAt('Hypervisor', hypervisorAddress)) as Hypervisor
 
         const poolAddress = await factory.getPool(token0.address, token1.address, FeeAmount.MEDIUM)
@@ -64,11 +60,11 @@ describe('Hypervisor', () => {
 
         // adding extra liquidity into pool to make sure there's always
         // someone to swap with
-        await token0.mint(carol.address, giantTokenAmount)
-        await token1.mint(carol.address, giantTokenAmount)
+        await token0.mint(carol.address, ethers.utils.parseEther('1000000000000'))
+        await token1.mint(carol.address, ethers.utils.parseEther('1000000000000'))
 
-        await token0.connect(carol).approve(nft.address, veryLargeTokenAmount)
-        await token1.connect(carol).approve(nft.address, veryLargeTokenAmount)
+        await token0.connect(carol).approve(nft.address, ethers.utils.parseEther('10000000000'))
+        await token1.connect(carol).approve(nft.address, ethers.utils.parseEther('10000000000'))
 
         await nft.connect(carol).mint({
             token0: token0.address,
@@ -77,148 +73,78 @@ describe('Hypervisor', () => {
             tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
             fee: FeeAmount.MEDIUM,
             recipient: carol.address,
-            amount0Desired: veryLargeTokenAmount,
-            amount1Desired: veryLargeTokenAmount,
+            amount0Desired: ethers.utils.parseEther('10000000000'),
+            amount1Desired: ethers.utils.parseEther('10000000000'),
             amount0Min: 0,
             amount1Min: 0,
             deadline: 2000000000,
         })
     })
 
-    it('multiple deposits and total withdrawal', async () => {
-        // mint tokens to alice
-        await token0.mint(alice.address, largeTokenAmount)
-        await token1.mint(alice.address, largeTokenAmount)
+    it('deposit with an incorrect proportion will revert', async () => {
+        await hypervisor.toggleDepositFree();
+        await token0.mint(alice.address, ethers.utils.parseEther('1000000'))
+        await token1.mint(alice.address, ethers.utils.parseEther('1000000'))
 
-        // alice approves the hypervisor to transfer her tokens
-        await token0.connect(alice).approve(hypervisor.address, largeTokenAmount)
-        await token1.connect(alice).approve(hypervisor.address, largeTokenAmount)
+        await token0.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
+        await token1.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
 
         // alice should start with 0 hypervisor tokens
         let alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(0)
-
-        // expect that alice's deposits which exceed the deposit maximums to be reverted
-        await expect(hypervisor.connect(alice).deposit(ethers.utils.parseEther('100000'), 0, alice.address)).to.be.reverted
-        await expect(hypervisor.connect(alice).deposit(0, ethers.utils.parseEther('200000'), alice.address)).to.be.reverted
-        await expect(hypervisor.connect(alice).deposit(ethers.utils.parseEther('100000'), ethers.utils.parseEther('100000'), alice.address)).to.be.reverted
-
-        // expect alice's deposit smaller than deposit maximums to be accepted
-        await hypervisor.connect(alice).deposit(smallTokenAmount, smallTokenAmount, alice.address)
+        // establishing 1:1 ratio in hypervisor
+        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address)
+        // attempting 2 unbalanced deposits & expecting failure
+        await expect(hypervisor.connect(alice).deposit(ethers.utils.parseEther('10000'), 0, alice.address)).to.be.revertedWith("Ratio overflow")
+        await expect(hypervisor.connect(alice).deposit(0, ethers.utils.parseEther('20000'), alice.address)).to.be.revertedWith("Ratio overflow")
+        // attempting balanced deposit & expecting success
+        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address)
+        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('700'), alice.address)
 
         let token0hypervisor = await token0.balanceOf(hypervisor.address)
         let token1hypervisor = await token1.balanceOf(hypervisor.address)
-        // check that all the tokens alice depostied ended up in the hypervisor
-        expect(token0hypervisor).to.equal(smallTokenAmount)
-        expect(token1hypervisor).to.equal(smallTokenAmount)
+        expect(token0hypervisor).to.equal(ethers.utils.parseEther('3000'))
+        expect(token1hypervisor).to.equal(ethers.utils.parseEther('2700'))
         alice_liq_balance = await hypervisor.balanceOf(alice.address)
-
+        console.log("alice liq balance: " + alice_liq_balance)
         // check that alice has been awarded liquidity tokens equal the
         // quantity of tokens deposited since their price is the same
-        expect(alice_liq_balance).to.equal(ethers.utils.parseEther('2000'))
+        expect(alice_liq_balance).to.equal(ethers.utils.parseEther('5700'))
 
         // liquidity positions will only be created once rebalance is called
-        await hypervisor.rebalance(-1800, 1800, -600, 0, bob.address, 0)
+        await hypervisor.rebalance(-1800, 1800, 0, 600, bob.address, 0)
         token0hypervisor = await token0.balanceOf(hypervisor.address)
         token1hypervisor = await token1.balanceOf(hypervisor.address)
-        // all of the hypervisor assets should have been deployed in v3 lp positions
         expect(token0hypervisor).to.equal(0)
         expect(token1hypervisor).to.equal(0)
 
         let basePosition = await hypervisor.getBasePosition()
         let limitPosition = await hypervisor.getLimitPosition()
         expect(basePosition[0]).to.be.gt(0)
-        expect(limitPosition[0]).to.be.equal(0)
-
-        await hypervisor.connect(alice).deposit(smallTokenAmount, ethers.utils.parseEther('4000'), alice.address)
-        token0hypervisor = await token0.balanceOf(hypervisor.address)
-        token1hypervisor = await token1.balanceOf(hypervisor.address)
-        expect(token0hypervisor).to.equal(smallTokenAmount)
-        expect(token1hypervisor).to.equal(ethers.utils.parseEther('4000'))
-        alice_liq_balance = await hypervisor.balanceOf(alice.address)
-
-        expect(alice_liq_balance).to.lt(ethers.utils.parseEther('7000').add(15))
-        expect(alice_liq_balance).to.gt(ethers.utils.parseEther('7000').sub(15))
-
-        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('2000'), smallTokenAmount, alice.address)
-
-        // do a test swap
-        await token0.connect(carol).approve(router.address, veryLargeTokenAmount)
-        await token1.connect(carol).approve(router.address, veryLargeTokenAmount)
-        await router.connect(carol).exactInputSingle({
-            tokenIn: token0.address,
-            tokenOut: token1.address,
-            fee: FeeAmount.MEDIUM,
-            recipient: carol.address,
-            deadline: 2000000000, // Wed May 18 2033 03:33:20 GMT+0000
-            amountIn: largeTokenAmount,
-            amountOutMinimum: ethers.utils.parseEther('0'),
-            sqrtPriceLimitX96: 0,
-        })
-
-        let limitUpper = -60
-        let limitLower = -540
-        let tokenAmounts = await hypervisor.getTotalAmounts()
-        let token0BeforeRebalanceSwap = tokenAmounts[0]
-        let token1BeforeRebalanceSwap = tokenAmounts[1]
-        let fees0 = await token0.balanceOf(bob.address)
-        let fees1 = await token1.balanceOf(bob.address)
-        expect(fees0).to.equal(0)
-        expect(fees1).to.equal(0)
-        let rebalanceSwapAmount = ethers.utils.parseEther('4000')
-        await hypervisor.rebalance(-1800, 1920, limitLower, limitUpper, bob.address, rebalanceSwapAmount)
-        tokenAmounts = await hypervisor.getTotalAmounts()
-        let token0AfterRebalanceSwap = tokenAmounts[0]
-        expect(token0BeforeRebalanceSwap.sub(token0AfterRebalanceSwap).sub(rebalanceSwapAmount).abs()).to.be.lt(ethers.utils.parseEther('1'))
-        token0hypervisor = await token0.balanceOf(hypervisor.address)
-        token1hypervisor = await token1.balanceOf(hypervisor.address)
-        expect(token0hypervisor).to.equal(0)
-        expect(token1hypervisor).to.equal(0)
-        fees0 = await token0.balanceOf(bob.address)
-        fees1 = await token1.balanceOf(bob.address)
-        expect(fees0).to.gt(0)
-        expect(fees1).to.equal(0)
-        // have the positions been updated? Are the token amounts unchanged?
-        basePosition = await hypervisor.getBasePosition()
-        limitPosition = await hypervisor.getLimitPosition()
-        expect(basePosition[0]).to.be.gt(0)
         expect(limitPosition[0]).to.be.gt(0)
 
-        await hypervisor.rebalance(-1800, 1920, limitLower, limitUpper, bob.address, rebalanceSwapAmount.mul(-1))
-        tokenAmounts = await hypervisor.getTotalAmounts()
-        let token0AfterSecondRebalance = tokenAmounts[0]
-        let token1AfterSecondRebalance = tokenAmounts[1]
-        expect(token0AfterSecondRebalance.sub(token0BeforeRebalanceSwap).abs()).to.be.lt(ethers.utils.parseEther('15'))
-        expect(token1AfterSecondRebalance.sub(token1BeforeRebalanceSwap).abs()).to.be.lt(ethers.utils.parseEther('15'))
-
-        // test withdrawal of liquidity
-        alice_liq_balance = await hypervisor.balanceOf(alice.address)
-        await hypervisor.connect(alice).withdraw(alice_liq_balance, alice.address, alice.address)
-        tokenAmounts = await hypervisor.getTotalAmounts()
-        // verify that all liquidity has been removed from the pool
-        expect(tokenAmounts[0]).to.equal(0)
-        expect(tokenAmounts[1]).to.equal(0)
+        await expect(hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('4000'), alice.address)).to.be.revertedWith("Ratio overflow")
     })
 
     it('calculates fees properly & rebalances to limit-only after large swap', async () => {
-        await token0.mint(alice.address, largeTokenAmount)
-        await token1.mint(alice.address, largeTokenAmount)
+        await token0.mint(alice.address, ethers.utils.parseEther('1000000'))
+        await token1.mint(alice.address, ethers.utils.parseEther('1000000'))
 
-        await token0.connect(alice).approve(hypervisor.address, largeTokenAmount)
-        await token1.connect(alice).approve(hypervisor.address, largeTokenAmount)
+        await token0.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
+        await token1.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
 
         // alice should start with 0 hypervisor tokens
         let alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(0)
 
-        await hypervisor.connect(alice).deposit(smallTokenAmount, smallTokenAmount, alice.address)
+        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address)
 
         let token0hypervisor = await token0.balanceOf(hypervisor.address)
         let token1hypervisor = await token1.balanceOf(hypervisor.address)
-        expect(token0hypervisor).to.equal(smallTokenAmount)
-        expect(token1hypervisor).to.equal(smallTokenAmount)
+        expect(token0hypervisor).to.equal(ethers.utils.parseEther('1000'))
+        expect(token1hypervisor).to.equal(ethers.utils.parseEther('1000'))
         alice_liq_balance = await hypervisor.balanceOf(alice.address)
-
+        console.log("alice liq balance: " + alice_liq_balance)
         // check that alice has been awarded liquidity tokens equal the
         // quantity of tokens deposited since their price is the same
         expect(alice_liq_balance).to.equal(ethers.utils.parseEther('2000'))
@@ -237,10 +163,11 @@ describe('Hypervisor', () => {
 
         let tokenAmounts = await hypervisor.getTotalAmounts()
         expect(tokenAmounts[0] === tokenAmounts[1])
+        console.log("totalAmounts: " + tokenAmounts)
 
         // do a test swap
-        await token0.connect(carol).approve(router.address, veryLargeTokenAmount)
-        await token1.connect(carol).approve(router.address, veryLargeTokenAmount)
+        await token0.connect(carol).approve(router.address, ethers.utils.parseEther('10000000000'))
+        await token1.connect(carol).approve(router.address, ethers.utils.parseEther('10000000000'))
         await router.connect(carol).exactInputSingle({
             tokenIn: token0.address,
             tokenOut: token1.address,
@@ -274,6 +201,7 @@ describe('Hypervisor', () => {
         // we are expecting VISR fees of 3 bips
         expect(fees0).to.gt(ethers.utils.parseEther('0.3'))
         expect(fees0).to.lt(ethers.utils.parseEther('0.305'))
+        console.log("fees: " + fees0.toString())
         expect(fees1).to.equal(0)
         // have the positions been updated? Are the token amounts unchanged?
         basePosition = await hypervisor.getBasePosition()
@@ -282,6 +210,8 @@ describe('Hypervisor', () => {
         // only a single asset after carol's big swap
         expect(basePosition[0]).to.equal(0)
         expect(limitPosition[0]).to.be.gt(0)
+        console.log("limit liq:" + limitPosition[0])
+        console.log("base liq:" + basePosition[0])
 
         // swap everything back and check fees in the other token have
         // been earned
@@ -309,7 +239,7 @@ describe('Hypervisor', () => {
         // we are expecting fees of approximately 3 bips (10% of 30bips, which is total fees)
         expect(fees1).to.gt(ethers.utils.parseEther('0.595'))
         expect(fees1).to.lt(ethers.utils.parseEther('0.605'))
-
+        console.log("fees: " + fees0.toString())
         // have the positions been updated? Are the token amounts unchanged?
         basePosition = await hypervisor.getBasePosition()
         limitPosition = await hypervisor.getLimitPosition()
@@ -317,6 +247,8 @@ describe('Hypervisor', () => {
         // only a single asset after carol's big swap
         expect(basePosition[0]).to.equal(0)
         expect(limitPosition[0]).to.be.gt(0)
+        console.log("limit liq:" + limitPosition[0])
+        console.log("base liq:" + basePosition[0])
     })
 
     it('deposit/withdrawal with many users', async () => {
@@ -432,17 +364,17 @@ describe('Hypervisor', () => {
     })
 
     it('can withdraw deposited funds without rebalance', async () => {
-        await token0.mint(alice.address, largeTokenAmount)
-        await token1.mint(alice.address, largeTokenAmount)
+        await token0.mint(alice.address, ethers.utils.parseEther('1000000'))
+        await token1.mint(alice.address, ethers.utils.parseEther('1000000'))
 
-        await token0.connect(alice).approve(hypervisor.address, largeTokenAmount)
-        await token1.connect(alice).approve(hypervisor.address, largeTokenAmount)
+        await token0.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
+        await token1.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
 
         // alice should start with 0 hypervisor tokens
         let alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(0)
 
-        await hypervisor.connect(alice).deposit(smallTokenAmount, smallTokenAmount, alice.address)
+        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address)
         alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(ethers.utils.parseEther('2000'))
         await hypervisor.connect(alice).withdraw(alice_liq_balance, alice.address, alice.address)
@@ -451,11 +383,11 @@ describe('Hypervisor', () => {
         expect(tokenAmounts[0]).to.equal(0)
         expect(tokenAmounts[1]).to.equal(0)
 
-        await hypervisor.connect(alice).deposit(smallTokenAmount, smallTokenAmount, alice.address)
+        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address)
 
         await hypervisor.rebalance(-120, 120, 0, 60, bob.address, 0)
 
-        let tokenAmount = smallTokenAmount
+        let tokenAmount = ethers.utils.parseEther('1000')
 
         await token0.mint(user0.address, tokenAmount)
         await token1.mint(user0.address, tokenAmount)
@@ -470,21 +402,21 @@ describe('Hypervisor', () => {
         const user0_liq_balance = await hypervisor.balanceOf(user0.address)
         tokenAmounts = await hypervisor.getTotalAmounts()
         // verify that all liquidity has been removed from the pool
-        expect(tokenAmounts[0]).to.be.gte(ethers.utils.parseEther('2000').sub(15))
-        expect(tokenAmounts[1]).to.be.gte(ethers.utils.parseEther('2000').sub(15))
-        expect(tokenAmounts[0]).to.be.lt(ethers.utils.parseEther('2000').add(15))
-        expect(tokenAmounts[1]).to.be.lt(ethers.utils.parseEther('2000').add(15))
+        expect(tokenAmounts[0]).to.be.gte(ethers.utils.parseEther('1999'))
+        expect(tokenAmounts[1]).to.be.gte(ethers.utils.parseEther('1999'))
+        expect(tokenAmounts[0]).to.be.lt(ethers.utils.parseEther('2001'))
+        expect(tokenAmounts[1]).to.be.lt(ethers.utils.parseEther('2001'))
 
         await hypervisor.connect(user0).withdraw(user0_liq_balance, user0.address, user0.address)
         token0Balance = await token0.balanceOf(user0.address)
         token1Balance = await token1.balanceOf(user0.address)
-        expect(token0Balance).to.equal(smallTokenAmount)
-        expect(token1Balance).to.equal(smallTokenAmount)
+        expect(token0Balance).to.equal(ethers.utils.parseEther('1000'))
+        expect(token1Balance).to.equal(ethers.utils.parseEther('1000'))
     })
 })
 
 describe('ETHUSDT Hypervisor', () => {
-    const [wallet, other, user0, user1, user2, user3, user4, user5] = waffle.provider.getWallets()
+    const [wallet, alice, bob, carol, other, user0, user1, user2, user3, user4, user5] = waffle.provider.getWallets()
 
     let factory: UniswapV3Factory
     let router: SwapRouter
@@ -496,15 +428,18 @@ describe('ETHUSDT Hypervisor', () => {
     let hypervisorFactory: HypervisorFactory
     let hypervisor: Hypervisor
 
+    let bigDepositAmount: BigNumber
+
     let loadFixture: ReturnType<typeof createFixtureLoader>
     before('create fixture loader', async () => {
         loadFixture = createFixtureLoader([wallet, other])
     })
 
     beforeEach('deploy contracts', async () => {
-        ({ token0, token1, token2, factory, router, nft, hypervisorFactory } = await loadFixture(hypervisorTestFixture))
-        await hypervisorFactory.createHypervisor(token0.address, token1.address, FeeAmount.MEDIUM)
-        const hypervisorAddress = await hypervisorFactory.getHypervisor(token0.address, token1.address, FeeAmount.MEDIUM)
+        bigDepositAmount = BigNumber.from(10).pow(32);
+        ({ token0, token1, token2, factory, router, nft, hypervisorFactory } = await loadFixture(hypervisorTestFixture));
+        await hypervisorFactory.createHypervisor(token0.address, token1.address, FeeAmount.MEDIUM, "Test Visor", "TVR");
+        const hypervisorAddress = await hypervisorFactory.getHypervisor(token0.address, token1.address, FeeAmount.MEDIUM);
         hypervisor = (await ethers.getContractAt('Hypervisor', hypervisorAddress)) as Hypervisor
 
         const poolAddress = await factory.getPool(token0.address, token1.address, FeeAmount.MEDIUM)
@@ -516,11 +451,11 @@ describe('ETHUSDT Hypervisor', () => {
 
         // adding extra liquidity into pool to make sure there's always
         // someone to swap with
-        await token0.mint(user0.address, giantTokenAmount)
-        await token1.mint(user0.address, giantTokenAmount)
+        await token0.mint(user0.address, ethers.utils.parseEther('10000000000'))
+        await token1.mint(user0.address, ethers.utils.parseEther('10000000000'))
 
-        await token0.connect(user0).approve(nft.address, veryLargeTokenAmount)
-        await token1.connect(user0).approve(nft.address, veryLargeTokenAmount)
+        await token0.connect(user0).approve(nft.address, ethers.utils.parseEther('100000000'))
+        await token1.connect(user0).approve(nft.address, ethers.utils.parseEther('100000000'))
 
         await nft.connect(user0).mint({
             token0: token0.address,
@@ -529,12 +464,13 @@ describe('ETHUSDT Hypervisor', () => {
             tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
             fee: FeeAmount.MEDIUM,
             recipient: user0.address,
-            amount0Desired: veryLargeTokenAmount,
-            amount1Desired: veryLargeTokenAmount,
+            amount0Desired: ethers.utils.parseEther('100000000'),
+            amount1Desired: ethers.utils.parseEther('100000000'),
             amount0Min: 0,
             amount1Min: 0,
             deadline: 2000000000,
         })
+        await hypervisor.toggleDepositFree();
     })
 
     it('handles deposit / withdrawal from pools of different balances', async () => {
@@ -542,16 +478,16 @@ describe('ETHUSDT Hypervisor', () => {
         expect(slot0.tick).to.equal(-198080)
 
         // create a balanced base deposit
-        await token0.mint(user1.address, largeTokenAmount)
-        await token1.mint(user1.address, largeTokenAmount)
+        await token0.mint(user1.address, ethers.utils.parseEther('1000000'))
+        await token1.mint(user1.address, ethers.utils.parseEther('1000000'))
 
-        await token0.connect(user1).approve(hypervisor.address, largeTokenAmount)
-        await token1.connect(user1).approve(hypervisor.address, largeTokenAmount)
+        await token0.connect(user1).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
+        await token1.connect(user1).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
 
         await hypervisor.connect(user1).deposit(ethers.utils.parseEther('1'), 2500000000, user1.address)
 
         let user1LiquidityBalance = await hypervisor.balanceOf(user1.address)
-        let expectedValue = 5000000000
+        let expectedValue = 5000010000
         expect(user1LiquidityBalance).to.be.gt(Math.round(expectedValue*0.999))
         expect(user1LiquidityBalance).to.be.lt(Math.round(expectedValue*1.001))
 
@@ -577,63 +513,13 @@ describe('ETHUSDT Hypervisor', () => {
         expect(user2usdtBalance).to.be.gt(1249900000)
 
         // deposit & withdraw liquidity with ETH only
-        await token0.mint(user3.address, ethers.utils.parseEther('0.5'))
-        await token0.connect(user3).approve(hypervisor.address, ethers.utils.parseEther('0.5'))
+        await token1.mint(user3.address, ethers.utils.parseEther('100'))
+        await token1.connect(user3).approve(hypervisor.address, ethers.utils.parseEther('100'))
 
-        await hypervisor.connect(user3).deposit(ethers.utils.parseEther('0.5'), 0, user3.address)
-        let user3LiquidityBalance = await hypervisor.balanceOf(user3.address)
-        expect(user3LiquidityBalance).to.be.gt(1249500000)
-        expect(user3LiquidityBalance).to.be.lt(1250010000)
-
-        await hypervisor.connect(user3).withdraw(user3LiquidityBalance, user3.address, user3.address)
-
-        let user3ethBalance = await token0.balanceOf(user3.address)
-        let user3usdtBalance = await token1.balanceOf(user3.address)
-        expect(user3ethBalance).to.be.lt(ethers.utils.parseEther('0.301'))
-        expect(user3ethBalance).to.be.gt(ethers.utils.parseEther('0.299'))
-        expect(user3usdtBalance).to.be.lt(500100000)
-        expect(user3usdtBalance).to.be.gt(499900000)
-
-        // deposit & withdraw liquidity with USDT overweight
-        let singleSidedUSDTAmount = 1000000000
-        await token1.mint(user4.address, singleSidedUSDTAmount)
-        await token1.connect(user4).approve(hypervisor.address, singleSidedUSDTAmount)
-
-        await hypervisor.connect(user4).deposit(0, singleSidedUSDTAmount, user4.address)
-        let user4LiquidityBalance = await hypervisor.balanceOf(user4.address)
-        expect(user4LiquidityBalance).to.be.gt(Math.round(singleSidedUSDTAmount*0.999))
-        expect(user4LiquidityBalance).to.be.lt(Math.round(singleSidedUSDTAmount*1.001))
-
-        await hypervisor.connect(user4).withdraw(user4LiquidityBalance, user4.address, user4.address)
-
-        let user4ethBalance = await token0.balanceOf(user4.address)
-        let user4usdtBalance = await token1.balanceOf(user4.address)
-        expect(user4ethBalance).to.be.lt(ethers.utils.parseEther('0.201'))
-        expect(user4ethBalance).to.be.gt(ethers.utils.parseEther('0.199'))
-        expect(user4usdtBalance).to.be.lt(500100000)
-        expect(user4usdtBalance).to.be.gt(499900000)
-
-        // add a deposit of just ETH
-        await hypervisor.connect(user1).deposit(ethers.utils.parseEther('1'), 0, user1.address)
-
-        user1LiquidityBalance = await hypervisor.balanceOf(user1.address)
-        expect(user1LiquidityBalance).to.be.gt(7499500000)
-        expect(user1LiquidityBalance).to.be.lt(7500100000)
-
-        // deposit & withdraw liquidity with ETH & USDT balanced
-        // deposit & withdraw liquidity with ETH overweight
-        // deposit & withdraw liquidity with USDT overweight
-
-        // add a deposit of just USDT, flipping the balance of the pool to be
-        // overweight USDT
-        await hypervisor.connect(user1).deposit(0, 6500000000, user1.address)
-
-        user1LiquidityBalance = await hypervisor.balanceOf(user1.address)
-        expect(user1LiquidityBalance).to.be.gt(13999500000)
-        expect(user1LiquidityBalance).to.be.lt(14000010000)
-
-        // deposit & withdraw liquidity with ETH & USDT balanced
-        // deposit & withdraw liquidity with ETH overweight
-        // deposit & withdraw liquidity with USDT overweight
+        // should fail because toggleDepositFree is activated at the end of beforeAll
+        await expect(hypervisor.connect(user3).deposit(0, ethers.utils.parseEther('0.5'), user3.address)).to.be.revertedWith("Ratio overflow");
+        await hypervisor.toggleDepositFree()
+        // should succeed once toggleDepositFree is de-activated
+        await hypervisor.connect(user3).deposit(0, ethers.utils.parseEther('0.5'), user3.address)
     })
 })
