@@ -40,8 +40,7 @@ contract Swap {
         bool send
     ) external onlyOwner {
         uint256 balance = IERC20(token).balanceOf(address(this));
-        if (IERC20(token).allowance(address(this), address(router)) < balance)
-            IERC20(token).approve(address(router), balance);
+        if (IERC20(token).allowance(address(this), address(router)) < balance) IERC20(token).approve(address(router), balance);
         uint256 amountOut = router.exactInput(
             ISwapRouter.ExactInputParams(
                 path,

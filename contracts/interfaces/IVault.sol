@@ -6,6 +6,7 @@ interface IVault {
     function deposit(
         uint256,
         uint256,
+        address,
         address
     ) external returns (uint256);
 

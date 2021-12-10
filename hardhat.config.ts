@@ -1,7 +1,7 @@
 import '@nomiclabs/hardhat-ethers'
 import '@nomiclabs/hardhat-etherscan'
 import '@nomiclabs/hardhat-waffle'
-import 'hardhat-typechain'
+import '@typechain/hardhat'
 import "hardhat-watcher"
 import './scripts/copy-uniswap-v3-artifacts.ts'
 import './tasks/hypervisor'
@@ -9,31 +9,55 @@ import './tasks/swap'
 import { parseUnits } from 'ethers/lib/utils'
 import { HardhatUserConfig } from 'hardhat/types'
 require('dotenv').config()
-const PRIVATE_KEY = process.env.PRIVATE_KEY as string;
+const mnemonic = process.env.DEV_MNEMONIC || ''
+const archive_node = process.env.ETHEREUM_ARCHIVE_URL || ''
 
 const config: HardhatUserConfig = {
   networks: {
       hardhat: {
-          allowUnlimitedContractSize: false,
+        allowUnlimitedContractSize: false,
       },
 	  Arbitrum_Testnet: {
 		  url: "https://rinkeby.arbitrum.io/rpc",
-		  accounts: [`0x${PRIVATE_KEY}`],
+		  accounts: {
+			  mnemonic,
+		  },
 		  gas: 2100000,
 		  gasPrice: 8000000000,
 	  },
 	  Arbitrum_Mainnet: {
 		  url: "https://arb1.arbitrum.io/rpc",
-		  accounts: [`0x${PRIVATE_KEY}`],
+		  accounts: [`0x${process.env.PVT_KEY}`],
 	  },
-    mainnet: {
-      url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-      accounts: [PRIVATE_KEY],
-    },
-    rinkeby: {
-      url: `https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-      accounts: [PRIVATE_KEY],
-    },
+      goerli: {
+        url: 'https://goerli.infura.io/v3/' + process.env.INFURA_ID,
+        accounts: {
+          mnemonic,
+        },
+        gasPrice: parseUnits('130', 'gwei').toNumber(),
+      },
+      bsc: {
+        url: 'https://bsc-dataseed1.binance.org',
+        accounts: {
+          mnemonic,
+        },
+        // gasPrice: parseUnits('130', 'gwei').toNumber(),
+      },
+      kovan: {
+        url: 'https://kovan.infura.io/v3/' + process.env.INFURA_ID,
+        accounts: {
+          mnemonic,
+        },
+        gasPrice: parseUnits('60', 'gwei').toNumber(),
+      },
+      mainnet: {
+        url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+        accounts: [process.env.MAINNET_PRIVATE_KEY as string],
+      },
+      rinkeby: {
+        url: `https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+        accounts: [process.env.RINKEBY_PRIVATE_KEY as string],
+      },
   },
   watcher: {
       compilation: {
@@ -54,6 +78,9 @@ const config: HardhatUserConfig = {
               bytecodeHash: 'none',
           },
       },
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_APIKEY,
   },
   mocha: {
     timeout: 2000000

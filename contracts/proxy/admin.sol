@@ -35,21 +35,32 @@ contract Admin {
         IHypervisor(_hypervisor).rebalance(_baseLower, _baseUpper, _limitLower, _limitUpper, _feeRecipient, swapQuantity);
     }
 
-    function emergencyWithdraw(
-        address _hypervisor,
-        IERC20 token,
-        uint256 amount
-    ) external onlyAdmin {
-        IHypervisor(_hypervisor).emergencyWithdraw(token, amount);
+    function pullLiquidity(
+      address _hypervisor,
+      uint256 shares
+    ) external onlyAdvisor returns(
+        uint256 base0,
+        uint256 base1,
+        uint256 limit0,
+        uint256 limit1
+      ) {
+      ( uint256 base0, 
+        uint256 base1, 
+        uint256 limit0, 
+        uint256 limit1
+      ) = IHypervisor(_hypervisor).pullLiquidity(shares);
     }
 
-    function emergencyBurn(
-        address _hypervisor,
-        int24 tickLower,
-        int24 tickUpper,
-        uint128 liquidity
-    ) external onlyAdmin {
-        IHypervisor(_hypervisor).emergencyBurn(tickLower, tickUpper, liquidity);
+    function addBaseLiquidity(address _hypervisor, uint256 amount0, uint256 amount1) external onlyAdvisor {
+        IHypervisor(_hypervisor).addBaseLiquidity(amount0, amount1);
+    }
+
+    function addLimitLiquidity(address _hypervisor, uint256 amount0, uint256 amount1) external onlyAdvisor {
+        IHypervisor(_hypervisor).addLimitLiquidity(amount0, amount1);
+    }
+
+    function pendingFees(address _hypervisor) external onlyAdvisor returns (uint256 fees0, uint256 fees1) {
+        IHypervisor(_hypervisor).pendingFees();
     }
 
     function setDepositMax(address _hypervisor, uint256 _deposit0Max, uint256 _deposit1Max) external onlyAdmin {
