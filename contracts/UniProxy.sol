@@ -24,7 +24,7 @@ contract UniProxy {
   uint256 public deltaScale = 1000; // must be a power of 10
   uint256 public priceThreshold = 100;
   uint256 public swapLife = 10000;
-	ISwapRouter public router;
+  ISwapRouter public router;
 
   uint256 MAX_INT = 2**256 - 1;
 
@@ -45,8 +45,8 @@ contract UniProxy {
     owner = msg.sender;
   }
 
-	// @param pos Address of Hypervisor 
-	// @param version Hypervisor version 
+  // @param pos Address of Hypervisor 
+  // @param version Hypervisor version 
   function addPosition(address pos, uint8 version) external onlyOwner {
     require(positions[pos].version == 0, 'already added');
     require(version > 0, 'version < 1');
@@ -56,13 +56,13 @@ contract UniProxy {
     p.version = version;
   }
 
-	// @dev deposit to specified Hypervisor 
-	// @param deposit0 Amount of token0 transfered from sender to Hypervisor
-	// @param deposit1 Amount of token1 transfered from sender to Hypervisor
-	// @param to Address to which liquidity tokens are minted
-	// @param from Address from which asset tokens are transferred
-	// @param pos Address of hypervisor instance 
-	// @return shares Quantity of liquidity tokens minted as a result of deposit
+  // @dev deposit to specified Hypervisor 
+// @param deposit0 Amount of token0 transfered from sender to Hypervisor
+// @param deposit1 Amount of token1 transfered from sender to Hypervisor
+// @param to Address to which liquidity tokens are minted
+// @param from Address from which asset tokens are transferred
+// @param pos Address of hypervisor instance 
+// @return shares Quantity of liquidity tokens minted as a result of deposit
   function deposit(
     uint256 deposit0,
     uint256 deposit1,
@@ -124,47 +124,47 @@ contract UniProxy {
 
   }
 
-	/*
+  /*
 
-	client path encoding for depositSwap path param
+  client path encoding for depositSwap path param
 
-	const encodePath = (tokenAddresses: string[], fees: number[]) => {
-		const FEE_SIZE = 3;
+  const encodePath = (tokenAddresses: string[], fees: number[]) => {
+    const FEE_SIZE = 3;
 
-		if (tokenAddresses.length != fees.length + 1) {
-			throw new Error("path/fee lengths do not match");
-		}
+    if (tokenAddresses.length != fees.length + 1) {
+      throw new Error("path/fee lengths do not match");
+    }
 
-		let encoded = "0x";
-		for (let i = 0; i < fees.length; i++) {
-			// 20 byte encoding of the address
-			encoded += tokenAddresses[i].slice(2);
-			// 3 byte encoding of the fee
-			encoded += fees[i].toString(16).padStart(2 * FEE_SIZE, "0");
-		}
-		// encode the final token
-		encoded += tokenAddresses[tokenAddresses.length - 1].slice(2);
+    let encoded = "0x";
+    for (let i = 0; i < fees.length; i++) {
+      // 20 byte encoding of the address
+      encoded += tokenAddresses[i].slice(2);
+      // 3 byte encoding of the fee
+      encoded += fees[i].toString(16).padStart(2 * FEE_SIZE, "0");
+    }
+    // encode the final token
+    encoded += tokenAddresses[tokenAddresses.length - 1].slice(2);
 
-		return encoded.toLowerCase();
-	};
+    return encoded.toLowerCase();
+  };
 
-	path = encodePath(
-		[token0Address, token1Address],
-		[poolFee]
-	);
-	 
+  path = encodePath(
+    [token0Address, token1Address],
+    [poolFee]
+  );
+   
 
-	*/
+  */
 
-	// @dev single sided deposit using uni3 router swap
-	// @param deposit0 Amount of token0 transfered from sender to Hypervisor
-	// @param deposit1 Amount of token1 transfered from sender to Hypervisor
-	// @param to Address to which liquidity tokens are minted
-	// @param from Address from which asset tokens are transferred
-	// @param path See above path encoding example 
-	// @param pos Address of hypervisor instance 
-	// @param _router Address of uniswap router 
-	// @return shares Quantity of liquidity tokens minted as a result of deposit
+  // @dev single sided deposit using uni3 router swap
+  // @param deposit0 Amount of token0 transfered from sender to Hypervisor
+  // @param deposit1 Amount of token1 transfered from sender to Hypervisor
+  // @param to Address to which liquidity tokens are minted
+  // @param from Address from which asset tokens are transferred
+  // @param path See above path encoding example 
+  // @param pos Address of hypervisor instance 
+  // @param _router Address of uniswap router 
+  // @return shares Quantity of liquidity tokens minted as a result of deposit
   function depositSwap(
     int256 swapAmount, // (-) token1, (+) token0 for token1; amount to swap
     uint256 deposit0,
@@ -173,7 +173,7 @@ contract UniProxy {
     address from,
     bytes memory path,
     address pos,
-		address _router
+    address _router
   ) external returns (uint256 shares) {
 
     if (twapCheck || positions[pos].twapOverride) {
@@ -199,9 +199,9 @@ contract UniProxy {
       }
     }
 
-		router = ISwapRouter(_router);
+    router = ISwapRouter(_router);
     uint256 amountOut;
-		uint256 swap;
+    uint256 swap;
     if(swapAmount < 0) {
         //swap token1 for token0
 
@@ -219,7 +219,7 @@ contract UniProxy {
     }
     else{
         //swap token1 for token0
-				swap = uint256(swapAmount);
+        swap = uint256(swapAmount);
         IHypervisor(pos).token0().transferFrom(msg.sender, address(this), deposit0+swap);
 
         amountOut = router.exactInput(
@@ -250,11 +250,11 @@ contract UniProxy {
     }
   }
 
-	// @dev check if ratio of deposit0:deposit1 sufficiently matches composition of hypervisor 
-	// @param pos address of hypervisor instance 
-	// @param deposit0 amount of token0 transfered from sender to hypervisor
-	// @param deposit1 amount of token1 transfered from sender to hypervisor
-	// @return bool is sufficiently proper 
+  // @dev check if ratio of deposit0:deposit1 sufficiently matches composition of hypervisor 
+  // @param pos address of hypervisor instance 
+  // @param deposit0 amount of token0 transfered from sender to hypervisor
+  // @param deposit1 amount of token1 transfered from sender to hypervisor
+  // @return bool is sufficiently proper 
   function properDepositRatio(
     address pos,
     uint256 deposit0,
@@ -274,11 +274,11 @@ contract UniProxy {
     return true;
   }
 
-	// @dev given amount of provided token, return valid range of complimentary token amount 
-	// @param pos address of hypervisor instance 
-	// @param Address of token user is supplying amount of 
-	// @param deposit amount of token provided
-	// @return valid range of complimentary deposit amount 
+  // @dev given amount of provided token, return valid range of complimentary token amount 
+  // @param pos address of hypervisor instance 
+  // @param Address of token user is supplying amount of 
+  // @param deposit amount of token provided
+  // @return valid range of complimentary deposit amount 
   function getDepositAmount(
     address pos,
     address token,
@@ -299,7 +299,7 @@ contract UniProxy {
   }
 
 
-	// @dev check if twap of given _twapInterval differs from current price equal to or exceeding _priceThreshold 
+  // @dev check if twap of given _twapInterval differs from current price equal to or exceeding _priceThreshold 
   function checkPriceChange(
     address pos,
     uint32 _twapInterval,
@@ -345,7 +345,7 @@ contract UniProxy {
     deltaScale = _deltaScale;
   }
 
-	// @dev provide custom deposit configuration for Hypervisor
+  // @dev provide custom deposit configuration for Hypervisor
   function customDeposit(
     address pos,
     uint256 deposit0Max,
