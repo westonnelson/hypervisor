@@ -44,8 +44,9 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
     uint256 public deposit0Max;
     uint256 public deposit1Max;
     uint256 public maxTotalSupply;
-    mapping(address => bool) public list;
-    bool public whitelisted;
+    mapping(address => bool) public list; // whitelist of depositors
+    bool public whitelisted; // depositors must be on list
+    bool public directDeposit; // enter uni on deposit (avoid if client uses public rpc)
 
     uint256 public constant PRECISION = 1e36;
 
@@ -115,22 +116,23 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         if (totalSupply() != 0) {
           uint256 pool0PricedInToken1 = pool0.mul(price).div(PRECISION);
           shares = shares.mul(totalSupply()).div(pool0PricedInToken1.add(pool1));
-          baseLiquidity = _liquidityForAmounts(
-              baseLower,
-              baseUpper,
-              token0.balanceOf(address(this)),
-              token1.balanceOf(address(this))
-          );
-          _mintLiquidity(baseLower, baseUpper, baseLiquidity, address(this));
+          if(directDeposit) {
+            baseLiquidity = _liquidityForAmounts(
+                baseLower,
+                baseUpper,
+                token0.balanceOf(address(this)),
+                token1.balanceOf(address(this))
+            );
+            _mintLiquidity(baseLower, baseUpper, baseLiquidity, address(this));
 
-          limitLiquidity = _liquidityForAmounts(
-              limitLower,
-              limitUpper,
-              token0.balanceOf(address(this)),
-              token1.balanceOf(address(this))
-          );
-          _mintLiquidity(limitLower, limitUpper, limitLiquidity, address(this));
-
+            limitLiquidity = _liquidityForAmounts(
+                limitLower,
+                limitUpper,
+                token0.balanceOf(address(this)),
+                token1.balanceOf(address(this))
+            );
+            _mintLiquidity(limitLower, limitUpper, limitLiquidity, address(this));
+          }
         }
         _mint(to, shares);
         emit Deposit(from, to, shares, deposit0, deposit1);
@@ -546,6 +548,11 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         maxTotalSupply = _maxTotalSupply;
     }
 
+    // @dev toggle directDeposit 
+    function toggleDirectDeposit() external onlyOwner {
+        directDeposit = !directDeposit;
+    }
+
     // @param _deposit0Max The maximum amount of token0 allowed in a deposit
     // @param _deposit1Max The maximum amount of token1 allowed in a deposit
     function setDepositMax(uint256 _deposit0Max, uint256 _deposit1Max) external onlyOwner {
@@ -564,7 +571,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
     }
 
     function toggleWhitelist() external onlyOwner {
-        whitelisted = whitelisted ? false : true;
+        whitelisted = !whitelisted;
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
