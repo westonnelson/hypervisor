@@ -17,8 +17,8 @@ import {
 } from './shared/utilities'
 
 import {
-    SwapRouter,
-    UniswapV3Factory,
+    ISwapRouter,
+    IUniswapV3Factory,
     IUniswapV3Pool,
     HypervisorFactory,
     Hypervisor,
@@ -32,8 +32,8 @@ describe('Hypervisor', () => {
     const [wallet, alice, bob, carol, other,
            user0, user1, user2, user3, user4] = waffle.provider.getWallets()
 
-    let factory: UniswapV3Factory
-    let router: SwapRouter
+    let factory: IUniswapV3Factory
+    let router: ISwapRouter
     let nft: NonfungiblePositionManager
     let token0: TestERC20
     let token1: TestERC20

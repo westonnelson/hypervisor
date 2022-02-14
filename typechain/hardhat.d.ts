@@ -25,6 +25,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20Permit__factory>;
     getContractFactory(
+      name: "IERC165",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC165__factory>;
+    getContractFactory(
       name: "ERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC20__factory>;
@@ -32,6 +36,26 @@ declare module "hardhat/types/runtime" {
       name: "IERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20__factory>;
+    getContractFactory(
+      name: "IERC721",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC721__factory>;
+    getContractFactory(
+      name: "IERC721Enumerable",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC721Enumerable__factory>;
+    getContractFactory(
+      name: "IERC721Metadata",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IERC721Metadata__factory>;
+    getContractFactory(
+      name: "IUniswapV2Factory",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IUniswapV2Factory__factory>;
+    getContractFactory(
+      name: "IUniswapV2Pair",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IUniswapV2Pair__factory>;
     getContractFactory(
       name: "IUniswapV3FlashCallback",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -205,6 +229,22 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.V3Migrator__factory>;
     getContractFactory(
+      name: "BaseController",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.BaseController__factory>;
+    getContractFactory(
+      name: "GammaController",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.GammaController__factory>;
+    getContractFactory(
+      name: "IHypervisor",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IHypervisor__factory>;
+    getContractFactory(
+      name: "IUniProxy",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IUniProxy__factory>;
+    getContractFactory(
       name: "Hypervisor",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Hypervisor__factory>;
@@ -213,9 +253,17 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.HypervisorFactory__factory>;
     getContractFactory(
+      name: "HypervisorV3Migrator",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.HypervisorV3Migrator__factory>;
+    getContractFactory(
       name: "IHypervisor",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IHypervisor__factory>;
+    getContractFactory(
+      name: "IUniProxy",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IUniProxy__factory>;
     getContractFactory(
       name: "IUniversalVault",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -273,6 +321,11 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20Permit>;
     getContractAt(
+      name: "IERC165",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC165>;
+    getContractAt(
       name: "ERC20",
       address: string,
       signer?: ethers.Signer
@@ -282,6 +335,31 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20>;
+    getContractAt(
+      name: "IERC721",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721>;
+    getContractAt(
+      name: "IERC721Enumerable",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721Enumerable>;
+    getContractAt(
+      name: "IERC721Metadata",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IERC721Metadata>;
+    getContractAt(
+      name: "IUniswapV2Factory",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IUniswapV2Factory>;
+    getContractAt(
+      name: "IUniswapV2Pair",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IUniswapV2Pair>;
     getContractAt(
       name: "IUniswapV3FlashCallback",
       address: string,
@@ -498,6 +576,26 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.V3Migrator>;
     getContractAt(
+      name: "BaseController",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.BaseController>;
+    getContractAt(
+      name: "GammaController",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.GammaController>;
+    getContractAt(
+      name: "IHypervisor",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IHypervisor>;
+    getContractAt(
+      name: "IUniProxy",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IUniProxy>;
+    getContractAt(
       name: "Hypervisor",
       address: string,
       signer?: ethers.Signer
@@ -508,10 +606,20 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.HypervisorFactory>;
     getContractAt(
+      name: "HypervisorV3Migrator",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.HypervisorV3Migrator>;
+    getContractAt(
       name: "IHypervisor",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IHypervisor>;
+    getContractAt(
+      name: "IUniProxy",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IUniProxy>;
     getContractAt(
       name: "IUniversalVault",
       address: string,

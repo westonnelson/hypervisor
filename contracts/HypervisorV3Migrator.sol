@@ -25,7 +25,7 @@ contract HypervisorV3Migrator {
         uniProxy = IUniProxy(_uniProxy);
     }
 
-    function migrate(address _hypervisor, uint8 percentageToMigrate, address recipient) external override {
+    function migrate(address _hypervisor, uint8 percentageToMigrate, address recipient) external {
         require(percentageToMigrate > 0, 'Percentage too small');
         require(percentageToMigrate <= 100, 'Percentage too large');
 
