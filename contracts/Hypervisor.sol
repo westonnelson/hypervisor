@@ -87,17 +87,10 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         require(deposit0 > 0 || deposit1 > 0, "deposits must be nonzero");
         require(deposit0 <= deposit0Max && deposit1 <= deposit1Max, "deposits must be less than maximum amounts");
         require(to != address(0) && to != address(this), "to");
-        require(!whitelisted || list[from], "must be on the list");
+        require(!whitelisted || list[msg.sender], "must be on the list");
 
-        // update fess for inclusion in total pool amounts
-        (uint128 baseLiquidity,,) = _position(baseLower, baseUpper);
-        if (baseLiquidity > 0) {
-            pool.burn(baseLower, baseUpper, 0);
-        }
-        (uint128 limitLiquidity,,)  = _position(limitLower, limitUpper);
-        if (limitLiquidity > 0) {
-            pool.burn(limitLower, limitUpper, 0);
-        }
+        // update fees
+        (uint128 baseLiquidity, uint128 limitLiquidity) = zeroBurn();
 
         uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(currentTick());
         uint256 price = FullMath.mulDiv(uint256(sqrtPrice).mul(uint256(sqrtPrice)), PRECISION, 2**(96 * 2));
@@ -117,7 +110,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         if (totalSupply() != 0) {
           uint256 pool0PricedInToken1 = pool0.mul(price).div(PRECISION);
           shares = shares.mul(totalSupply()).div(pool0PricedInToken1.add(pool1));
-          if(directDeposit) {
+          if (directDeposit) {
             baseLiquidity = _liquidityForAmounts(
                 baseLower,
                 baseUpper,
@@ -141,6 +134,18 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         require(maxTotalSupply == 0 || totalSupply() <= maxTotalSupply, "maxTotalSupply");
     }
 
+    function zeroBurn() internal returns(uint128 baseLiquidity, uint128 limitLiquidity) {
+      // update fees for inclusion
+      (baseLiquidity, , ) = _position(baseLower, baseUpper);
+      if (baseLiquidity > 0) {
+          pool.burn(baseLower, baseUpper, 0);
+      }
+      (limitLiquidity, , ) = _position(limitLower, limitUpper);
+      if (limitLiquidity > 0) {
+          pool.burn(limitLower, limitUpper, 0);
+      }
+    }
+
     function pullLiquidity(
       uint256 shares
     ) external onlyOwner returns(
@@ -149,15 +154,15 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         uint256 limit0,
         uint256 limit1
       ) {
-
-        (uint256 base0, uint256 base1) = _burnLiquidity(
+        zeroBurn();
+        (base0, base1) = _burnLiquidity(
             baseLower,
             baseUpper,
             _liquidityForShares(baseLower, baseUpper, shares),
             address(this),
             false
         );
-        (uint256 limit0, uint256 limit1) = _burnLiquidity(
+        (limit0, limit1) = _burnLiquidity(
             limitLower,
             limitUpper,
             _liquidityForShares(limitLower, limitUpper, shares),
@@ -179,6 +184,9 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         require(shares > 0, "shares");
         require(to != address(0), "to");
 
+        // update fees
+        zeroBurn();
+
         // Withdraw liquidity from Uniswap pool
         (uint256 base0, uint256 base1) = _burnLiquidity(
             baseLower,
@@ -196,9 +204,9 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         );
 
         // Push tokens proportional to unused balances
-        uint256 totalSupply = totalSupply();
-        uint256 unusedAmount0 = token0.balanceOf(address(this)).mul(shares).div(totalSupply);
-        uint256 unusedAmount1 = token1.balanceOf(address(this)).mul(shares).div(totalSupply);
+        uint256 supply = totalSupply();
+        uint256 unusedAmount0 = token0.balanceOf(address(this)).mul(shares).div(supply);
+        uint256 unusedAmount1 = token1.balanceOf(address(this)).mul(shares).div(supply);
         if (unusedAmount0 > 0) token0.safeTransfer(to, unusedAmount0);
         if (unusedAmount1 > 0) token1.safeTransfer(to, unusedAmount1);
 
@@ -242,16 +250,14 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
                 _limitUpper % tickSpacing == 0,
             "limit position invalid"
         );
+        require(
+          _limitUpper != _baseUpper ||
+          _limitLower != _baseLower,
+          "limit equals base"
+        );
 
         // update fees
-        (uint128 baseLiquidity, , ) = _position(baseLower, baseUpper);
-        if (baseLiquidity > 0) {
-            pool.burn(baseLower, baseUpper, 0);
-        }
-        (uint128 limitLiquidity, , ) = _position(limitLower, limitUpper);
-        if (limitLiquidity > 0) {
-            pool.burn(limitLower, limitUpper, 0);
-        }
+        (uint128 baseLiquidity, uint128 limitLiquidity) = zeroBurn();
 
         // Withdraw all liquidity and collect all fees from Uniswap pool
         (, uint256 feesLimit0, uint256 feesLimit1) = _position(baseLower, baseUpper);
@@ -259,6 +265,9 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
 
         uint256 fees0 = feesBase0.add(feesLimit0);
         uint256 fees1 = feesBase1.add(feesLimit1);
+        (baseLiquidity, , ) = _position(baseLower, baseUpper);
+        (limitLiquidity, , ) = _position(limitLower, limitUpper);
+
         _burnLiquidity(baseLower, baseUpper, baseLiquidity, address(this), true);
         _burnLiquidity(limitLower, limitUpper, limitLiquidity, address(this), true);
 
@@ -549,11 +558,6 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         maxTotalSupply = _maxTotalSupply;
     }
 
-    // @dev toggle directDeposit 
-    function toggleDirectDeposit() external onlyOwner {
-        directDeposit = !directDeposit;
-    }
-
     // @param _deposit0Max The maximum amount of token0 allowed in a deposit
     // @param _deposit1Max The maximum amount of token1 allowed in a deposit
     function setDepositMax(uint256 _deposit0Max, uint256 _deposit1Max) external onlyOwner {
@@ -569,6 +573,10 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
 
     function removeListed(address listed) external onlyOwner {
         list[listed] = false;
+    }
+
+    function toggleDirectDeposit() external onlyOwner {
+        directDeposit = !directDeposit;
     }
 
     function toggleWhitelist() external onlyOwner {
