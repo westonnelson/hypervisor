@@ -37,6 +37,7 @@ interface HypervisorInterface extends ethers.utils.Interface {
     "deposit(uint256,uint256,address,address)": FunctionFragment;
     "deposit0Max()": FunctionFragment;
     "deposit1Max()": FunctionFragment;
+    "directDeposit()": FunctionFragment;
     "fee()": FunctionFragment;
     "getBasePosition()": FunctionFragment;
     "getLimitPosition()": FunctionFragment;
@@ -59,6 +60,7 @@ interface HypervisorInterface extends ethers.utils.Interface {
     "setMaxTotalSupply(uint256)": FunctionFragment;
     "symbol()": FunctionFragment;
     "tickSpacing()": FunctionFragment;
+    "toggleDirectDeposit()": FunctionFragment;
     "toggleWhitelist()": FunctionFragment;
     "token0()": FunctionFragment;
     "token1()": FunctionFragment;
@@ -119,6 +121,10 @@ interface HypervisorInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "deposit1Max",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "directDeposit",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "fee", values?: undefined): string;
@@ -204,6 +210,10 @@ interface HypervisorInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "toggleDirectDeposit",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "toggleWhitelist",
     values?: undefined
   ): string;
@@ -279,6 +289,10 @@ interface HypervisorInterface extends ethers.utils.Interface {
     functionFragment: "deposit1Max",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "directDeposit",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "fee", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getBasePosition",
@@ -332,6 +346,10 @@ interface HypervisorInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "tickSpacing",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "toggleDirectDeposit",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -532,6 +550,8 @@ export class Hypervisor extends BaseContract {
 
     deposit1Max(overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    directDeposit(overrides?: CallOverrides): Promise<[boolean]>;
+
     fee(overrides?: CallOverrides): Promise<[number]>;
 
     getBasePosition(
@@ -631,6 +651,10 @@ export class Hypervisor extends BaseContract {
     symbol(overrides?: CallOverrides): Promise<[string]>;
 
     tickSpacing(overrides?: CallOverrides): Promise<[number]>;
+
+    toggleDirectDeposit(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     toggleWhitelist(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -745,6 +769,8 @@ export class Hypervisor extends BaseContract {
 
   deposit1Max(overrides?: CallOverrides): Promise<BigNumber>;
 
+  directDeposit(overrides?: CallOverrides): Promise<boolean>;
+
   fee(overrides?: CallOverrides): Promise<number>;
 
   getBasePosition(
@@ -842,6 +868,10 @@ export class Hypervisor extends BaseContract {
   symbol(overrides?: CallOverrides): Promise<string>;
 
   tickSpacing(overrides?: CallOverrides): Promise<number>;
+
+  toggleDirectDeposit(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   toggleWhitelist(
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -953,6 +983,8 @@ export class Hypervisor extends BaseContract {
 
     deposit1Max(overrides?: CallOverrides): Promise<BigNumber>;
 
+    directDeposit(overrides?: CallOverrides): Promise<boolean>;
+
     fee(overrides?: CallOverrides): Promise<number>;
 
     getBasePosition(
@@ -1056,6 +1088,8 @@ export class Hypervisor extends BaseContract {
     symbol(overrides?: CallOverrides): Promise<string>;
 
     tickSpacing(overrides?: CallOverrides): Promise<number>;
+
+    toggleDirectDeposit(overrides?: CallOverrides): Promise<void>;
 
     toggleWhitelist(overrides?: CallOverrides): Promise<void>;
 
@@ -1315,6 +1349,8 @@ export class Hypervisor extends BaseContract {
 
     deposit1Max(overrides?: CallOverrides): Promise<BigNumber>;
 
+    directDeposit(overrides?: CallOverrides): Promise<BigNumber>;
+
     fee(overrides?: CallOverrides): Promise<BigNumber>;
 
     getBasePosition(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1394,6 +1430,10 @@ export class Hypervisor extends BaseContract {
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
 
     tickSpacing(overrides?: CallOverrides): Promise<BigNumber>;
+
+    toggleDirectDeposit(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
     toggleWhitelist(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1512,6 +1552,8 @@ export class Hypervisor extends BaseContract {
 
     deposit1Max(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    directDeposit(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     fee(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getBasePosition(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -1597,6 +1639,10 @@ export class Hypervisor extends BaseContract {
     symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     tickSpacing(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    toggleDirectDeposit(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
 
     toggleWhitelist(
       overrides?: Overrides & { from?: string | Promise<string> }

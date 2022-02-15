@@ -28,6 +28,7 @@ interface UniProxyInterface extends ethers.utils.Interface {
     "deltaScale()": FunctionFragment;
     "deposit(uint256,uint256,address,address,address)": FunctionFragment;
     "depositDelta()": FunctionFragment;
+    "depositSwap(int256,uint256,uint256,address,address,bytes,address,address)": FunctionFragment;
     "freeDeposit()": FunctionFragment;
     "getDepositAmount(address,address,uint256)": FunctionFragment;
     "getSqrtTwapX96(address,uint32)": FunctionFragment;
@@ -36,11 +37,14 @@ interface UniProxyInterface extends ethers.utils.Interface {
     "priceThreshold()": FunctionFragment;
     "properDepositRatio(address,uint256,uint256)": FunctionFragment;
     "removeListed(address,address)": FunctionFragment;
+    "router()": FunctionFragment;
     "setDeltaScale(uint256)": FunctionFragment;
     "setDepositDelta(uint256)": FunctionFragment;
     "setPriceThreshold(uint256)": FunctionFragment;
+    "setSwapLife(uint256)": FunctionFragment;
     "setTwapInterval(uint32)": FunctionFragment;
     "setTwapOverride(address,bool,uint32)": FunctionFragment;
+    "swapLife()": FunctionFragment;
     "toggleDepositFree()": FunctionFragment;
     "toggleDepositFreeOverride(address)": FunctionFragment;
     "toggleTwap()": FunctionFragment;
@@ -78,6 +82,19 @@ interface UniProxyInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "depositSwap",
+    values: [
+      BigNumberish,
+      BigNumberish,
+      BigNumberish,
+      string,
+      string,
+      BytesLike,
+      string,
+      string
+    ]
+  ): string;
+  encodeFunctionData(
     functionFragment: "freeDeposit",
     values?: undefined
   ): string;
@@ -103,6 +120,7 @@ interface UniProxyInterface extends ethers.utils.Interface {
     functionFragment: "removeListed",
     values: [string, string]
   ): string;
+  encodeFunctionData(functionFragment: "router", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "setDeltaScale",
     values: [BigNumberish]
@@ -116,6 +134,10 @@ interface UniProxyInterface extends ethers.utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "setSwapLife",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setTwapInterval",
     values: [BigNumberish]
   ): string;
@@ -123,6 +145,7 @@ interface UniProxyInterface extends ethers.utils.Interface {
     functionFragment: "setTwapOverride",
     values: [string, boolean, BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "swapLife", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "toggleDepositFree",
     values?: undefined
@@ -165,6 +188,10 @@ interface UniProxyInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "depositSwap",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "freeDeposit",
     data: BytesLike
   ): Result;
@@ -190,6 +217,7 @@ interface UniProxyInterface extends ethers.utils.Interface {
     functionFragment: "removeListed",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "router", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setDeltaScale",
     data: BytesLike
@@ -203,6 +231,10 @@ interface UniProxyInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setSwapLife",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setTwapInterval",
     data: BytesLike
   ): Result;
@@ -210,6 +242,7 @@ interface UniProxyInterface extends ethers.utils.Interface {
     functionFragment: "setTwapOverride",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "swapLife", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "toggleDepositFree",
     data: BytesLike
@@ -316,6 +349,18 @@ export class UniProxy extends BaseContract {
 
     depositDelta(overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    depositSwap(
+      swapAmount: BigNumberish,
+      deposit0: BigNumberish,
+      deposit1: BigNumberish,
+      to: string,
+      from: string,
+      path: BytesLike,
+      pos: string,
+      _router: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     freeDeposit(overrides?: CallOverrides): Promise<[boolean]>;
 
     getDepositAmount(
@@ -377,6 +422,8 @@ export class UniProxy extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    router(overrides?: CallOverrides): Promise<[string]>;
+
     setDeltaScale(
       _deltaScale: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -392,6 +439,11 @@ export class UniProxy extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setSwapLife(
+      _swapLife: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setTwapInterval(
       _twapInterval: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -403,6 +455,8 @@ export class UniProxy extends BaseContract {
       _twapInterval: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    swapLife(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     toggleDepositFree(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -467,6 +521,18 @@ export class UniProxy extends BaseContract {
 
   depositDelta(overrides?: CallOverrides): Promise<BigNumber>;
 
+  depositSwap(
+    swapAmount: BigNumberish,
+    deposit0: BigNumberish,
+    deposit1: BigNumberish,
+    to: string,
+    from: string,
+    path: BytesLike,
+    pos: string,
+    _router: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   freeDeposit(overrides?: CallOverrides): Promise<boolean>;
 
   getDepositAmount(
@@ -528,6 +594,8 @@ export class UniProxy extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  router(overrides?: CallOverrides): Promise<string>;
+
   setDeltaScale(
     _deltaScale: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -543,6 +611,11 @@ export class UniProxy extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setSwapLife(
+    _swapLife: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   setTwapInterval(
     _twapInterval: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -554,6 +627,8 @@ export class UniProxy extends BaseContract {
     _twapInterval: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
+
+  swapLife(overrides?: CallOverrides): Promise<BigNumber>;
 
   toggleDepositFree(
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -618,6 +693,18 @@ export class UniProxy extends BaseContract {
 
     depositDelta(overrides?: CallOverrides): Promise<BigNumber>;
 
+    depositSwap(
+      swapAmount: BigNumberish,
+      deposit0: BigNumberish,
+      deposit1: BigNumberish,
+      to: string,
+      from: string,
+      path: BytesLike,
+      pos: string,
+      _router: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
     freeDeposit(overrides?: CallOverrides): Promise<boolean>;
 
     getDepositAmount(
@@ -679,6 +766,8 @@ export class UniProxy extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    router(overrides?: CallOverrides): Promise<string>;
+
     setDeltaScale(
       _deltaScale: BigNumberish,
       overrides?: CallOverrides
@@ -694,6 +783,11 @@ export class UniProxy extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setSwapLife(
+      _swapLife: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setTwapInterval(
       _twapInterval: BigNumberish,
       overrides?: CallOverrides
@@ -705,6 +799,8 @@ export class UniProxy extends BaseContract {
       _twapInterval: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    swapLife(overrides?: CallOverrides): Promise<BigNumber>;
 
     toggleDepositFree(overrides?: CallOverrides): Promise<void>;
 
@@ -768,6 +864,18 @@ export class UniProxy extends BaseContract {
 
     depositDelta(overrides?: CallOverrides): Promise<BigNumber>;
 
+    depositSwap(
+      swapAmount: BigNumberish,
+      deposit0: BigNumberish,
+      deposit1: BigNumberish,
+      to: string,
+      from: string,
+      path: BytesLike,
+      pos: string,
+      _router: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     freeDeposit(overrides?: CallOverrides): Promise<BigNumber>;
 
     getDepositAmount(
@@ -802,6 +910,8 @@ export class UniProxy extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    router(overrides?: CallOverrides): Promise<BigNumber>;
+
     setDeltaScale(
       _deltaScale: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -817,6 +927,11 @@ export class UniProxy extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setSwapLife(
+      _swapLife: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setTwapInterval(
       _twapInterval: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -828,6 +943,8 @@ export class UniProxy extends BaseContract {
       _twapInterval: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    swapLife(overrides?: CallOverrides): Promise<BigNumber>;
 
     toggleDepositFree(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -893,6 +1010,18 @@ export class UniProxy extends BaseContract {
 
     depositDelta(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    depositSwap(
+      swapAmount: BigNumberish,
+      deposit0: BigNumberish,
+      deposit1: BigNumberish,
+      to: string,
+      from: string,
+      path: BytesLike,
+      pos: string,
+      _router: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     freeDeposit(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getDepositAmount(
@@ -930,6 +1059,8 @@ export class UniProxy extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    router(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     setDeltaScale(
       _deltaScale: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -945,6 +1076,11 @@ export class UniProxy extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    setSwapLife(
+      _swapLife: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     setTwapInterval(
       _twapInterval: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -956,6 +1092,8 @@ export class UniProxy extends BaseContract {
       _twapInterval: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
+
+    swapLife(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     toggleDepositFree(
       overrides?: Overrides & { from?: string | Promise<string> }
