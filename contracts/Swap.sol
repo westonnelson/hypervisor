@@ -11,6 +11,8 @@ import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
 
+/// @title Swap
+
 contract Swap {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
@@ -37,6 +39,10 @@ contract Swap {
         router = ISwapRouter(_router);
     }
 
+    /// @notice Swap given token with VISR via ISwapRouter
+    /// @param token Address of token to twap
+    /// @param path
+    /// @param send Boolean variable for sending to recipient or contract
     function swap(
         address token,
         bytes memory path,
@@ -56,11 +62,14 @@ contract Swap {
         emit SwapVISR(token, send ? recipient : address(this), amountOut);
     }
 
+    /// @param _recipient Address of the recipient
     function changeRecipient(address _recipient) external onlyOwner {
         require(_recipient != address(0), "_recipient should be non-zero");
         recipient = _recipient;
     }
 
+    /// @param token Address of token to send
+    /// @param amount Amount of tokens to send
     function sendToken(address token, uint256 amount) external onlyOwner {
         IERC20(token).transfer(recipient, amount);
     }
