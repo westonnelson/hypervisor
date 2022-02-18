@@ -1,8 +1,8 @@
-// SPDX-License-Identifier: Unlicense
+/// SPDX-License-Identifier: BUSL-1.1
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.sol";

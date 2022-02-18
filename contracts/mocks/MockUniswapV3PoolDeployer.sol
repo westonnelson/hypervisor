@@ -1,5 +1,6 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity =0.7.6;
+/// SPDX-License-Identifier: BUSL-1.1
+
+pragma solidity ^0.8.4;
 
 import {IUniswapV3PoolDeployer} from '@uniswap/v3-core/contracts/interfaces/IUniswapV3PoolDeployer.sol';
 import {MockUniswapV3Pool} from './MockUniswapV3Pool.sol';

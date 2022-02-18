@@ -1,12 +1,12 @@
-// SPDX-License-Identifier: Unlicense
+/// SPDX-License-Identifier: BUSL-1.1
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.4;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
@@ -41,7 +41,7 @@ contract Swap {
 
     /// @notice Swap given token with VISR via ISwapRouter
     /// @param token Address of token to twap
-    /// @param path
+    /// @param path Path info for router
     /// @param send Boolean variable for sending to recipient or contract
     function swap(
         address token,

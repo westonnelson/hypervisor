@@ -1,8 +1,9 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
-pragma solidity =0.7.6;
+/// SPDX-License-Identifier: BUSL-1.1
+
+pragma solidity ^0.8.4;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';

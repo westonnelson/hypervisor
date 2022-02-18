@@ -1,15 +1,15 @@
 /// SPDX-License-Identifier: BUSL-1.1
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.4;
 pragma abicoder v2;
 
 import "./interfaces/IHypervisor.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/math/SignedSafeMath.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SignedSafeMath.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 
 /// @title UniProxy
@@ -156,16 +156,16 @@ contract UniProxy is ReentrancyGuard {
   /// @notice Get the amount of token to deposit for the given amount of pair token
   /// @param pos Hypervisor Address
   /// @param token Address of token to deposit
-  /// @param deposit Amount of token to deposit
+  /// @param _deposit Amount of token to deposit
   /// @return amountStart Minimum amounts of the pair token to deposit
   /// @return amountEnd Maximum amounts of the pair token to deposit
   function getDepositAmount(
     address pos,
     address token,
-    uint256 deposit
+    uint256 _deposit
   ) public view returns (uint256 amountStart, uint256 amountEnd) {
     require(token == address(IHypervisor(pos).token0()) || token == address(IHypervisor(pos).token1()), "token mistmatch");
-    require(deposit > 0, "deposits can't be zero");
+    require(_deposit > 0, "deposits can't be zero");
     (uint256 total0, uint256 total1) = IHypervisor(pos).getTotalAmounts();
     if (IHypervisor(pos).totalSupply() == 0 || total0 == 0 || total1 == 0) {
       amountStart = 0;
@@ -176,11 +176,11 @@ contract UniProxy is ReentrancyGuard {
     uint256 ratioEnd = FullMath.mulDiv(total0.mul(deltaScale), 1e18, total1.mul(depositDelta));
 
     if (token == address(IHypervisor(pos).token0())) {
-      amountStart = FullMath.mulDiv(deposit, 1e18, ratioStart);
-      amountEnd = FullMath.mulDiv(deposit, 1e18, ratioEnd);
+      amountStart = FullMath.mulDiv(_deposit, 1e18, ratioStart);
+      amountEnd = FullMath.mulDiv(_deposit, 1e18, ratioEnd);
     } else {
-      amountStart = FullMath.mulDiv(deposit, ratioStart, 1e18);
-      amountEnd = FullMath.mulDiv(deposit, ratioEnd, 1e18);
+      amountStart = FullMath.mulDiv(_deposit, ratioStart, 1e18);
+      amountEnd = FullMath.mulDiv(_deposit, ratioEnd, 1e18);
     }
   }
 
@@ -238,7 +238,7 @@ contract UniProxy is ReentrancyGuard {
     emit DepositDeltaSet(_depositDelta);
   }
 
-  /// @param _depositScale Number to calculate deposit ratio
+  /// @param _deltaScale Number to calculate deposit ratio
   function setDeltaScale(uint256 _deltaScale) external onlyOwner {
     deltaScale = _deltaScale;
     emit DeltaScaleSet(_deltaScale);
@@ -290,7 +290,7 @@ contract UniProxy is ReentrancyGuard {
   }
 
   /// @param pos Hypervisor Address
-  /// @param twapOverride
+  /// @param twapOverride Twap Override
   /// @param _twapInterval Time Intervals
   function setTwapOverride(address pos, bool twapOverride, uint32 _twapInterval) external onlyOwner onlyAddedPosition(pos) {
     Position storage p = positions[pos];

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 
-pragma solidity =0.7.6;
+pragma solidity ^0.8.4;
 pragma abicoder v2;
 
 interface IUniProxy {
@@ -16,7 +16,7 @@ interface IUniProxy {
   function getDepositAmount(
     address pos,
     address token,
-    uint256 deposit
+    uint256 _deposit
   ) external view returns (
     uint256 amountStart,
     uint256 amountEnd

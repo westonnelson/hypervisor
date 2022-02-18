@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.4;
 
-import "@openzeppelin/contracts/math/Math.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
-import "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/SignedSafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-import "@openzeppelin/contracts/drafts/ERC20Permit.sol";
-import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.sol";
 import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
@@ -17,7 +17,6 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import "@uniswap/v3-periphery/contracts/libraries/LiquidityAmounts.sol";
-import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 
 import "./interfaces/IVault.sol";
 import "./interfaces/IUniversalVault.sol";
@@ -76,8 +75,8 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         owner = _owner;
 
         maxTotalSupply = 0; /// no cap
-        deposit0Max = uint256(-1);
-        deposit1Max = uint256(-1);
+        deposit0Max = type(uint256).max;
+        deposit1Max = type(uint256).max;
         whitelisted = false;
     }
 
@@ -144,7 +143,8 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
     }
 
     /// @notice Update fees of the positions
-    /// @return updated fees
+    /// @return baseLiquidity Fee of base position
+    /// @return limitLiquidity Fee of limit position
     function zeroBurn() internal returns(uint128 baseLiquidity, uint128 limitLiquidity) {
       /// update fees for inclusion
       (baseLiquidity, , ) = _position(baseLower, baseUpper);
@@ -159,7 +159,10 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
 
     /// @notice Pull liquidity tokens from liquidity and receive the tokens
     /// @param shares Number of liquidity tokens to pull from liquidity
-    /// @return amount of tokens received
+    /// @return base0 amount of token0 received from base position
+    /// @return base1 amount of token1 received from base position
+    /// @return limit0 amount of token0 received from limit position
+    /// @return limit1 amount of token1 received from limit position
     function pullLiquidity(
       uint256 shares
     ) external onlyOwner returns(
@@ -332,7 +335,8 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
     }
 
     /// @notice Get the pending fees
-    /// @return Pending fees of base and limit position
+    /// @return fees0 Pending fees of token0
+    /// @return fees1 Pending fees of token1
     function pendingFees() external onlyOwner returns (uint256 fees0, uint256 fees1) {
         /// update fees
         (uint128 baseLiquidity, , ) = _position(baseLower, baseUpper);
@@ -388,10 +392,11 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
 
     /// @notice Adds the liquidity for the given position
     /// @param tickLower The lower tick of the position in which to add liquidity
-    /// @param tickupper The upper tick of the position in which to add liquidity
+    /// @param tickUpper The upper tick of the position in which to add liquidity
     /// @param liquidity The amount of liquidity to mint
     /// @param payer Payer Data
-    /// @return The amount of token0 and token1 that was paid to mint the given amount of liquidity
+    /// @return amount0 The amount of token0 that was paid to mint the given amount of liquidity
+    /// @return amount1 The amount of token1 that was paid to mint the given amount of liquidity
     function _mintLiquidity(
         int24 tickLower,
         int24 tickUpper,
@@ -415,7 +420,8 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
     /// @param liquidity The amount of liquidity to burn
     /// @param to The address which should receive the fees collected
     /// @param collectAll If true, collect all tokens owed in the pool, else collect the owed tokens of the burn
-    /// @return The amount of fees collected in token0 and token1
+    /// @return amount0 The amount of fees collected in token0
+    /// @return amount1 The amount of fees collected in token1
     function _burnLiquidity(
         int24 tickLower,
         int24 tickUpper,

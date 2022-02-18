@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: BUSL-1.1
 
-pragma solidity 0.7.6;
+pragma solidity ^0.8.4;
 
 import "../interfaces/IHypervisor.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -34,7 +34,7 @@ contract Admin {
     /// @param _baseUpper The upper tick of the base position
     /// @param _limitLower The lower tick of the limit position
     /// @param _limitUpper The upper tick of the limit position
-    /// @param feeRecipient Address of recipient of 10% of earned fees since last rebalance
+    /// @param _feeRecipient Address of recipient of 10% of earned fees since last rebalance
     /// @param swapQuantity Quantity of tokens to swap; if quantity is positive,
     /// `swapQuantity` token0 are swaped for token1, if negative, `swapQuantity`
     /// token1 is swaped for token0    
@@ -53,7 +53,10 @@ contract Admin {
     /// @notice Pull liquidity tokens from liquidity and receive the tokens
     /// @param _hypervisor Hypervisor Address
     /// @param shares Number of liquidity tokens to pull from liquidity
-    /// @return amount of tokens received
+    /// @return base0 amount of token0 received from base position
+    /// @return base1 amount of token1 received from base position
+    /// @return limit0 amount of token0 received from limit position
+    /// @return limit1 amount of token1 received from limit position
     function pullLiquidity(
       address _hypervisor,
       uint256 shares
@@ -63,11 +66,7 @@ contract Admin {
         uint256 limit0,
         uint256 limit1
       ) {
-      ( uint256 base0, 
-        uint256 base1, 
-        uint256 limit0, 
-        uint256 limit1
-      ) = IHypervisor(_hypervisor).pullLiquidity(shares);
+      (base0, base1, limit0, limit1) = IHypervisor(_hypervisor).pullLiquidity(shares);
     }
 
     /// @notice Add tokens to base liquidity
@@ -88,7 +87,8 @@ contract Admin {
 
     /// @notice Get the pending fees
     /// @param _hypervisor Hypervisor Address
-    /// @return Pending fees of base and limit position
+    /// @return fees0 Pending fees of token0
+    /// @return fees1 Pending fees of token1
     function pendingFees(address _hypervisor) external onlyAdvisor returns (uint256 fees0, uint256 fees1) {
         (fees0, fees1) = IHypervisor(_hypervisor).pendingFees();
     }
