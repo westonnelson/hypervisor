@@ -12,7 +12,7 @@ import '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
 import './interfaces/IHypervisor.sol';
 import './interfaces/IUniProxy.sol';
 
-/// @title HperVisor V3 Migrator
+/// @title HyperVisor V3 Migrator
 
 contract HypervisorV3Migrator {
     using SafeMath for uint256;
@@ -21,6 +21,8 @@ contract HypervisorV3Migrator {
     IUniProxy public uniProxy;
 
     constructor(address _uniswapV2Factory, address _uniProxy) {
+        require(_uniswapV2Factory != address(0), "_uniswapV2Factory should be non-zero");
+        require(_uniProxy != address(0), "_uniProxy should be non-zero");
         uniswapV2Factory = IUniswapV2Factory(_uniswapV2Factory);
         uniProxy = IUniProxy(_uniProxy);
     }

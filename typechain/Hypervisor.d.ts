@@ -388,6 +388,8 @@ interface HypervisorInterface extends ethers.utils.Interface {
   events: {
     "Approval(address,address,uint256)": EventFragment;
     "Deposit(address,address,uint256,uint256,uint256)": EventFragment;
+    "DepositMaxSet(uint256,uint256)": EventFragment;
+    "MaxTotalSupplySet(uint256)": EventFragment;
     "Rebalance(int24,uint256,uint256,uint256,uint256,uint256)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
     "Withdraw(address,address,uint256,uint256,uint256)": EventFragment;
@@ -395,6 +397,8 @@ interface HypervisorInterface extends ethers.utils.Interface {
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "DepositMaxSet"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "MaxTotalSupplySet"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Rebalance"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Withdraw"): EventFragment;
@@ -416,6 +420,14 @@ export type DepositEvent = TypedEvent<
     amount0: BigNumber;
     amount1: BigNumber;
   }
+>;
+
+export type DepositMaxSetEvent = TypedEvent<
+  [BigNumber, BigNumber] & { _deposit0Max: BigNumber; _deposit1Max: BigNumber }
+>;
+
+export type MaxTotalSupplySetEvent = TypedEvent<
+  [BigNumber] & { _maxTotalSupply: BigNumber }
 >;
 
 export type RebalanceEvent = TypedEvent<
@@ -1195,6 +1207,30 @@ export class Hypervisor extends BaseContract {
         amount1: BigNumber;
       }
     >;
+
+    "DepositMaxSet(uint256,uint256)"(
+      _deposit0Max?: null,
+      _deposit1Max?: null
+    ): TypedEventFilter<
+      [BigNumber, BigNumber],
+      { _deposit0Max: BigNumber; _deposit1Max: BigNumber }
+    >;
+
+    DepositMaxSet(
+      _deposit0Max?: null,
+      _deposit1Max?: null
+    ): TypedEventFilter<
+      [BigNumber, BigNumber],
+      { _deposit0Max: BigNumber; _deposit1Max: BigNumber }
+    >;
+
+    "MaxTotalSupplySet(uint256)"(
+      _maxTotalSupply?: null
+    ): TypedEventFilter<[BigNumber], { _maxTotalSupply: BigNumber }>;
+
+    MaxTotalSupplySet(
+      _maxTotalSupply?: null
+    ): TypedEventFilter<[BigNumber], { _maxTotalSupply: BigNumber }>;
 
     "Rebalance(int24,uint256,uint256,uint256,uint256,uint256)"(
       tick?: null,

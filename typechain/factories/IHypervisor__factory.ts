@@ -299,6 +299,19 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "address",
+        name: "listed",
+        type: "address",
+      },
+    ],
+    name: "removeListed",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "uint256",
         name: "_deposit0Max",
         type: "uint256",

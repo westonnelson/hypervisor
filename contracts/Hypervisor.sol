@@ -64,9 +64,13 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         string memory name,
         string memory symbol
     ) ERC20Permit(name) ERC20(name, symbol) {
+        require(_pool != address(0), "_pool should be non-zero");
+        require(_owner != address(0), "_owner should be non-zero");
         pool = IUniswapV3Pool(_pool);
         token0 = IERC20(pool.token0());
         token1 = IERC20(pool.token1());
+        require(address(token0) != address(0), "token0 of pool should be non-zero");
+        require(address(token1) != address(0), "token1 of pool should be non-zero");
         fee = pool.fee();
         tickSpacing = pool.tickSpacing();
 
@@ -102,8 +106,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
 
         (uint256 pool0, uint256 pool1) = getTotalAmounts();
 
-        uint256 deposit0PricedInToken1 = deposit0.mul(price).div(PRECISION);
-        shares = deposit1.add(deposit0PricedInToken1);
+        shares = deposit1.add(deposit0.mul(price).div(PRECISION));
 
         if (deposit0 > 0) {
           token0.safeTransferFrom(from, address(this), deposit0);
@@ -112,9 +115,10 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
           token1.safeTransferFrom(from, address(this), deposit1);
         }
 
-        if (totalSupply() != 0) {
+        uint256 total = totalSupply();
+        if (total != 0) {
           uint256 pool0PricedInToken1 = pool0.mul(price).div(PRECISION);
-          shares = shares.mul(totalSupply()).div(pool0PricedInToken1.add(pool1));
+          shares = shares.mul(total).div(pool0PricedInToken1.add(pool1));
           if (directDeposit) {
             baseLiquidity = _liquidityForAmounts(
                 baseLower,
@@ -136,7 +140,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         _mint(to, shares);
         emit Deposit(from, to, shares, deposit0, deposit1);
         // Check total supply cap not exceeded. A value of 0 means no limit.
-        require(maxTotalSupply == 0 || totalSupply() <= maxTotalSupply, "maxTotalSupply");
+        require(maxTotalSupply == 0 || total <= maxTotalSupply, "maxTotalSupply");
     }
 
     function zeroBurn() internal returns(uint128 baseLiquidity, uint128 limitLiquidity) {
@@ -260,6 +264,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
           _limitLower != _baseLower,
           "limit equals base"
         );
+        require(feeRecipient != address(0), "feeRecipient should be non-zero");
 
         // update fees
         (uint128 baseLiquidity, uint128 limitLiquidity) = zeroBurn();
@@ -341,21 +346,29 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
     }
 
     function addBaseLiquidity(uint256 amount0, uint256 amount1) external onlyOwner {
+        uint256 _token0 = token0.balanceOf(address(this));
+        uint256 _token1 = token1.balanceOf(address(this));
+        require(amount0 <= _token0, "amount0 exceeds token0 amount");
+        require(amount1 <= _token1, "amount1 exceeds token1 amount");
         uint128 baseLiquidity = _liquidityForAmounts(
             baseLower,
             baseUpper,
-            amount0 == 0 && amount1 == 0 ? token0.balanceOf(address(this)) : amount0,
-            amount0 == 0 && amount1 == 0 ? token1.balanceOf(address(this)) : amount1
+            amount0 == 0 && amount1 == 0 ? _token0 : amount0,
+            amount0 == 0 && amount1 == 0 ? _token1 : amount1
         );
         _mintLiquidity(baseLower, baseUpper, baseLiquidity, address(this));
     }
 
     function addLimitLiquidity(uint256 amount0, uint256 amount1) external onlyOwner {
+        uint256 _token0 = token0.balanceOf(address(this));
+        uint256 _token1 = token1.balanceOf(address(this));
+        require(amount0 <= _token0, "amount0 exceeds token0 amount");
+        require(amount1 <= _token1, "amount1 exceeds token1 amount");
         uint128 limitLiquidity = _liquidityForAmounts(
             limitLower,
             limitUpper,
-            amount0 == 0 && amount1 == 0 ? token0.balanceOf(address(this)) : amount0,
-            amount0 == 0 && amount1 == 0 ? token1.balanceOf(address(this)) : amount1
+            amount0 == 0 && amount1 == 0 ? _token0 : amount0,
+            amount0 == 0 && amount1 == 0 ? _token1 : amount1
         );
         _mintLiquidity(limitLower, limitUpper, limitLiquidity, address(this));
     }
@@ -560,15 +573,21 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
 
     // @param _maxTotalSupply The maximum liquidity token supply the contract allows
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyOwner {
-        maxTotalSupply = _maxTotalSupply;
-        emit MaxTotalSupplySet(_maxTotalSupply);
+        if (maxTotalSupply != _maxTotalSupply) {
+            maxTotalSupply = _maxTotalSupply;
+            emit MaxTotalSupplySet(_maxTotalSupply);
+        }
     }
 
     // @param _deposit0Max The maximum amount of token0 allowed in a deposit
     // @param _deposit1Max The maximum amount of token1 allowed in a deposit
     function setDepositMax(uint256 _deposit0Max, uint256 _deposit1Max) external onlyOwner {
-        deposit0Max = _deposit0Max;
-        deposit1Max = _deposit1Max;
+        if (deposit0Max != _deposit0Max) {
+            deposit0Max = _deposit0Max;
+        }
+        if (deposit1Max != _deposit1Max) {
+            deposit1Max = _deposit1Max;
+        }
         emit DepositMaxSet(_deposit0Max, _deposit1Max);
     }
 
@@ -591,6 +610,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "newOwner should be non-zero");        
         owner = newOwner;
     }
 

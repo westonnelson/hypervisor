@@ -28,6 +28,9 @@ contract Swap {
         address _router,
         address _VISR
     ) {
+        require(_owner != address(0), "_owner should be non-zero");
+        require(_router != address(0), "_router should be non-zero");
+        require(_VISR != address(0), "_VISR should be non-zero");
         owner = _owner;
         recipient = _owner;
         VISR = _VISR;
@@ -54,6 +57,7 @@ contract Swap {
     }
 
     function changeRecipient(address _recipient) external onlyOwner {
+        require(_recipient != address(0), "_recipient should be non-zero");
         recipient = _recipient;
     }
 
@@ -62,6 +66,7 @@ contract Swap {
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "newOwner should be non-zero");
         owner = newOwner;
     }
 

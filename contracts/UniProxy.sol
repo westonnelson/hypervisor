@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: BUSL-1.1
+
+pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "./interfaces/IHypervisor.sol";
@@ -24,7 +27,7 @@ contract UniProxy is ReentrancyGuard {
   uint256 public deltaScale = 1000; // must be a power of 10
   uint256 public priceThreshold = 100;
 
-  uint256 MAX_INT = 2**256 - 1;
+  uint256 constant MAX_INT = 2**256 - 1;
 
   struct Position {
     uint8 version; // 1->3 proxy 3 transfers, 2-> proxy two transfers, 3-> proxy no transfers
@@ -57,10 +60,16 @@ contract UniProxy is ReentrancyGuard {
     owner = msg.sender;
   }
 
-  function addPosition(address pos, uint8 version) external onlyOwner {
-    require(positions[pos].version == 0, 'already added');
-    require(version > 0, 'version < 1');
+  modifier onlyAddedPosition(address pos) {
     Position storage p = positions[pos];
+    require(p.version != 0, "not added");
+    _;
+  }
+
+  function addPosition(address pos, uint8 version) external onlyOwner {
+    Position storage p = positions[pos];
+    require(p.version == 0, 'already added');
+    require(version > 0, 'version < 1');
     p.version = version;
     IHypervisor(pos).token0().approve(pos, MAX_INT);
     IHypervisor(pos).token1().approve(pos, MAX_INT);
@@ -72,19 +81,20 @@ contract UniProxy is ReentrancyGuard {
     uint256 deposit1,
     address to,
     address pos
-  ) nonReentrant external returns (uint256 shares) {
-    require(positions[pos].version != 0, 'not added');
+  ) nonReentrant external onlyAddedPosition(pos) returns (uint256 shares) {
+    require(to != address(0), "to should be non-zero");
+    Position storage p = positions[pos];
 
-    if (twapCheck || positions[pos].twapOverride) {
+    if (twapCheck || p.twapOverride) {
       // check twap
       checkPriceChange(
         pos,
-        (positions[pos].twapOverride ? positions[pos].twapInterval : twapInterval),
-        (positions[pos].twapOverride ? positions[pos].priceThreshold : priceThreshold)
+        (p.twapOverride ? p.twapInterval : twapInterval),
+        (p.twapOverride ? p.priceThreshold : priceThreshold)
       );
     }
 
-    if (!freeDeposit && !positions[pos].list[msg.sender] && !positions[pos].freeDeposit) {      
+    if (!freeDeposit && !p.list[msg.sender] && !p.freeDeposit) {      
       // freeDeposit off and hypervisor msg.sender not on list
       uint256 testMin;
       uint256 testMax; 
@@ -93,16 +103,16 @@ contract UniProxy is ReentrancyGuard {
       require(deposit1 >= testMin && deposit1 <= testMax, "Improper ratio"); 
     }
 
-    if (positions[pos].depositOverride) {
-      if (positions[pos].deposit0Max > 0) {
-        require(deposit0 <= positions[pos].deposit0Max, "token0 exceeds");
+    if (p.depositOverride) {
+      if (p.deposit0Max > 0) {
+        require(deposit0 <= p.deposit0Max, "token0 exceeds");
       }
-      if (positions[pos].deposit1Max > 0) {
-        require(deposit1 <= positions[pos].deposit1Max, "token1 exceeds");
+      if (p.deposit1Max > 0) {
+        require(deposit1 <= p.deposit1Max, "token1 exceeds");
       }
     }
 
-    if (positions[pos].version < 3) {
+    if (p.version < 3) {
       // requires asset transfer to proxy
       if (deposit0 != 0) {
         IHypervisor(pos).token0().transferFrom(msg.sender, address(this), deposit0);
@@ -110,7 +120,7 @@ contract UniProxy is ReentrancyGuard {
       if (deposit1 != 0) {
         IHypervisor(pos).token1().transferFrom(msg.sender, address(this), deposit1);
       }
-      if (positions[pos].version < 2) {
+      if (p.version < 2) {
         // requires lp token transfer from proxy to msg.sender
         shares = IHypervisor(pos).deposit(deposit0, deposit1, address(this));
         IHypervisor(pos).transfer(to, shares);
@@ -125,8 +135,8 @@ contract UniProxy is ReentrancyGuard {
       shares = IHypervisor(pos).deposit(deposit0, deposit1, msg.sender, msg.sender);
     }
 
-    if (positions[pos].depositOverride) {
-      require(IHypervisor(pos).totalSupply() <= positions[pos].maxTotalSupply, "supply exceeds");
+    if (p.depositOverride) {
+      require(IHypervisor(pos).totalSupply() <= p.maxTotalSupply, "supply exceeds");
     }
 
   }
@@ -144,15 +154,15 @@ contract UniProxy is ReentrancyGuard {
       amountEnd = 0;
     }
 
-    uint256 ratioStart = total0.mul(1e18).div(total1).mul(depositDelta).div(deltaScale);
-    uint256 ratioEnd = total0.mul(1e18).div(total1).div(depositDelta).mul(deltaScale);
+    uint256 ratioStart = FullMath.mulDiv(total0.mul(depositDelta), 1e18, total1.mul(deltaScale));
+    uint256 ratioEnd = FullMath.mulDiv(total0.mul(deltaScale), 1e18, total1.mul(depositDelta));
 
     if (token == address(IHypervisor(pos).token0())) {
-      amountStart = deposit.mul(1e18).div(ratioStart);
-      amountEnd = deposit.mul(1e18).div(ratioEnd);
+      amountStart = FullMath.mulDiv(deposit, 1e18, ratioStart);
+      amountEnd = FullMath.mulDiv(deposit, 1e18, ratioEnd);
     } else {
-      amountStart = deposit.mul(ratioStart).div(1e18);
-      amountEnd = deposit.mul(ratioEnd).div(1e18);
+      amountStart = FullMath.mulDiv(deposit, ratioStart, 1e18);
+      amountEnd = FullMath.mulDiv(deposit, ratioEnd, 1e18);
     }
   }
 
@@ -209,10 +219,11 @@ contract UniProxy is ReentrancyGuard {
     uint256 deposit0Max,
     uint256 deposit1Max,
     uint256 maxTotalSupply
-  ) external onlyOwner {
-    positions[pos].deposit0Max = deposit0Max;
-    positions[pos].deposit1Max = deposit1Max;
-    positions[pos].maxTotalSupply = maxTotalSupply;
+  ) external onlyOwner onlyAddedPosition(pos) {
+    Position storage p = positions[pos];
+    p.deposit0Max = deposit0Max;
+    p.deposit1Max = deposit1Max;
+    p.maxTotalSupply = maxTotalSupply;
     emit CustomDeposit(pos, deposit0Max, deposit1Max, maxTotalSupply);
   }
 
@@ -221,13 +232,15 @@ contract UniProxy is ReentrancyGuard {
     emit DepositFreeToggled();
   }
 
-  function toggleDepositOverride(address pos) external onlyOwner {
-    positions[pos].depositOverride = !positions[pos].depositOverride;
+  function toggleDepositOverride(address pos) external onlyOwner onlyAddedPosition(pos) {
+    Position storage p = positions[pos];
+    p.depositOverride = !p.depositOverride;
     emit DepositOverrideToggled(pos);
   }
 
-  function toggleDepositFreeOverride(address pos) external onlyOwner {
-    positions[pos].freeDeposit = !positions[pos].freeDeposit;
+  function toggleDepositFreeOverride(address pos) external onlyOwner onlyAddedPosition(pos) {
+    Position storage p = positions[pos];
+    p.freeDeposit = !p.freeDeposit;
     emit DepositFreeOverrideToggled(pos);
   }
 
@@ -236,9 +249,10 @@ contract UniProxy is ReentrancyGuard {
     emit TwapIntervalSet(_twapInterval);
   }
 
-  function setTwapOverride(address pos, bool twapOverride, uint32 _twapInterval) external onlyOwner {
-    positions[pos].twapOverride = twapOverride;
-    positions[pos].twapInterval = _twapInterval;
+  function setTwapOverride(address pos, bool twapOverride, uint32 _twapInterval) external onlyOwner onlyAddedPosition(pos) {
+    Position storage p = positions[pos];
+    p.twapOverride = twapOverride;
+    p.twapInterval = _twapInterval;
     emit TwapOverrideSet(pos, twapOverride, _twapInterval);
   }
 
@@ -247,19 +261,22 @@ contract UniProxy is ReentrancyGuard {
     emit TwapToggled();
   }
 
-  function appendList(address pos, address[] memory listed) external onlyOwner {
+  function appendList(address pos, address[] memory listed) external onlyOwner onlyAddedPosition(pos) {
+    Position storage p = positions[pos];
     for (uint8 i; i < listed.length; i++) {
-      positions[pos].list[listed[i]] = true;
+      p.list[listed[i]] = true;
     }
     emit ListAppended(pos, listed);
   }
 
-  function removeListed(address pos, address listed) external onlyOwner {
-    positions[pos].list[listed] = false;
+  function removeListed(address pos, address listed) external onlyOwner onlyAddedPosition(pos) {
+    Position storage p = positions[pos];
+    p.list[listed] = false;
     emit ListRemoved(pos, listed);
   }
 
   function transferOwnership(address newOwner) external onlyOwner {
+    require(newOwner != address(0), "newOwner should be non-zero");
     owner = newOwner;
   }
 

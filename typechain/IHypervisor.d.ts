@@ -33,6 +33,7 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     "pool()": FunctionFragment;
     "pullLiquidity(uint256)": FunctionFragment;
     "rebalance(int24,int24,int24,int24,address,int256)": FunctionFragment;
+    "removeListed(address)": FunctionFragment;
     "setDepositMax(uint256,uint256)": FunctionFragment;
     "setMaxTotalSupply(uint256)": FunctionFragment;
     "toggleWhitelist()": FunctionFragment;
@@ -93,6 +94,10 @@ interface IHypervisorInterface extends ethers.utils.Interface {
       string,
       BigNumberish
     ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "removeListed",
+    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "setDepositMax",
@@ -159,6 +164,10 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "rebalance", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "removeListed",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "setDepositMax",
     data: BytesLike
@@ -306,6 +315,11 @@ export class IHypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    removeListed(
+      listed: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setDepositMax(
       _deposit0Max: BigNumberish,
       _deposit1Max: BigNumberish,
@@ -417,6 +431,11 @@ export class IHypervisor extends BaseContract {
     _limitUpper: BigNumberish,
     _feeRecipient: string,
     swapQuantity: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  removeListed(
+    listed: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -540,6 +559,8 @@ export class IHypervisor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    removeListed(listed: string, overrides?: CallOverrides): Promise<void>;
+
     setDepositMax(
       _deposit0Max: BigNumberish,
       _deposit1Max: BigNumberish,
@@ -650,6 +671,11 @@ export class IHypervisor extends BaseContract {
       _limitUpper: BigNumberish,
       _feeRecipient: string,
       swapQuantity: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    removeListed(
+      listed: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -766,6 +792,11 @@ export class IHypervisor extends BaseContract {
       _limitUpper: BigNumberish,
       _feeRecipient: string,
       swapQuantity: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    removeListed(
+      listed: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

@@ -82,6 +82,8 @@ interface IHypervisor {
 
     function appendList(address[] memory listed) external;
 
+    function removeListed(address listed) external;
+
     function toggleWhitelist() external;
 
     function transferOwnership(address newOwner) external;

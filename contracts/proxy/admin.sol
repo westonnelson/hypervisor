@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: BUSL-1.1
+
 pragma solidity 0.7.6;
 
 import "../interfaces/IHypervisor.sol";
@@ -18,7 +20,9 @@ contract Admin {
         _;
     }
 
-    constructor(address _admin, address _advisor) public {
+    constructor(address _admin, address _advisor) {
+        require(_admin != address(0), "_admin should be non-zero");
+        require(_advisor != address(0), "_advisor should be non-zero");
         admin = _admin;
         advisor = _advisor;
     }
@@ -79,15 +83,17 @@ contract Admin {
         IHypervisor(_hypervisor).appendList(listed);
     }
 
-    function removeListed(address listed) external onlyAdmin {
+    function removeListed(address _hypervisor, address listed) external onlyAdmin {
         IHypervisor(_hypervisor).removeListed(listed);
     }
 
     function transferAdmin(address newAdmin) external onlyAdmin {
+        require(newAdmin != address(0), "newAdmin should be non-zero");
         admin = newAdmin;
     }
 
     function transferAdvisor(address newAdvisor) external onlyAdmin {
+        require(newAdvisor != address(0), "newAdvisor should be non-zero");
         advisor = newAdvisor;
     }
 
@@ -96,6 +102,7 @@ contract Admin {
     }
 
     function rescueERC20(IERC20 token, address recipient) external onlyAdmin {
+        require(recipient != address(0), "recipient should be non-zero");
         require(token.transfer(recipient, token.balanceOf(address(this))));
     }
 

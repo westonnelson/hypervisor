@@ -15,6 +15,7 @@ contract HypervisorFactory is Ownable {
     event HypervisorCreated(address token0, address token1, uint24 fee, address hypervisor, uint256);
 
     constructor(address _uniswapV3Factory) {
+        require(_uniswapV3Factory != address(0), "uniswapV3Factory should be non-zero");
         uniswapV3Factory = IUniswapV3Factory(_uniswapV3Factory);
     }
 
