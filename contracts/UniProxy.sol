@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BUSL-1.1
+/// SPDX-License-Identifier: BUSL-1.1
 
 pragma solidity 0.7.6;
 pragma abicoder v2;
@@ -12,6 +12,8 @@ import "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 
+/// @title UniProxy
+/// @notice Proxy contract for hypervisor positions management
 contract UniProxy is ReentrancyGuard {
   using SafeERC20 for IERC20;
   using SafeMath for uint256;
@@ -24,24 +26,25 @@ contract UniProxy is ReentrancyGuard {
   bool public twapCheck = false;
   uint32 public twapInterval = 1 hours;
   uint256 public depositDelta = 1010;
-  uint256 public deltaScale = 1000; // must be a power of 10
+  uint256 public deltaScale = 1000; /// must be a power of 10
   uint256 public priceThreshold = 100;
 
   uint256 constant MAX_INT = 2**256 - 1;
 
   struct Position {
-    uint8 version; // 1->3 proxy 3 transfers, 2-> proxy two transfers, 3-> proxy no transfers
-    mapping(address=>bool) list; // whitelist certain accounts for freedeposit
-    bool twapOverride; // force twap check for hypervisor instance
-    uint32 twapInterval; // override global twap
-    uint256 priceThreshold; // custom price threshold
-    bool depositOverride; // force custom deposit constraints
+    uint8 version; /// 1->3 proxy 3 transfers, 2-> proxy two transfers, 3-> proxy no transfers
+    mapping(address=>bool) list; /// whitelist certain accounts for freedeposit
+    bool twapOverride; /// force twap check for hypervisor instance
+    uint32 twapInterval; /// override global twap
+    uint256 priceThreshold; /// custom price threshold
+    bool depositOverride; /// force custom deposit constraints
     uint256 deposit0Max;
     uint256 deposit1Max;
     uint256 maxTotalSupply;
-    bool freeDeposit; // override global freeDepsoit
+    bool freeDeposit; /// override global freeDepsoit
   }
 
+  /// events
   event PositionAdded(address, uint8);
   event CustomDeposit(address, uint256, uint256, uint256);
   event PriceThresholdSet(uint256 _priceThreshold);
@@ -66,6 +69,9 @@ contract UniProxy is ReentrancyGuard {
     _;
   }
 
+  /// @notice Add the hypervisor position
+  /// @param pos Address of the hypervisor
+  /// @param version Type of hypervisor
   function addPosition(address pos, uint8 version) external onlyOwner {
     Position storage p = positions[pos];
     require(p.version == 0, 'already added');
@@ -76,6 +82,12 @@ contract UniProxy is ReentrancyGuard {
     emit PositionAdded(pos, version);
   }
 
+  /// @notice Deposit into the given position
+  /// @param deposit0 Amount of token0 to deposit
+  /// @param deposit1 Amount of token1 to deposit
+  /// @param to Address to receive liquidity tokens
+  /// @param pos Hypervisor Address
+  /// @return shares Amount of liquidity tokens received
   function deposit(
     uint256 deposit0,
     uint256 deposit1,
@@ -86,7 +98,7 @@ contract UniProxy is ReentrancyGuard {
     Position storage p = positions[pos];
 
     if (twapCheck || p.twapOverride) {
-      // check twap
+      /// check twap
       checkPriceChange(
         pos,
         (p.twapOverride ? p.twapInterval : twapInterval),
@@ -95,7 +107,7 @@ contract UniProxy is ReentrancyGuard {
     }
 
     if (!freeDeposit && !p.list[msg.sender] && !p.freeDeposit) {      
-      // freeDeposit off and hypervisor msg.sender not on list
+      /// freeDeposit off and hypervisor msg.sender not on list
       uint256 testMin;
       uint256 testMax; 
       (testMin, testMax) = getDepositAmount(pos, address(IHypervisor(pos).token0()), deposit0);
@@ -113,7 +125,7 @@ contract UniProxy is ReentrancyGuard {
     }
 
     if (p.version < 3) {
-      // requires asset transfer to proxy
+      /// requires asset transfer to proxy
       if (deposit0 != 0) {
         IHypervisor(pos).token0().transferFrom(msg.sender, address(this), deposit0);
       }
@@ -121,17 +133,17 @@ contract UniProxy is ReentrancyGuard {
         IHypervisor(pos).token1().transferFrom(msg.sender, address(this), deposit1);
       }
       if (p.version < 2) {
-        // requires lp token transfer from proxy to msg.sender
+        /// requires lp token transfer from proxy to msg.sender
         shares = IHypervisor(pos).deposit(deposit0, deposit1, address(this));
         IHypervisor(pos).transfer(to, shares);
       }
       else{
-        // transfer lp tokens direct to msg.sender
+        /// transfer lp tokens direct to msg.sender
         shares = IHypervisor(pos).deposit(deposit0, deposit1, msg.sender);
       }
     }
     else {
-      // transfer lp tokens direct to msg.sender
+      /// transfer lp tokens direct to msg.sender
       shares = IHypervisor(pos).deposit(deposit0, deposit1, msg.sender, msg.sender);
     }
 
@@ -141,6 +153,12 @@ contract UniProxy is ReentrancyGuard {
 
   }
 
+  /// @notice Get the amount of token to deposit for the given amount of pair token
+  /// @param pos Hypervisor Address
+  /// @param token Address of token to deposit
+  /// @param deposit Amount of token to deposit
+  /// @return amountStart Minimum amounts of the pair token to deposit
+  /// @return amountEnd Maximum amounts of the pair token to deposit
   function getDepositAmount(
     address pos,
     address token,
@@ -166,6 +184,11 @@ contract UniProxy is ReentrancyGuard {
     }
   }
 
+  /// @notice Check if the price change overflows or not based on given twap and threshold in the hypervisor
+  /// @param pos Hypervisor Address
+  /// @param _twapInterval Time intervals
+  /// @param _priceThreshold Price Threshold
+  /// @return price Current price
   function checkPriceChange(
     address pos,
     uint32 _twapInterval,
@@ -180,40 +203,51 @@ contract UniProxy is ReentrancyGuard {
       revert("Price change Overflow");
   }
 
+  /// @notice Get the sqrt price before the given interval
+  /// @param pos Hypervisor Address
+  /// @param _twapInterval Time intervals
+  /// @return sqrtPriceX96 Sqrt price before interval
   function getSqrtTwapX96(address pos, uint32 _twapInterval) public view returns (uint160 sqrtPriceX96) {
     if (_twapInterval == 0) {
-      // return the current price if _twapInterval == 0
+      /// return the current price if _twapInterval == 0
       (sqrtPriceX96, , , , , , ) = IHypervisor(pos).pool().slot0();
     } 
     else {
       uint32[] memory secondsAgos = new uint32[](2);
-      secondsAgos[0] = _twapInterval; // from (before)
-      secondsAgos[1] = 0; // to (now)
+      secondsAgos[0] = _twapInterval; /// from (before)
+      secondsAgos[1] = 0; /// to (now)
 
       (int56[] memory tickCumulatives, ) = IHypervisor(pos).pool().observe(secondsAgos);
 
-      // tick(imprecise as it's an integer) to price
+      /// tick(imprecise as it's an integer) to price
       sqrtPriceX96 = TickMath.getSqrtRatioAtTick(
-      int24((tickCumulatives[1] - tickCumulatives[0]) / _twapInterval)
+        int24((tickCumulatives[1] - tickCumulatives[0]) / _twapInterval)
       );
     }
   }
 
+  /// @param _priceThreshold Price Threshold
   function setPriceThreshold(uint256 _priceThreshold) external onlyOwner {
     priceThreshold = _priceThreshold;
     emit PriceThresholdSet(_priceThreshold);
   }
 
+  /// @param _depositDelta Number to calculate deposit ratio
   function setDepositDelta(uint256 _depositDelta) external onlyOwner {
     depositDelta = _depositDelta;
     emit DepositDeltaSet(_depositDelta);
   }
 
+  /// @param _depositScale Number to calculate deposit ratio
   function setDeltaScale(uint256 _deltaScale) external onlyOwner {
     deltaScale = _deltaScale;
     emit DeltaScaleSet(_deltaScale);
   }
 
+  /// @param pos Hypervisor address
+  /// @param deposit0Max Amount of maximum deposit amounts of token0
+  /// @param deposit1Max Amount of maximum deposit amounts of token1
+  /// @param maxTotalSupply Maximum total suppoy of hypervisor
   function customDeposit(
     address pos,
     uint256 deposit0Max,
@@ -227,28 +261,37 @@ contract UniProxy is ReentrancyGuard {
     emit CustomDeposit(pos, deposit0Max, deposit1Max, maxTotalSupply);
   }
 
+  /// @notice Toogle free deposit
   function toggleDepositFree() external onlyOwner {
     freeDeposit = !freeDeposit;
     emit DepositFreeToggled();
   }
 
+  /// @notice Toggle deposit override
+  /// @param pos Hypervisor Address
   function toggleDepositOverride(address pos) external onlyOwner onlyAddedPosition(pos) {
     Position storage p = positions[pos];
     p.depositOverride = !p.depositOverride;
     emit DepositOverrideToggled(pos);
   }
 
+  /// @notice Toggle free deposit of the given hypervisor
+  /// @param pos Hypervisor Address
   function toggleDepositFreeOverride(address pos) external onlyOwner onlyAddedPosition(pos) {
     Position storage p = positions[pos];
     p.freeDeposit = !p.freeDeposit;
     emit DepositFreeOverrideToggled(pos);
   }
 
+  /// @param _twapInterval Time intervals
   function setTwapInterval(uint32 _twapInterval) external onlyOwner {
     twapInterval = _twapInterval;
     emit TwapIntervalSet(_twapInterval);
   }
 
+  /// @param pos Hypervisor Address
+  /// @param twapOverride
+  /// @param _twapInterval Time Intervals
   function setTwapOverride(address pos, bool twapOverride, uint32 _twapInterval) external onlyOwner onlyAddedPosition(pos) {
     Position storage p = positions[pos];
     p.twapOverride = twapOverride;
@@ -256,11 +299,15 @@ contract UniProxy is ReentrancyGuard {
     emit TwapOverrideSet(pos, twapOverride, _twapInterval);
   }
 
+  /// @notice Twap Toggle
   function toggleTwap() external onlyOwner {
     twapCheck = !twapCheck;
     emit TwapToggled();
   }
 
+  /// @notice Append whitelist to hypervisor
+  /// @param pos Hypervisor Address
+  /// @param listed Address array to add in whitelist
   function appendList(address pos, address[] memory listed) external onlyOwner onlyAddedPosition(pos) {
     Position storage p = positions[pos];
     for (uint8 i; i < listed.length; i++) {
@@ -269,6 +316,9 @@ contract UniProxy is ReentrancyGuard {
     emit ListAppended(pos, listed);
   }
 
+  /// @notice Remove address from whitelist
+  /// @param pos Hypervisor Address
+  /// @param listed Address to remove from whitelist
   function removeListed(address pos, address listed) external onlyOwner onlyAddedPosition(pos) {
     Position storage p = positions[pos];
     p.list[listed] = false;
