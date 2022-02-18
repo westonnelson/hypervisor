@@ -11,8 +11,12 @@ interface IUniProxy {
     address pos
   ) external returns (uint256 shares);
 
-  function getDepositAmount(address token, uint256 deposit)
-  external view
-  returns (uint256 amountStart, uint256 amountEnd);
-
+  function getDepositAmount(
+    address pos,
+    address token,
+    uint256 deposit
+  ) external view returns (
+    uint256 amountStart,
+    uint256 amountEnd
+  );
 }

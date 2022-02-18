@@ -41,6 +41,17 @@ contract UniProxy is ReentrancyGuard {
 
   event PositionAdded(address, uint8);
   event CustomDeposit(address, uint256, uint256, uint256);
+  event PriceThresholdSet(uint256 _priceThreshold);
+  event DepositDeltaSet(uint256 _depositDelta);
+  event DeltaScaleSet(uint256 _deltaScale);
+  event TwapIntervalSet(uint32 _twapInterval);
+  event TwapOverrideSet(address pos, bool twapOverride, uint32 _twapInterval);
+  event DepositFreeToggled();
+  event DepositOverrideToggled(address pos);
+  event DepositFreeOverrideToggled(address pos);
+  event TwapToggled();
+  event ListAppended(address pos, address[] listed);
+  event ListRemoved(address pos, address listed);
 
   constructor() {
     owner = msg.sender;
@@ -49,10 +60,10 @@ contract UniProxy is ReentrancyGuard {
   function addPosition(address pos, uint8 version) external onlyOwner {
     require(positions[pos].version == 0, 'already added');
     require(version > 0, 'version < 1');
-    IHypervisor(pos).token0().approve(pos, MAX_INT);
-    IHypervisor(pos).token1().approve(pos, MAX_INT);
     Position storage p = positions[pos];
     p.version = version;
+    IHypervisor(pos).token0().approve(pos, MAX_INT);
+    IHypervisor(pos).token1().approve(pos, MAX_INT);
     emit PositionAdded(pos, version);
   }
 
@@ -128,15 +139,21 @@ contract UniProxy is ReentrancyGuard {
     require(token == address(IHypervisor(pos).token0()) || token == address(IHypervisor(pos).token1()), "token mistmatch");
     require(deposit > 0, "deposits can't be zero");
     (uint256 total0, uint256 total1) = IHypervisor(pos).getTotalAmounts();
-    if (IHypervisor(pos).totalSupply() == 0 || total0 == 0 || total1 == 0) return (0, 0);
+    if (IHypervisor(pos).totalSupply() == 0 || total0 == 0 || total1 == 0) {
+      amountStart = 0;
+      amountEnd = 0;
+    }
 
     uint256 ratioStart = total0.mul(1e18).div(total1).mul(depositDelta).div(deltaScale);
     uint256 ratioEnd = total0.mul(1e18).div(total1).div(depositDelta).mul(deltaScale);
 
     if (token == address(IHypervisor(pos).token0())) {
-      return (deposit.mul(1e18).div(ratioStart), deposit.mul(1e18).div(ratioEnd));
+      amountStart = deposit.mul(1e18).div(ratioStart);
+      amountEnd = deposit.mul(1e18).div(ratioEnd);
+    } else {
+      amountStart = deposit.mul(ratioStart).div(1e18);
+      amountEnd = deposit.mul(ratioEnd).div(1e18);
     }
-    return (deposit.mul(ratioStart).div(1e18), deposit.mul(ratioEnd).div(1e18));
   }
 
   function checkPriceChange(
@@ -174,14 +191,17 @@ contract UniProxy is ReentrancyGuard {
 
   function setPriceThreshold(uint256 _priceThreshold) external onlyOwner {
     priceThreshold = _priceThreshold;
+    emit PriceThresholdSet(_priceThreshold);
   }
 
   function setDepositDelta(uint256 _depositDelta) external onlyOwner {
     depositDelta = _depositDelta;
+    emit DepositDeltaSet(_depositDelta);
   }
 
   function setDeltaScale(uint256 _deltaScale) external onlyOwner {
     deltaScale = _deltaScale;
+    emit DeltaScaleSet(_deltaScale);
   }
 
   function customDeposit(
@@ -198,37 +218,45 @@ contract UniProxy is ReentrancyGuard {
 
   function toggleDepositFree() external onlyOwner {
     freeDeposit = !freeDeposit;
+    emit DepositFreeToggled();
   }
 
   function toggleDepositOverride(address pos) external onlyOwner {
     positions[pos].depositOverride = !positions[pos].depositOverride;
+    emit DepositOverrideToggled(pos);
   }
 
   function toggleDepositFreeOverride(address pos) external onlyOwner {
     positions[pos].freeDeposit = !positions[pos].freeDeposit;
+    emit DepositFreeOverrideToggled(pos);
   }
 
   function setTwapInterval(uint32 _twapInterval) external onlyOwner {
     twapInterval = _twapInterval;
+    emit TwapIntervalSet(_twapInterval);
   }
 
   function setTwapOverride(address pos, bool twapOverride, uint32 _twapInterval) external onlyOwner {
     positions[pos].twapOverride = twapOverride;
     positions[pos].twapInterval = _twapInterval;
+    emit TwapOverrideSet(pos, twapOverride, _twapInterval);
   }
 
   function toggleTwap() external onlyOwner {
     twapCheck = !twapCheck;
+    emit TwapToggled();
   }
 
   function appendList(address pos, address[] memory listed) external onlyOwner {
     for (uint8 i; i < listed.length; i++) {
       positions[pos].list[listed[i]] = true;
     }
+    emit ListAppended(pos, listed);
   }
 
   function removeListed(address pos, address listed) external onlyOwner {
     positions[pos].list[listed] = false;
+    emit ListRemoved(pos, listed);
   }
 
   function transferOwnership(address newOwner) external onlyOwner {

@@ -60,7 +60,7 @@ contract Admin {
     }
 
     function pendingFees(address _hypervisor) external onlyAdvisor returns (uint256 fees0, uint256 fees1) {
-        IHypervisor(_hypervisor).pendingFees();
+        (fees0, fees1) = IHypervisor(_hypervisor).pendingFees();
     }
 
     function setDepositMax(address _hypervisor, uint256 _deposit0Max, uint256 _deposit1Max) external onlyAdmin {
@@ -77,6 +77,10 @@ contract Admin {
 
     function appendList(address _hypervisor, address[] memory listed) external onlyAdmin {
         IHypervisor(_hypervisor).appendList(listed);
+    }
+
+    function removeListed(address listed) external onlyAdmin {
+        IHypervisor(_hypervisor).removeListed(listed);
     }
 
     function transferAdmin(address newAdmin) external onlyAdmin {

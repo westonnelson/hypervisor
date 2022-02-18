@@ -44,7 +44,11 @@ contract HypervisorV3Migrator {
         // calculate the amounts to migrate to v3
         uint256 amount1V2ToMigrate = amount1V2.mul(percentageToMigrate) / 100;
         uint256 amount0V2ToMigrate;
-        ( , amount0V2ToMigrate) = uniProxy.getDepositAmount(address(address(hypervisor.token1())), amount1V2ToMigrate); 
+        ( , amount0V2ToMigrate) = uniProxy.getDepositAmount(
+            _hypervisor,
+            address(address(hypervisor.token1())),
+            amount1V2ToMigrate
+        );
 
         // approve the position manager up to the maximum token amounts
         TransferHelper.safeApprove(address(hypervisor.token0()), _hypervisor, amount0V2ToMigrate);
