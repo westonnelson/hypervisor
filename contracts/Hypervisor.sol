@@ -62,13 +62,13 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         string memory name,
         string memory symbol
     ) ERC20Permit(name) ERC20(name, symbol) {
-        require(_pool != address(0), "_pool should be non-zero");
-        require(_owner != address(0), "_owner should be non-zero");
+        require(_pool != address(0));
+        require(_owner != address(0));
         pool = IUniswapV3Pool(_pool);
         token0 = IERC20(pool.token0());
         token1 = IERC20(pool.token1());
-        require(address(token0) != address(0), "token0 of pool should be non-zero");
-        require(address(token1) != address(0), "token1 of pool should be non-zero");
+        require(address(token0) != address(0));
+        require(address(token1) != address(0));
         fee = pool.fee();
         tickSpacing = pool.tickSpacing();
 
@@ -92,10 +92,10 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         address to,
         address from
     ) external override returns (uint256 shares) {
-        require(deposit0 > 0 || deposit1 > 0, "deposits must be nonzero");
-        require(deposit0 <= deposit0Max && deposit1 <= deposit1Max, "deposits must be less than maximum amounts");
+        require(deposit0 > 0 || deposit1 > 0);
+        require(deposit0 <= deposit0Max && deposit1 <= deposit1Max);
         require(to != address(0) && to != address(this), "to");
-        require(!whitelisted || list[msg.sender], "must be on the list");
+        require(!whitelisted || list[msg.sender]);
 
         /// update fees
         (uint128 baseLiquidity, uint128 limitLiquidity) = zeroBurn();
@@ -139,7 +139,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         _mint(to, shares);
         emit Deposit(from, to, shares, deposit0, deposit1);
         /// Check total supply cap not exceeded. A value of 0 means no limit.
-        require(maxTotalSupply == 0 || total <= maxTotalSupply, "maxTotalSupply");
+        require(maxTotalSupply == 0 || total <= maxTotalSupply, "max");
     }
 
     /// @notice Update fees of the positions
@@ -232,7 +232,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
 
         require(
             from == msg.sender || IUniversalVault(from).owner() == msg.sender,
-            "Sender must own the tokens"
+            "own"
         );
         _burn(from, shares);
 
@@ -258,21 +258,18 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         require(
             _baseLower < _baseUpper &&
                 _baseLower % tickSpacing == 0 &&
-                _baseUpper % tickSpacing == 0,
-            "base position invalid"
+                _baseUpper % tickSpacing == 0
         );
         require(
             _limitLower < _limitUpper &&
                 _limitLower % tickSpacing == 0 &&
-                _limitUpper % tickSpacing == 0,
-            "limit position invalid"
+                _limitUpper % tickSpacing == 0
         );
         require(
           _limitUpper != _baseUpper ||
-          _limitLower != _baseLower,
-          "limit equals base"
+          _limitLower != _baseLower
         );
-        require(feeRecipient != address(0), "feeRecipient should be non-zero");
+        require(feeRecipient != address(0));
 
         /// update fees
         (uint128 baseLiquidity, uint128 limitLiquidity) = zeroBurn();
@@ -360,15 +357,11 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
     /// @param amount0 Amount of token0 to add
     /// @param amount1 Amount of token1 to add
     function addBaseLiquidity(uint256 amount0, uint256 amount1) external onlyOwner {
-        uint256 _token0 = token0.balanceOf(address(this));
-        uint256 _token1 = token1.balanceOf(address(this));
-        require(amount0 <= _token0, "amount0 exceeds token0 amount");
-        require(amount1 <= _token1, "amount1 exceeds token1 amount");
         uint128 baseLiquidity = _liquidityForAmounts(
             baseLower,
             baseUpper,
-            amount0 == 0 && amount1 == 0 ? _token0 : amount0,
-            amount0 == 0 && amount1 == 0 ? _token1 : amount1
+            amount0 == 0 && amount1 == 0 ? token0.balanceOf(address(this)) : amount0,
+            amount0 == 0 && amount1 == 0 ? token1.balanceOf(address(this)) : amount1
         );
         _mintLiquidity(baseLower, baseUpper, baseLiquidity, address(this));
     }
@@ -377,15 +370,11 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
     /// @param amount0 Amount of token0 to add
     /// @param amount1 Amount of token1 to add
     function addLimitLiquidity(uint256 amount0, uint256 amount1) external onlyOwner {
-        uint256 _token0 = token0.balanceOf(address(this));
-        uint256 _token1 = token1.balanceOf(address(this));
-        require(amount0 <= _token0, "amount0 exceeds token0 amount");
-        require(amount1 <= _token1, "amount1 exceeds token1 amount");
         uint128 limitLiquidity = _liquidityForAmounts(
             limitLower,
             limitUpper,
-            amount0 == 0 && amount1 == 0 ? _token0 : amount0,
-            amount0 == 0 && amount1 == 0 ? _token1 : amount1
+            amount0 == 0 && amount1 == 0 ? token0.balanceOf(address(this)) : amount0,
+            amount0 == 0 && amount1 == 0 ? token1.balanceOf(address(this)) : amount1
         );
         _mintLiquidity(limitLower, limitUpper, limitLiquidity, address(this));
     }
@@ -629,21 +618,15 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
 
     /// @param _maxTotalSupply The maximum liquidity token supply the contract allows
     function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyOwner {
-        if (maxTotalSupply != _maxTotalSupply) {
-            maxTotalSupply = _maxTotalSupply;
-            emit MaxTotalSupplySet(_maxTotalSupply);
-        }
+        maxTotalSupply = _maxTotalSupply;
+        emit MaxTotalSupplySet(_maxTotalSupply);
     }
 
     /// @param _deposit0Max The maximum amount of token0 allowed in a deposit
     /// @param _deposit1Max The maximum amount of token1 allowed in a deposit
     function setDepositMax(uint256 _deposit0Max, uint256 _deposit1Max) external onlyOwner {
-        if (deposit0Max != _deposit0Max) {
-            deposit0Max = _deposit0Max;
-        }
-        if (deposit1Max != _deposit1Max) {
-            deposit1Max = _deposit1Max;
-        }
+        deposit0Max = _deposit0Max;
+        deposit1Max = _deposit1Max;
         emit DepositMaxSet(_deposit0Max, _deposit1Max);
     }
 
@@ -670,7 +653,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
-        require(newOwner != address(0), "newOwner should be non-zero");        
+        require(newOwner != address(0));
         owner = newOwner;
     }
 

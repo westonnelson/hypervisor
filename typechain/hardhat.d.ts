@@ -25,41 +25,13 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20Permit__factory>;
     getContractFactory(
-      name: "IERC165",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC165__factory>;
-    getContractFactory(
       name: "ERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.ERC20__factory>;
     getContractFactory(
-      name: "ERC20Permit",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.ERC20Permit__factory>;
-    getContractFactory(
-      name: "IERC20Permit",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC20Permit__factory>;
-    getContractFactory(
-      name: "IERC20Metadata",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC20Metadata__factory>;
-    getContractFactory(
       name: "IERC20",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20__factory>;
-    getContractFactory(
-      name: "IERC721",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721__factory>;
-    getContractFactory(
-      name: "IERC721Enumerable",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721Enumerable__factory>;
-    getContractFactory(
-      name: "IERC721Metadata",
-      signerOrOptions?: ethers.Signer | FactoryOptions
-    ): Promise<Contracts.IERC721Metadata__factory>;
     getContractFactory(
       name: "IUniswapV2Factory",
       signerOrOptions?: ethers.Signer | FactoryOptions
@@ -333,50 +305,15 @@ declare module "hardhat/types/runtime" {
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20Permit>;
     getContractAt(
-      name: "IERC165",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC165>;
-    getContractAt(
       name: "ERC20",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.ERC20>;
     getContractAt(
-      name: "ERC20Permit",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.ERC20Permit>;
-    getContractAt(
-      name: "IERC20Permit",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC20Permit>;
-    getContractAt(
-      name: "IERC20Metadata",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC20Metadata>;
-    getContractAt(
       name: "IERC20",
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20>;
-    getContractAt(
-      name: "IERC721",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC721>;
-    getContractAt(
-      name: "IERC721Enumerable",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC721Enumerable>;
-    getContractAt(
-      name: "IERC721Metadata",
-      address: string,
-      signer?: ethers.Signer
-    ): Promise<Contracts.IERC721Metadata>;
     getContractAt(
       name: "IUniswapV2Factory",
       address: string,
