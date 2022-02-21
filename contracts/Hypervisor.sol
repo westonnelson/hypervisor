@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: BUSL-1.1
 
-pragma solidity ^0.8.4;
+pragma solidity 0.7.6;
 
-import "@openzeppelin/contracts/utils/math/Math.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/math/SignedSafeMath.sol";
+import "@openzeppelin/contracts/math/Math.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/draft-ERC20Permit.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
+import "@openzeppelin/contracts/drafts/ERC20Permit.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.sol";
 import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
@@ -17,6 +17,7 @@ import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import "@uniswap/v3-periphery/contracts/libraries/LiquidityAmounts.sol";
+import "@uniswap/v3-periphery/contracts/interfaces/INonfungiblePositionManager.sol";
 
 import "./interfaces/IVault.sol";
 import "./interfaces/IUniversalVault.sol";
@@ -75,8 +76,8 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         owner = _owner;
 
         maxTotalSupply = 0; /// no cap
-        deposit0Max = type(uint256).max;
-        deposit1Max = type(uint256).max;
+        deposit0Max = uint256(-1);
+        deposit1Max = uint256(-1);
         whitelisted = false;
     }
 
@@ -220,7 +221,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
             false
         );
 
-        /// Push tokens proportional to unused balances
+        // Push tokens proportional to unused balances
         uint256 supply = totalSupply();
         uint256 unusedAmount0 = token0.balanceOf(address(this)).mul(shares).div(supply);
         uint256 unusedAmount1 = token1.balanceOf(address(this)).mul(shares).div(supply);
@@ -433,7 +434,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
             /// Burn liquidity
             (uint256 owed0, uint256 owed1) = pool.burn(tickLower, tickUpper, liquidity);
 
-            /// Collect amount owed
+            // Collect amount owed
             uint128 collect0 = collectAll ? type(uint128).max : _uint128Safe(owed0);
             uint128 collect1 = collectAll ? type(uint128).max : _uint128Safe(owed1);
             if (collect0 > 0 || collect1 > 0) {

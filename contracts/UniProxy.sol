@@ -1,15 +1,15 @@
 /// SPDX-License-Identifier: BUSL-1.1
 
-pragma solidity ^0.8.4;
+pragma solidity 0.7.6;
 pragma abicoder v2;
 
 import "./interfaces/IHypervisor.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/utils/math/SignedSafeMath.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 
 /// @title UniProxy
@@ -32,16 +32,16 @@ contract UniProxy is ReentrancyGuard {
   uint256 constant MAX_INT = 2**256 - 1;
 
   struct Position {
-    uint8 version; /// 1->3 proxy 3 transfers, 2-> proxy two transfers, 3-> proxy no transfers
-    mapping(address=>bool) list; /// whitelist certain accounts for freedeposit
-    bool twapOverride; /// force twap check for hypervisor instance
-    uint32 twapInterval; /// override global twap
-    uint256 priceThreshold; /// custom price threshold
-    bool depositOverride; /// force custom deposit constraints
+    uint8 version; // 1->3 proxy 3 transfers, 2-> proxy two transfers, 3-> proxy no transfers
+    mapping(address=>bool) list; // whitelist certain accounts for freedeposit
+    bool twapOverride; // force twap check for hypervisor instance
+    uint32 twapInterval; // override global twap
+    uint256 priceThreshold; // custom price threshold
+    bool depositOverride; // force custom deposit constraints
     uint256 deposit0Max;
     uint256 deposit1Max;
     uint256 maxTotalSupply;
-    bool freeDeposit; /// override global freeDepsoit
+    bool freeDeposit; // override global freeDepsoit
   }
 
   /// events
@@ -107,7 +107,7 @@ contract UniProxy is ReentrancyGuard {
     }
 
     if (!freeDeposit && !p.list[msg.sender] && !p.freeDeposit) {      
-      /// freeDeposit off and hypervisor msg.sender not on list
+      // freeDeposit off and hypervisor msg.sender not on list
       uint256 testMin;
       uint256 testMax; 
       (testMin, testMax) = getDepositAmount(pos, address(IHypervisor(pos).token0()), deposit0);

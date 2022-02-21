@@ -1,9 +1,8 @@
-/// SPDX-License-Identifier: BUSL-1.1
-
-pragma solidity ^0.8.4;
+// SPDX-License-Identifier: GPL-2.0-or-later
+pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Pair.sol';
 import '@uniswap/v2-core/contracts/interfaces/IUniswapV2Factory.sol';
@@ -37,10 +36,10 @@ contract HypervisorV3Migrator {
         require(percentageToMigrate > 0, 'Percentage too small');
         require(percentageToMigrate <= 100, 'Percentage too large');
 
-        /// get v3 pair
+        // get v3 pair
         IHypervisor hypervisor = IHypervisor(_hypervisor);
 
-        /// get v2 pair from token0 & token1
+        // get v2 pair from token0 & token1
         address v2Pair = uniswapV2Factory.getPair(address(hypervisor.token0()), address(hypervisor.token1()));
         uint256 balanceV2 = IUniswapV2Pair(v2Pair).balanceOf(msg.sender);
         require(balanceV2 > 0, 'No V2 liquidity');
@@ -49,7 +48,7 @@ contract HypervisorV3Migrator {
         IUniswapV2Pair(v2Pair).transferFrom(msg.sender, v2Pair, balanceV2);
         (uint256 amount0V2, uint256 amount1V2) = IUniswapV2Pair(v2Pair).burn(address(this));
 
-        /// calculate the amounts to migrate to v3
+        // calculate the amounts to migrate to v3
         uint256 amount1V2ToMigrate = amount1V2.mul(percentageToMigrate) / 100;
         uint256 amount0V2ToMigrate;
         ( , amount0V2ToMigrate) = uniProxy.getDepositAmount(
