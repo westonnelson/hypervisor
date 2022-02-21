@@ -221,7 +221,7 @@ contract UniProxy is ReentrancyGuard {
 
       /// tick(imprecise as it's an integer) to price
       sqrtPriceX96 = TickMath.getSqrtRatioAtTick(
-        int24((tickCumulatives[1] - tickCumulatives[0]) / int256(uint256(_twapInterval)))
+        int24((tickCumulatives[1] - tickCumulatives[0]) / _twapInterval)
       );
     }
   }
