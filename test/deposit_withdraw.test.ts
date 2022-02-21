@@ -22,7 +22,6 @@ import {
     IUniswapV3Pool,
     HypervisorFactory,
     Hypervisor,
-    NonfungiblePositionManager,
     TestERC20
 } from "../typechain"
 
@@ -34,7 +33,6 @@ describe('Hypervisor', () => {
 
     let factory: IUniswapV3Factory
     let router: ISwapRouter
-    let nft: NonfungiblePositionManager
     let token0: TestERC20
     let token1: TestERC20
     let token2: TestERC20
@@ -48,7 +46,7 @@ describe('Hypervisor', () => {
     })
 
     beforeEach('deploy contracts', async () => {
-        ({ token0, token1, token2, factory, router, nft, hypervisorFactory } = await loadFixture(hypervisorTestFixture))
+        ({ token0, token1, token2, factory, router, hypervisorFactory } = await loadFixture(hypervisorTestFixture))
         await hypervisorFactory.createHypervisor(token0.address, token1.address, FeeAmount.MEDIUM,"Test Visor", "TVR");
         const hypervisorAddress = await hypervisorFactory.getHypervisor(token0.address, token1.address, FeeAmount.MEDIUM)
         hypervisor = (await ethers.getContractAt('Hypervisor', hypervisorAddress)) as Hypervisor
@@ -62,23 +60,6 @@ describe('Hypervisor', () => {
         // someone to swap with
         await token0.mint(carol.address, ethers.utils.parseEther('1000000000000'))
         await token1.mint(carol.address, ethers.utils.parseEther('1000000000000'))
-
-        await token0.connect(carol).approve(nft.address, ethers.utils.parseEther('10000000000'))
-        await token1.connect(carol).approve(nft.address, ethers.utils.parseEther('10000000000'))
-
-        await nft.connect(carol).mint({
-            token0: token0.address,
-            token1: token1.address,
-            tickLower: getMinTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-            tickUpper: getMaxTick(TICK_SPACINGS[FeeAmount.MEDIUM]),
-            fee: FeeAmount.MEDIUM,
-            recipient: carol.address,
-            amount0Desired: ethers.utils.parseEther('10000000000'),
-            amount1Desired: ethers.utils.parseEther('10000000000'),
-            amount0Min: 0,
-            amount1Min: 0,
-            deadline: 2000000000,
-        })
     })
 
   /*
