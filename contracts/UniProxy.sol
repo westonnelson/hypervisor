@@ -171,16 +171,17 @@ contract UniProxy is ReentrancyGuard {
       amountStart = 0;
       amountEnd = 0;
     }
+    else {
+      uint256 ratioStart = FullMath.mulDiv(total0.mul(depositDelta), 1e18, total1.mul(deltaScale));
+      uint256 ratioEnd = FullMath.mulDiv(total0.mul(deltaScale), 1e18, total1.mul(depositDelta));
 
-    uint256 ratioStart = FullMath.mulDiv(total0.mul(depositDelta), 1e18, total1.mul(deltaScale));
-    uint256 ratioEnd = FullMath.mulDiv(total0.mul(deltaScale), 1e18, total1.mul(depositDelta));
-
-    if (token == address(IHypervisor(pos).token0())) {
-      amountStart = FullMath.mulDiv(_deposit, 1e18, ratioStart);
-      amountEnd = FullMath.mulDiv(_deposit, 1e18, ratioEnd);
-    } else {
-      amountStart = FullMath.mulDiv(_deposit, ratioStart, 1e18);
-      amountEnd = FullMath.mulDiv(_deposit, ratioEnd, 1e18);
+      if (token == address(IHypervisor(pos).token0())) {
+        amountStart = FullMath.mulDiv(_deposit, 1e18, ratioStart);
+        amountEnd = FullMath.mulDiv(_deposit, 1e18, ratioEnd);
+      } else {
+        amountStart = FullMath.mulDiv(_deposit, ratioStart, 1e18);
+        amountEnd = FullMath.mulDiv(_deposit, ratioEnd, 1e18);
+      }
     }
   }
 
