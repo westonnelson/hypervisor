@@ -108,11 +108,16 @@ contract UniProxy is ReentrancyGuard {
 
     if (!freeDeposit && !p.list[msg.sender] && !p.freeDeposit) {      
       // freeDeposit off and hypervisor msg.sender not on list
-      uint256 testMin;
-      uint256 testMax; 
-      (testMin, testMax) = getDepositAmount(pos, address(IHypervisor(pos).token0()), deposit0);
+      if (deposit0 > 0) {
+        (uint256 test1Min, uint256 test1Max) = getDepositAmount(pos, address(IHypervisor(pos).token0()), deposit0);
 
-      require(deposit1 >= testMin && deposit1 <= testMax, "Improper ratio"); 
+        require(deposit1 >= test1Min && deposit1 <= test1Max, "Improper ratio"); 
+      }
+      if (deposit1 > 0) {
+        (uint256 test0Min, uint256 test0Max) = getDepositAmount(pos, address(IHypervisor(pos).token1()), deposit1);
+
+        require(deposit0 >= test0Min && deposit0 <= test0Max, "Improper ratio"); 
+      }
     }
 
     if (p.depositOverride) {
@@ -169,19 +174,23 @@ contract UniProxy is ReentrancyGuard {
     (uint256 total0, uint256 total1) = IHypervisor(pos).getTotalAmounts();
     if (IHypervisor(pos).totalSupply() == 0 || total0 == 0 || total1 == 0) {
       amountStart = 0;
-      amountEnd = 0;
-    }
-    else {
-      uint256 ratioStart = FullMath.mulDiv(total0.mul(depositDelta), 1e18, total1.mul(deltaScale));
-      uint256 ratioEnd = FullMath.mulDiv(total0.mul(deltaScale), 1e18, total1.mul(depositDelta));
-
       if (token == address(IHypervisor(pos).token0())) {
-        amountStart = FullMath.mulDiv(_deposit, 1e18, ratioStart);
-        amountEnd = FullMath.mulDiv(_deposit, 1e18, ratioEnd);
+        amountEnd = IHypervisor(pos).deposit1Max();
       } else {
-        amountStart = FullMath.mulDiv(_deposit, ratioStart, 1e18);
-        amountEnd = FullMath.mulDiv(_deposit, ratioEnd, 1e18);
+        amountEnd = IHypervisor(pos).deposit0Max();
       }
+    } else {
+      uint256 ratioStart;
+      uint256 ratioEnd;
+      if (token == address(IHypervisor(pos).token0())) {
+        ratioStart = FullMath.mulDiv(total0.mul(depositDelta), 1e18, total1.mul(deltaScale));
+        ratioEnd = FullMath.mulDiv(total0.mul(deltaScale), 1e18, total1.mul(depositDelta));
+      } else {
+        ratioStart = FullMath.mulDiv(total1.mul(depositDelta), 1e18, total0.mul(deltaScale));
+        ratioEnd = FullMath.mulDiv(total1.mul(deltaScale), 1e18, total0.mul(depositDelta));
+      }
+      amountStart = FullMath.mulDiv(_deposit, 1e18, ratioStart);
+      amountEnd = FullMath.mulDiv(_deposit, 1e18, ratioEnd);
     }
   }
 

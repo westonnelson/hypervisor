@@ -26,8 +26,11 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     "appendList(address[])": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
+    "compound()": FunctionFragment;
     "currentTick()": FunctionFragment;
     "deposit(uint256,uint256,address,address)": FunctionFragment;
+    "deposit0Max()": FunctionFragment;
+    "deposit1Max()": FunctionFragment;
     "getTotalAmounts()": FunctionFragment;
     "pendingFees()": FunctionFragment;
     "pool()": FunctionFragment;
@@ -63,6 +66,7 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
+  encodeFunctionData(functionFragment: "compound", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "currentTick",
     values?: undefined
@@ -70,6 +74,14 @@ interface IHypervisorInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "deposit",
     values: [BigNumberish, BigNumberish, string, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "deposit0Max",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "deposit1Max",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getTotalAmounts",
@@ -145,11 +157,20 @@ interface IHypervisorInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "appendList", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "compound", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "currentTick",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "deposit0Max",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "deposit1Max",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "getTotalAmounts",
     data: BytesLike
@@ -269,6 +290,10 @@ export class IHypervisor extends BaseContract {
 
     balanceOf(arg0: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    compound(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     currentTick(
       overrides?: CallOverrides
     ): Promise<[number] & { tick: number }>;
@@ -287,6 +312,10 @@ export class IHypervisor extends BaseContract {
       arg2: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    deposit0Max(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    deposit1Max(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     getTotalAmounts(
       overrides?: CallOverrides
@@ -392,6 +421,10 @@ export class IHypervisor extends BaseContract {
 
   balanceOf(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+  compound(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   currentTick(overrides?: CallOverrides): Promise<number>;
 
   "deposit(uint256,uint256,address,address)"(
@@ -408,6 +441,10 @@ export class IHypervisor extends BaseContract {
     arg2: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
+
+  deposit0Max(overrides?: CallOverrides): Promise<BigNumber>;
+
+  deposit1Max(overrides?: CallOverrides): Promise<BigNumber>;
 
   getTotalAmounts(
     overrides?: CallOverrides
@@ -508,6 +545,17 @@ export class IHypervisor extends BaseContract {
 
     balanceOf(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+    compound(
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        baseToken0Owed: BigNumber;
+        baseToken1Owed: BigNumber;
+        limitToken0Owed: BigNumber;
+        limitToken1Owed: BigNumber;
+      }
+    >;
+
     currentTick(overrides?: CallOverrides): Promise<number>;
 
     "deposit(uint256,uint256,address,address)"(
@@ -524,6 +572,10 @@ export class IHypervisor extends BaseContract {
       arg2: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
+
+    deposit0Max(overrides?: CallOverrides): Promise<BigNumber>;
+
+    deposit1Max(overrides?: CallOverrides): Promise<BigNumber>;
 
     getTotalAmounts(
       overrides?: CallOverrides
@@ -634,6 +686,10 @@ export class IHypervisor extends BaseContract {
 
     balanceOf(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
 
+    compound(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     currentTick(overrides?: CallOverrides): Promise<BigNumber>;
 
     "deposit(uint256,uint256,address,address)"(
@@ -650,6 +706,10 @@ export class IHypervisor extends BaseContract {
       arg2: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    deposit0Max(overrides?: CallOverrides): Promise<BigNumber>;
+
+    deposit1Max(overrides?: CallOverrides): Promise<BigNumber>;
 
     getTotalAmounts(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -755,6 +815,10 @@ export class IHypervisor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    compound(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     currentTick(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "deposit(uint256,uint256,address,address)"(
@@ -771,6 +835,10 @@ export class IHypervisor extends BaseContract {
       arg2: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
+
+    deposit0Max(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    deposit1Max(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     getTotalAmounts(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

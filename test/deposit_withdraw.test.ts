@@ -66,40 +66,40 @@ describe('Hypervisor', () => {
    * Tests arent accommodating deposit functions with differing signatures. 
    * UniProxy straddles deposit(uint,uint,address) and deposit(uint,uint,address,address)
    */
-  //it('deposit with an incorrect proportion will revert', async () => {
-  //      let uniProxyFactory = await ethers.getContractFactory('UniProxy')
-  //      let uniProxy = (await uniProxyFactory.deploy())
-  //      let owner = await uniProxy.owner();
-  //      expect(owner).to.equal(wallet.address);
-  //      await uniProxy.connect(wallet).addPosition(hypervisor.address, 2);
+    it('deposit with an incorrect proportion will revert', async () => {
+        let uniProxyFactory = await ethers.getContractFactory('UniProxy')
+        let uniProxy = (await uniProxyFactory.deploy())
+        let owner = await uniProxy.owner();
+        expect(owner).to.equal(wallet.address);
+        await uniProxy.connect(wallet).addPosition(hypervisor.address, 3);
 
-  //      // SETTING FREE DEPOSIT
-  //      //await uniProxy.connect(wallet).toggleDepositFree();
-  //      let depState = await uniProxy.freeDeposit();
-  //      expect(depState).to.equal(false);
+        // SETTING FREE DEPOSIT
+        //await uniProxy.connect(wallet).toggleDepositFree();
+        let depState = await uniProxy.freeDeposit();
+        expect(depState).to.equal(false);
 
-  //      await token0.mint(alice.address, ethers.utils.parseEther('1000000'))
-  //      await token1.mint(alice.address, ethers.utils.parseEther('1000000'))
+        await token0.mint(alice.address, ethers.utils.parseEther('1000000'))
+        await token1.mint(alice.address, ethers.utils.parseEther('1000000'))
 
-  //      await token0.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
-  //      await token1.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
-  //      await token0.connect(alice).approve(uniProxy.address, ethers.utils.parseEther('1000000'))
-  //      await token1.connect(alice).approve(uniProxy.address, ethers.utils.parseEther('1000000'))
+        await token0.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
+        await token1.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
+        await token0.connect(alice).approve(uniProxy.address, ethers.utils.parseEther('1000000'))
+        await token1.connect(alice).approve(uniProxy.address, ethers.utils.parseEther('1000000'))
 
-  //      // alice should start with 0 hypervisor tokens
-  //      let alice_liq_balance = await hypervisor.balanceOf(alice.address)
-  //      expect(alice_liq_balance).to.equal(0)
-  //      // establishing 1:1 ratio in hypervisor
-  //      await uniProxy.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address, hypervisor.address)
-  //      await hypervisor.rebalance(-1800, 1800, 0, 600, bob.address, 0)
-  //      // attempting 2 unbalanced deposits & expecting failure
-  //      await expect(uniProxy.connect(alice).deposit(ethers.utils.parseEther('20000'), 0, alice.address, alice.address, hypervisor.address)).to.be.revertedWith("Improper ratio")
-  //      await expect(uniProxy.connect(alice).deposit(0, ethers.utils.parseEther('20000'), alice.address, alice.address, hypervisor.address)).to.be.revertedWith("Improper ratio")
-  //      // attempting balanced deposit & expecting success
-  //      await uniProxy.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address, hypervisor.address)
-  //      // nearly balanced deposits are excepted
-  //      await uniProxy.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('998'), alice.address, alice.address, hypervisor.address)
-  //  });
+        // alice should start with 0 hypervisor tokens
+        let alice_liq_balance = await hypervisor.balanceOf(alice.address)
+        expect(alice_liq_balance).to.equal(0)
+        // establishing 1:1 ratio in hypervisor
+        await uniProxy.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, hypervisor.address)
+        await hypervisor.rebalance(-1800, 1800, 0, 600, bob.address, 0)
+        // attempting 2 unbalanced deposits & expecting failure
+        await expect(uniProxy.connect(alice).deposit(ethers.utils.parseEther('20000'), 0, alice.address, hypervisor.address)).to.be.revertedWith("Improper ratio")
+        await expect(uniProxy.connect(alice).deposit(0, ethers.utils.parseEther('20000'), alice.address, hypervisor.address)).to.be.revertedWith("Improper ratio")
+        // attempting balanced deposit & expecting success
+        await uniProxy.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, hypervisor.address)
+        // nearly balanced deposits are excepted
+        await uniProxy.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('998'), alice.address, hypervisor.address)
+    });
 
     it('calculates fees properly & rebalances to limit-only after large swap, realize pending fees after compound', async () => {
         await token0.mint(alice.address, ethers.utils.parseEther('1000000'))

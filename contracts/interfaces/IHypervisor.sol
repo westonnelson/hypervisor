@@ -70,6 +70,10 @@ interface IHypervisor {
 
     function token1() external view returns (IERC20);
 
+    function deposit0Max() external view returns (uint256);
+
+    function deposit1Max() external view returns (uint256);
+
     function balanceOf(address) external view returns (uint256);
 
     function approve(address, uint256) external returns (bool);

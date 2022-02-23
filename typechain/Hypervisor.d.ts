@@ -31,6 +31,7 @@ interface HypervisorInterface extends ethers.utils.Interface {
     "balanceOf(address)": FunctionFragment;
     "baseLower()": FunctionFragment;
     "baseUpper()": FunctionFragment;
+    "compound()": FunctionFragment;
     "currentTick()": FunctionFragment;
     "decimals()": FunctionFragment;
     "decreaseAllowance(address,uint256)": FunctionFragment;
@@ -50,7 +51,6 @@ interface HypervisorInterface extends ethers.utils.Interface {
     "name()": FunctionFragment;
     "nonces(address)": FunctionFragment;
     "owner()": FunctionFragment;
-    "pendingFees()": FunctionFragment;
     "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)": FunctionFragment;
     "pool()": FunctionFragment;
     "pullLiquidity(uint256)": FunctionFragment;
@@ -102,6 +102,7 @@ interface HypervisorInterface extends ethers.utils.Interface {
   encodeFunctionData(functionFragment: "balanceOf", values: [string]): string;
   encodeFunctionData(functionFragment: "baseLower", values?: undefined): string;
   encodeFunctionData(functionFragment: "baseUpper", values?: undefined): string;
+  encodeFunctionData(functionFragment: "compound", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "currentTick",
     values?: undefined
@@ -160,10 +161,6 @@ interface HypervisorInterface extends ethers.utils.Interface {
   encodeFunctionData(functionFragment: "name", values?: undefined): string;
   encodeFunctionData(functionFragment: "nonces", values: [string]): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "pendingFees",
-    values?: undefined
-  ): string;
   encodeFunctionData(
     functionFragment: "permit",
     values: [
@@ -271,6 +268,7 @@ interface HypervisorInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "baseLower", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "baseUpper", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "compound", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "currentTick",
     data: BytesLike
@@ -320,10 +318,6 @@ interface HypervisorInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "nonces", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "pendingFees",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "permit", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pool", data: BytesLike): Result;
   decodeFunctionResult(
@@ -538,6 +532,10 @@ export class Hypervisor extends BaseContract {
 
     baseUpper(overrides?: CallOverrides): Promise<[number]>;
 
+    compound(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     currentTick(
       overrides?: CallOverrides
     ): Promise<[number] & { tick: number }>;
@@ -611,10 +609,6 @@ export class Hypervisor extends BaseContract {
     nonces(owner: string, overrides?: CallOverrides): Promise<[BigNumber]>;
 
     owner(overrides?: CallOverrides): Promise<[string]>;
-
-    pendingFees(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
 
     permit(
       owner: string,
@@ -759,6 +753,10 @@ export class Hypervisor extends BaseContract {
 
   baseUpper(overrides?: CallOverrides): Promise<number>;
 
+  compound(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   currentTick(overrides?: CallOverrides): Promise<number>;
 
   decimals(overrides?: CallOverrides): Promise<number>;
@@ -828,10 +826,6 @@ export class Hypervisor extends BaseContract {
   nonces(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
   owner(overrides?: CallOverrides): Promise<string>;
-
-  pendingFees(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
 
   permit(
     owner: string,
@@ -973,6 +967,17 @@ export class Hypervisor extends BaseContract {
 
     baseUpper(overrides?: CallOverrides): Promise<number>;
 
+    compound(
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        baseToken0Owed: BigNumber;
+        baseToken1Owed: BigNumber;
+        limitToken0Owed: BigNumber;
+        limitToken1Owed: BigNumber;
+      }
+    >;
+
     currentTick(overrides?: CallOverrides): Promise<number>;
 
     decimals(overrides?: CallOverrides): Promise<number>;
@@ -1044,10 +1049,6 @@ export class Hypervisor extends BaseContract {
     nonces(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<string>;
-
-    pendingFees(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber, BigNumber] & { fees0: BigNumber; fees1: BigNumber }>;
 
     permit(
       owner: string,
@@ -1363,6 +1364,10 @@ export class Hypervisor extends BaseContract {
 
     baseUpper(overrides?: CallOverrides): Promise<BigNumber>;
 
+    compound(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     currentTick(overrides?: CallOverrides): Promise<BigNumber>;
 
     decimals(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1414,10 +1419,6 @@ export class Hypervisor extends BaseContract {
     nonces(owner: string, overrides?: CallOverrides): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
-
-    pendingFees(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
 
     permit(
       owner: string,
@@ -1566,6 +1567,10 @@ export class Hypervisor extends BaseContract {
 
     baseUpper(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
+    compound(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     currentTick(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     decimals(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -1623,10 +1628,6 @@ export class Hypervisor extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
-    pendingFees(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
 
     permit(
       owner: string,
