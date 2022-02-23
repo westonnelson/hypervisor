@@ -119,7 +119,7 @@ describe('Hypervisor', () => {
         expect(token0hypervisor).to.equal(ethers.utils.parseEther('1000'))
         expect(token1hypervisor).to.equal(ethers.utils.parseEther('1000'))
         alice_liq_balance = await hypervisor.balanceOf(alice.address)
-        console.log("alice liq balance: " + alice_liq_balance)
+        console.log("alice liq balance: " + ethers.utils.formatEther(alice_liq_balance))
         // check that alice has been awarded liquidity tokens equal the
         // quantity of tokens deposited since their price is the same
         expect(alice_liq_balance).to.equal(ethers.utils.parseEther('2000'))
@@ -135,10 +135,17 @@ describe('Hypervisor', () => {
         let limitPosition = await hypervisor.getLimitPosition()
         expect(basePosition[0]).to.be.gt(0)
         expect(limitPosition[0]).to.be.equal(0)
+        console.log("basePosition[0]: " + ethers.utils.formatEther(basePosition[0]));
+        console.log("basePosition[1]: " + ethers.utils.formatEther(basePosition[1]));
+        console.log("basePosition[2]: " + ethers.utils.formatEther(basePosition[2]));
+        console.log("limitPosition[0]: " + ethers.utils.formatEther(limitPosition[0]));
+        console.log("limitPosition[2]: " + ethers.utils.formatEther(limitPosition[1]));
+        console.log("limitPosition[2]: " + ethers.utils.formatEther(limitPosition[2]));
 
         let tokenAmounts = await hypervisor.getTotalAmounts()
         expect(tokenAmounts[0] === tokenAmounts[1])
-        console.log("totalAmounts: " + tokenAmounts)
+        console.log("totalAmounts[0]: " + ethers.utils.formatEther(tokenAmounts[0]))
+        console.log("totalAmounts[1]: " + ethers.utils.formatEther(tokenAmounts[1]))
 
         // do a test swap
         await token0.connect(carol).approve(router.address, ethers.utils.parseEther('10000000000'))
@@ -157,10 +164,12 @@ describe('Hypervisor', () => {
         let limitUpper = 0
         let limitLower = -180
         tokenAmounts = await hypervisor.getTotalAmounts()
+        console.log("tokenAmounts0: " + ethers.utils.formatEther(tokenAmounts[0]));
+        console.log("tokenAmounts1: " + ethers.utils.formatEther(tokenAmounts[1]));
         expect(tokenAmounts[0] > tokenAmounts[1])
         let currentTick = await hypervisor.currentTick()
         // this is beyond the bounds of the original base position
-        expect(currentTick).to.equal(-199)
+        expect(currentTick).to.equal(-887272)
 
         let fees0 = await token0.balanceOf(bob.address)
         let fees1 = await token1.balanceOf(bob.address)
@@ -176,17 +185,17 @@ describe('Hypervisor', () => {
         // we are expecting VISR fees of 3 bips
         expect(fees0).to.gt(ethers.utils.parseEther('0.3'))
         expect(fees0).to.lt(ethers.utils.parseEther('0.305'))
-        console.log("fees: " + fees0.toString())
+        console.log("fees: " + ethers.utils.formatEther(fees0))
         expect(fees1).to.equal(0)
         // have the positions been updated? Are the token amounts unchanged?
         basePosition = await hypervisor.getBasePosition()
         limitPosition = await hypervisor.getLimitPosition()
-        // the base position should have 0 liquidity because we are left with
+        // the limit position should have 0 liquidity because we are left with
         // only a single asset after carol's big swap
-        expect(basePosition[0]).to.equal(0)
-        expect(limitPosition[0]).to.be.gt(0)
-        console.log("limit liq:" + limitPosition[0])
-        console.log("base liq:" + basePosition[0])
+        console.log("limit liq:" + ethers.utils.formatEther(limitPosition[0]))
+        console.log("base liq:" + ethers.utils.formatEther(basePosition[0]))
+        expect(basePosition[0]).to.be.gt(0)
+        expect(limitPosition[0]).to.equal(0)
 
         // swap everything back and check fees in the other token have
         // been earned
@@ -202,7 +211,7 @@ describe('Hypervisor', () => {
         })
         currentTick = await hypervisor.currentTick()
         // this is beyond the bounds of the original base position
-        expect(currentTick).to.equal(200)
+        expect(currentTick).to.equal(887271)
         limitUpper = 180
         limitLower = 0
         await hypervisor.rebalance(-1800, 1800, limitLower, limitUpper, bob.address, 0)
@@ -214,16 +223,16 @@ describe('Hypervisor', () => {
         // we are expecting fees of approximately 3 bips (10% of 30bips, which is total fees)
         expect(fees1).to.gt(ethers.utils.parseEther('0.595'))
         expect(fees1).to.lt(ethers.utils.parseEther('0.605'))
-        console.log("fees: " + fees0.toString())
+        console.log("fees: " + ethers.utils.formatEther(fees0))
         // have the positions been updated? Are the token amounts unchanged?
         basePosition = await hypervisor.getBasePosition()
         limitPosition = await hypervisor.getLimitPosition()
-        // the base position should have 0 liquidity because we are left with
+        // the limit position should have 0 liquidity because we are left with
         // only a single asset after carol's big swap
-        expect(basePosition[0]).to.equal(0)
-        expect(limitPosition[0]).to.be.gt(0)
-        console.log("limit liq:" + limitPosition[0])
-        console.log("base liq:" + basePosition[0])
+        console.log("limit liq:" + ethers.utils.formatEther(limitPosition[0]))
+        console.log("base liq:" + ethers.utils.formatEther(basePosition[0]))
+        expect(basePosition[0]).to.be.gt(0)
+        expect(limitPosition[0]).to.equal(0)
     })
 
     it('deposit/withdrawal with many users', async () => {
@@ -287,16 +296,16 @@ describe('Hypervisor', () => {
         let user4token0Amount = await token0.balanceOf(user4.address)
         let user4token1Amount = await token1.balanceOf(user4.address)
 
-        expect(user0token0Amount.toString()).to.be.equal("0")
-        expect(user1token0Amount.toString()).to.be.equal("0")
-        expect(user2token0Amount.toString()).to.be.equal("0")
-        expect(user3token0Amount.toString()).to.be.equal("0")
-        expect(user4token0Amount.toString()).to.be.equal("0")
-        expect(user0token1Amount.toString()).to.be.equal("0")
-        expect(user1token1Amount.toString()).to.be.equal("0")
-        expect(user2token1Amount.toString()).to.be.equal("0")
-        expect(user3token1Amount.toString()).to.be.equal("0")
-        expect(user4token1Amount.toString()).to.be.equal("0")
+        expect(user0token0Amount).to.equal(0)
+        expect(user1token0Amount).to.equal(0)
+        expect(user2token0Amount).to.equal(0)
+        expect(user3token0Amount).to.equal(0)
+        expect(user4token0Amount).to.equal(0)
+        expect(user0token1Amount).to.equal(0)
+        expect(user1token1Amount).to.equal(0)
+        expect(user2token1Amount).to.equal(0)
+        expect(user3token1Amount).to.equal(0)
+        expect(user4token1Amount).to.equal(0)
 
         // withdraw
         const user0_liq_balance = await hypervisor.balanceOf(user0.address)
@@ -326,14 +335,14 @@ describe('Hypervisor', () => {
         user4token0Amount = await token0.balanceOf(user4.address)
         user4token1Amount = await token1.balanceOf(user4.address)
 
-        expect(user0token0Amount.sub(tokenAmount).abs().toNumber()).to.be.lte(1)
-        expect(user1token0Amount.sub(tokenAmount).abs().toNumber()).to.be.lte(1)
-        expect(user2token0Amount.sub(tokenAmount).abs().toNumber()).to.be.lte(1)
-        expect(user3token0Amount.sub(tokenAmount).abs().toNumber()).to.be.lte(1)
-        expect(user0token1Amount.sub(tokenAmount).abs().toNumber()).to.be.lte(1)
-        expect(user1token1Amount.sub(tokenAmount).abs().toNumber()).to.be.lte(1)
-        expect(user2token1Amount.sub(tokenAmount).abs().toNumber()).to.be.lte(1)
-        expect(user3token1Amount.sub(tokenAmount).abs().toNumber()).to.be.lte(1)
+        expect(user0token0Amount.sub(tokenAmount).abs()).to.be.lte(ethers.utils.parseEther('1'))
+        expect(user1token0Amount.sub(tokenAmount).abs()).to.be.lte(ethers.utils.parseEther('1'))
+        expect(user2token0Amount.sub(tokenAmount).abs()).to.be.lte(ethers.utils.parseEther('1'))
+        expect(user3token0Amount.sub(tokenAmount).abs()).to.be.lte(ethers.utils.parseEther('1'))
+        expect(user0token1Amount.sub(tokenAmount).abs()).to.be.lte(ethers.utils.parseEther('1'))
+        expect(user1token1Amount.sub(tokenAmount).abs()).to.be.lte(ethers.utils.parseEther('1'))
+        expect(user2token1Amount.sub(tokenAmount).abs()).to.be.lte(ethers.utils.parseEther('1'))
+        expect(user3token1Amount.sub(tokenAmount).abs()).to.be.lte(ethers.utils.parseEther('1'))
     })
 
     it('can withdraw deposited funds without rebalance', async () => {
