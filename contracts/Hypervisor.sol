@@ -331,26 +331,41 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         _mintLiquidity(limitLower, limitUpper, limitLiquidity, address(this));
     }
 
-    /// @notice Get the pending fees
-    /// @return fees0 Pending fees of token0
-    /// @return fees1 Pending fees of token1
-    function pendingFees() external onlyOwner returns (uint256 fees0, uint256 fees1) {
-        /// update fees
-        (uint128 baseLiquidity, , ) = _position(baseLower, baseUpper);
-        if (baseLiquidity > 0) {
-            pool.burn(baseLower, baseUpper, 0);
-        }
-        (uint128 limitLiquidity, , ) = _position(limitLower, limitUpper);
-        if (limitLiquidity > 0) {
-            pool.burn(limitLower, limitUpper, 0);
-        }
+    /// @notice Compound pending fees
+    /// @return baseToken0Owed Pending fees of base token0
+    /// @return baseToken1Owed Pending fees of base token1
+    /// @return limitToken0Owed Pending fees of limit token0
+    /// @return limitToken1Owed Pending fees of limit token1
+    function compound() external onlyOwner returns (
+      uint128 baseToken0Owed,
+      uint128 baseToken1Owed,
+      uint128 limitToken0Owed,
+      uint128 limitToken1Owed
+    ) {
+      // update fees for compounding
+      zeroBurn();
+      (, baseToken0Owed,baseToken1Owed) = _position(baseLower, baseUpper);
+      (, limitToken0Owed,limitToken1Owed) = _position(limitLower, limitUpper);
+      
+      // collect fees
+      pool.collect(address(this), baseLower, baseLower, baseToken0Owed, baseToken1Owed);
+      pool.collect(address(this), limitLower, limitUpper, limitToken0Owed, limitToken1Owed);
+      
+      uint128 baseLiquidity = _liquidityForAmounts(
+        baseLower,
+        baseUpper,
+        token0.balanceOf(address(this)),
+        token1.balanceOf(address(this))
+      );
+      _mintLiquidity(baseLower, baseUpper, baseLiquidity, address(this));
 
-        /// Withdraw all liquidity and collect all fees from Uniswap pool
-        (, uint256 feesLimit0, uint256 feesLimit1) = _position(baseLower, baseUpper);
-        (, uint256 feesBase0, uint256 feesBase1) = _position(limitLower, limitUpper);
-
-        fees0 = feesBase0.add(feesLimit0);
-        fees1 = feesBase1.add(feesLimit1);
+      uint128 limitLiquidity = _liquidityForAmounts(
+        limitLower,
+        limitUpper,
+        token0.balanceOf(address(this)),
+        token1.balanceOf(address(this))
+      );
+      _mintLiquidity(limitLower, limitUpper, limitLiquidity, address(this));
     }
 
     /// @notice Add tokens to base liquidity

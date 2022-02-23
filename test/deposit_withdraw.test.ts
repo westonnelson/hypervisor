@@ -101,7 +101,7 @@ describe('Hypervisor', () => {
   //      await uniProxy.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('998'), alice.address, alice.address, hypervisor.address)
   //  });
 
-    it('calculates fees properly & rebalances to limit-only after large swap', async () => {
+    it('calculates fees properly & rebalances to limit-only after large swap, realize pending fees after compound', async () => {
         await token0.mint(alice.address, ethers.utils.parseEther('1000000'))
         await token1.mint(alice.address, ethers.utils.parseEther('1000000'))
 
@@ -210,6 +210,13 @@ describe('Hypervisor', () => {
             sqrtPriceLimitX96: 0,
         })
         currentTick = await hypervisor.currentTick()
+				let totalAmounts0 = await hypervisor.getTotalAmounts();
+				await hypervisor.compound();
+				let totalAmounts1 = await hypervisor.getTotalAmounts();
+				// pending fees from swap should be realized after compounding
+				expect(totalAmounts0.total1).to.lt(totalAmounts1.total1);	 	
+
+
         // this is beyond the bounds of the original base position
         expect(currentTick).to.equal(887271)
         limitUpper = 180

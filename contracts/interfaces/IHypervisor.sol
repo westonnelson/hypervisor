@@ -54,6 +54,14 @@ interface IHypervisor {
         uint256 limit1
     );
 
+    function compound()
+    external returns(
+      uint128 baseToken0Owed,
+      uint128 baseToken1Owed,
+      uint128 limitToken0Owed,
+      uint128 limitToken1Owed
+    );
+
     function pool() external view returns (IUniswapV3Pool);
 
     function currentTick() external view returns (int24 tick);
