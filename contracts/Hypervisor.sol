@@ -486,15 +486,9 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         bytes calldata data
     ) external override {
         require(msg.sender == address(pool));
-        address payer = abi.decode(data, (address));
 
-        if (payer == address(this)) {
-            if (amount0 > 0) token0.safeTransfer(msg.sender, amount0);
-            if (amount1 > 0) token1.safeTransfer(msg.sender, amount1);
-        } else {
-            if (amount0 > 0) token0.safeTransferFrom(payer, msg.sender, amount0);
-            if (amount1 > 0) token1.safeTransferFrom(payer, msg.sender, amount1);
-        }
+        if (amount0 > 0) token0.safeTransfer(msg.sender, amount0);
+        if (amount1 > 0) token1.safeTransfer(msg.sender, amount1);
     }
 
     /// @notice Callback function of uniswapV3Pool swap
@@ -507,17 +501,9 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         address payer = abi.decode(data, (address));
 
         if (amount0Delta > 0) {
-            if (payer == address(this)) {
-                token0.safeTransfer(msg.sender, uint256(amount0Delta));
-            } else {
-                token0.safeTransferFrom(payer, msg.sender, uint256(amount0Delta));
-            }
+            token0.safeTransfer(msg.sender, uint256(amount0Delta));
         } else if (amount1Delta > 0) {
-            if (payer == address(this)) {
-                token1.safeTransfer(msg.sender, uint256(amount1Delta));
-            } else {
-                token1.safeTransferFrom(payer, msg.sender, uint256(amount1Delta));
-            }
+            token1.safeTransfer(msg.sender, uint256(amount1Delta));
         }
     }
 
