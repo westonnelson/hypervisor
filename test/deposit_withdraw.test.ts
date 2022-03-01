@@ -62,10 +62,6 @@ describe('Hypervisor', () => {
         await token1.mint(carol.address, ethers.utils.parseEther('1000000000000'))
     })
 
-  /*
-   * Tests arent accommodating deposit functions with differing signatures. 
-   * UniProxy straddles deposit(uint,uint,address) and deposit(uint,uint,address,address)
-   */
     it('deposit with an incorrect proportion will revert', async () => {
         let uniProxyFactory = await ethers.getContractFactory('UniProxy')
         let uniProxy = (await uniProxyFactory.deploy())
