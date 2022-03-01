@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
-pragma solidity 0.7.6;
-pragma abicoder v2;
+pragma solidity =0.6.11;
+pragma experimental ABIEncoderV2;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
@@ -54,14 +54,6 @@ interface IHypervisor {
         uint256 limit1
     );
 
-    function compound()
-    external returns(
-      uint128 baseToken0Owed,
-      uint128 baseToken1Owed,
-      uint128 limitToken0Owed,
-      uint128 limitToken1Owed
-    );
-
     function pool() external view returns (IUniswapV3Pool);
 
     function currentTick() external view returns (int24 tick);
@@ -69,10 +61,6 @@ interface IHypervisor {
     function token0() external view returns (IERC20);
 
     function token1() external view returns (IERC20);
-
-    function deposit0Max() external view returns (uint256);
-
-    function deposit1Max() external view returns (uint256);
 
     function balanceOf(address) external view returns (uint256);
 
@@ -93,8 +81,6 @@ interface IHypervisor {
     function setDepositMax(uint256 _deposit0Max, uint256 _deposit1Max) external;
 
     function appendList(address[] memory listed) external;
-
-    function removeListed(address listed) external;
 
     function toggleWhitelist() external;
 
