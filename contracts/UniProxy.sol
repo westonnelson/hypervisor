@@ -77,8 +77,8 @@ contract UniProxy is ReentrancyGuard {
     require(p.version == 0, 'already added');
     require(version > 0, 'version < 1');
     p.version = version;
-    IHypervisor(pos).token0().approve(pos, MAX_INT);
-    IHypervisor(pos).token1().approve(pos, MAX_INT);
+    IHypervisor(pos).token0().safeApprove(pos, MAX_INT);
+    IHypervisor(pos).token1().safeApprove(pos, MAX_INT);
     emit PositionAdded(pos, version);
   }
 
@@ -100,10 +100,10 @@ contract UniProxy is ReentrancyGuard {
     if (p.version < 3) {
       /// requires asset transfer to proxy
       if (deposit0 != 0) {
-        IHypervisor(pos).token0().transferFrom(msg.sender, address(this), deposit0);
+        IHypervisor(pos).token0().safeTransferFrom(msg.sender, address(this), deposit0);
       }
       if (deposit1 != 0) {
-        IHypervisor(pos).token1().transferFrom(msg.sender, address(this), deposit1);
+        IHypervisor(pos).token1().safeTransferFrom(msg.sender, address(this), deposit1);
       }
     }
 
