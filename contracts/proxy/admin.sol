@@ -47,9 +47,10 @@ contract Admin {
         int24 _limitUpper,
         address _feeRecipient,
         int256 swapQuantity,
-        int256 amountMin
+        int256 amountMin,
+        uint160 sqrtPriceLimitX96
     ) external onlyAdvisor {
-        IHypervisor(_hypervisor).rebalance(_baseLower, _baseUpper, _limitLower, _limitUpper, _feeRecipient, swapQuantity, amountMin);
+        IHypervisor(_hypervisor).rebalance(_baseLower, _baseUpper, _limitLower, _limitUpper, _feeRecipient, swapQuantity, amountMin, sqrtPriceLimitX96);
     }
 
     /// @notice Pull liquidity tokens from liquidity and receive the tokens
