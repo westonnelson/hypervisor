@@ -305,8 +305,8 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         );
 
         /// swap tokens if required
+        rebalanceCalled = true;
         if (swapQuantity != 0) {
-            rebalanceCalled = true;
             pool.swap(
                 address(this),
                 swapQuantity > 0,

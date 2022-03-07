@@ -522,5 +522,6 @@ describe('Hypervisor', () => {
         // pending fees from swap should be realized after compounding
         expect(totalAmounts0.total1).to.lt(totalAmounts1.total1);
     })
+
 })
 
