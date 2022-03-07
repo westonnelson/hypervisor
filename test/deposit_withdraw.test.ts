@@ -31,6 +31,9 @@ describe('Hypervisor', () => {
     const [wallet, alice, bob, carol, other,
            user0, user1, user2, user3, user4] = waffle.provider.getWallets()
 
+    const minSqrtPrice = 4295128740;
+    const maxSqrtPrice = 1461446703485210103287273052203988822378723970341;
+
     let factory: IUniswapV3Factory
     let router: ISwapRouter
     let token0: TestERC20
@@ -87,7 +90,7 @@ describe('Hypervisor', () => {
         expect(alice_liq_balance).to.equal(0)
         // establishing 1:1 ratio in hypervisor
         await uniProxy.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, hypervisor.address)
-        await hypervisor.rebalance(-1800, 1800, 0, 600, bob.address, 0, 0)
+        await hypervisor.rebalance(-1800, 1800, 0, 600, bob.address, 0, 0, minSqrtPrice)
         // attempting 2 unbalanced deposits & expecting failure
         await expect(uniProxy.connect(alice).deposit(ethers.utils.parseEther('20000'), 0, alice.address, hypervisor.address)).to.be.revertedWith("Improper ratio")
         await expect(uniProxy.connect(alice).deposit(0, ethers.utils.parseEther('20000'), alice.address, hypervisor.address)).to.be.revertedWith("Improper ratio")
@@ -120,7 +123,7 @@ describe('Hypervisor', () => {
         expect(alice_liq_balance).to.equal(ethers.utils.parseEther('2000'))
 
         // liquidity positions will only be created once rebalance is called
-        await hypervisor.rebalance(-120, 120, -60, 0, bob.address, 0, 0)
+        await hypervisor.rebalance(-120, 120, -60, 0, bob.address, 0, 0, minSqrtPrice)
         token0hypervisor = await token0.balanceOf(hypervisor.address)
         token1hypervisor = await token1.balanceOf(hypervisor.address)
         expect(token0hypervisor).to.equal(0)
@@ -160,7 +163,7 @@ describe('Hypervisor', () => {
         let fees1 = await token1.balanceOf(bob.address)
         expect(fees0).to.equal(0)
         expect(fees1).to.equal(0)
-        await hypervisor.rebalance(-1800, 1800, limitLower, limitUpper, bob.address, 0, 0)
+        await hypervisor.rebalance(-1800, 1800, limitLower, limitUpper, bob.address, 0, 0, minSqrtPrice)
         token0hypervisor = await token0.balanceOf(hypervisor.address)
         token1hypervisor = await token1.balanceOf(hypervisor.address)
         expect(token0hypervisor).to.equal(0)
@@ -202,7 +205,7 @@ describe('Hypervisor', () => {
         expect(currentTick).to.equal(887271)
         limitUpper = 180
         limitLower = 0
-        await hypervisor.rebalance(-1800, 1800, limitLower, limitUpper, bob.address, 0, 0)
+        await hypervisor.rebalance(-1800, 1800, limitLower, limitUpper, bob.address, 0, 0, minSqrtPrice)
         token0hypervisor = await token0.balanceOf(hypervisor.address)
         token1hypervisor = await token1.balanceOf(hypervisor.address)
         expect(token0hypervisor).to.equal(0)
@@ -260,7 +263,7 @@ describe('Hypervisor', () => {
         await token1.connect(user4).approve(hypervisor.address, tokenAmount)
 
         await hypervisor.connect(user0).deposit(tokenAmount, tokenAmount, user0.address, user0.address)
-        await hypervisor.rebalance(-1800, 1800, 0, 600, bob.address, 0, 0)
+        await hypervisor.rebalance(-1800, 1800, 0, 600, bob.address, 0, 0, minSqrtPrice)
         await hypervisor.connect(user1).deposit(tokenAmount, tokenAmount, user1.address, user1.address)
         await hypervisor.connect(user2).deposit(tokenAmount, tokenAmount, user2.address, user2.address)
         await hypervisor.connect(user3).deposit(tokenAmount, tokenAmount, user3.address, user3.address)
@@ -352,7 +355,7 @@ describe('Hypervisor', () => {
 
         await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address)
 
-        await hypervisor.rebalance(-120, 120, 0, 60, bob.address, 0, 0)
+        await hypervisor.rebalance(-120, 120, 0, 60, bob.address, 0, 0, minSqrtPrice)
 
         let tokenAmount = ethers.utils.parseEther('1000')
 
@@ -397,7 +400,7 @@ describe('Hypervisor', () => {
         alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(ethers.utils.parseEther('2000'))
 
-        await hypervisor.rebalance(-120, 120, 0, 60, bob.address, 0, 0)
+        await hypervisor.rebalance(-120, 120, 0, 60, bob.address, 0, 0, minSqrtPrice)
 
         let basePosition = await hypervisor.getBasePosition()
         let limitPosition = await hypervisor.getLimitPosition()
@@ -455,7 +458,7 @@ describe('Hypervisor', () => {
 
         await hypervisor.connect(carol).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), carol.address, carol.address)
 
-        await hypervisor.rebalance(-120, 120, 0, 60, bob.address, 0, 0)
+        await hypervisor.rebalance(-120, 120, 0, 60, bob.address, 0, 0, minSqrtPrice)
 
         await hypervisor.toggleDirectDeposit()
         let directDeposit = await hypervisor.directDeposit()
@@ -489,7 +492,7 @@ describe('Hypervisor', () => {
         await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address)
 
         // liquidity positions will only be created once rebalance is called
-        await hypervisor.rebalance(-120, 120, -60, 0, bob.address, 0, 0)
+        await hypervisor.rebalance(-120, 120, -60, 0, bob.address, 0, 0, minSqrtPrice)
 
         let basePosition = await hypervisor.getBasePosition()
         let limitPosition = await hypervisor.getLimitPosition()
@@ -521,6 +524,129 @@ describe('Hypervisor', () => {
         let totalAmounts1 = await hypervisor.getTotalAmounts();
         // pending fees from swap should be realized after compounding
         expect(totalAmounts0.total1).to.lt(totalAmounts1.total1);
+    })
+
+    it ('rebalance swap fails when limit is reached', async () => {
+        await token0.mint(alice.address, ethers.utils.parseEther('1000000'))
+        await token1.mint(alice.address, ethers.utils.parseEther('1000000'))
+
+        await token0.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
+        await token1.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
+
+        // alice should start with 0 hypervisor tokens
+        let alice_liq_balance = await hypervisor.balanceOf(alice.address)
+        expect(alice_liq_balance).to.equal(0)
+
+        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address)
+
+        console.log("==============================Deposit==============================")
+        let slots = await uniswapPool.slot0();
+        console.log("SqrtPrice: " + ethers.utils.formatEther(slots[0]));
+        let amount0 = await token0.balanceOf(uniswapPool.address);
+        let amount1 = await token1.balanceOf(uniswapPool.address);
+        let balance0 = await token0.balanceOf(hypervisor.address);
+        let balance1 = await token1.balanceOf(hypervisor.address);
+        console.log("Token0 in unisw pool: " + ethers.utils.formatEther(amount0));
+        console.log("Token1 in unisw pool: " + ethers.utils.formatEther(amount1));
+        console.log("Token0 in hypervisor: " + ethers.utils.formatEther(balance0));
+        console.log("Token1 in hypervisor: " + ethers.utils.formatEther(balance1));
+        // liquidity positions will only be created once rebalance is called
+        await hypervisor.rebalance(-120, 120, -60, 0, bob.address, 0, 0, minSqrtPrice)
+
+        console.log("==============================Rebalance==============================")
+        slots = await uniswapPool.slot0();
+        console.log("SqrtPrice: " + ethers.utils.formatEther(slots[0]));
+        amount0 = await token0.balanceOf(uniswapPool.address);
+        amount1 = await token1.balanceOf(uniswapPool.address);
+        balance0 = await token0.balanceOf(hypervisor.address);
+        balance1 = await token1.balanceOf(hypervisor.address);
+        console.log("Token0 in unisw pool: " + ethers.utils.formatEther(amount0));
+        console.log("Token1 in unisw pool: " + ethers.utils.formatEther(amount1));
+        console.log("Token0 in hypervisor: " + ethers.utils.formatEther(balance0));
+        console.log("Token1 in hypervisor: " + ethers.utils.formatEther(balance1));
+
+        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address)
+
+        console.log("==============================Deposit==============================")
+        slots = await uniswapPool.slot0();
+        console.log("SqrtPrice: " + ethers.utils.formatEther(slots[0]));
+        amount0 = await token0.balanceOf(uniswapPool.address);
+        amount1 = await token1.balanceOf(uniswapPool.address);
+        balance0 = await token0.balanceOf(hypervisor.address);
+        balance1 = await token1.balanceOf(hypervisor.address);
+        console.log("Token0 in unisw pool: " + ethers.utils.formatEther(amount0));
+        console.log("Token1 in unisw pool: " + ethers.utils.formatEther(amount1));
+        console.log("Token0 in hypervisor: " + ethers.utils.formatEther(balance0));
+        console.log("Token1 in hypervisor: " + ethers.utils.formatEther(balance1));
+
+        // liquidity positions will only be created once rebalance is called
+        await hypervisor.rebalance(-120, 120, -60, 0, bob.address, ethers.utils.parseEther('500'), ethers.utils.parseEther('0'), minSqrtPrice)
+
+        console.log("==============================Rebalance with swap==============================")
+        slots = await uniswapPool.slot0();
+        console.log("SqrtPrice: " + ethers.utils.formatEther(slots[0]));
+        amount0 = await token0.balanceOf(uniswapPool.address);
+        amount1 = await token1.balanceOf(uniswapPool.address);
+        balance0 = await token0.balanceOf(hypervisor.address);
+        balance1 = await token1.balanceOf(hypervisor.address);
+        console.log("Token0 in unisw pool: " + ethers.utils.formatEther(amount0));
+        console.log("Token1 in unisw pool: " + ethers.utils.formatEther(amount1));
+        console.log("Token0 in hypervisor: " + ethers.utils.formatEther(balance0));
+        console.log("Token1 in hypervisor: " + ethers.utils.formatEther(balance1));
+
+        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address)
+
+        console.log("==============================Deposit==============================")
+        slots = await uniswapPool.slot0();
+        console.log("SqrtPrice: " + ethers.utils.formatEther(slots[0]));
+        amount0 = await token0.balanceOf(uniswapPool.address);
+        amount1 = await token1.balanceOf(uniswapPool.address);
+        balance0 = await token0.balanceOf(hypervisor.address);
+        balance1 = await token1.balanceOf(hypervisor.address);
+        console.log("Token0 in unisw pool: " + ethers.utils.formatEther(amount0));
+        console.log("Token1 in unisw pool: " + ethers.utils.formatEther(amount1));
+        console.log("Token0 in hypervisor: " + ethers.utils.formatEther(balance0));
+        console.log("Token1 in hypervisor: " + ethers.utils.formatEther(balance1));
+
+        await hypervisor.rebalance(-120, 120, -60, 0, bob.address, 0, 0, minSqrtPrice)
+
+        console.log("==============================Rebalance==============================")
+        slots = await uniswapPool.slot0();
+        console.log("SqrtPrice: " + ethers.utils.formatEther(slots[0]));
+        amount0 = await token0.balanceOf(uniswapPool.address);
+        amount1 = await token1.balanceOf(uniswapPool.address);
+        balance0 = await token0.balanceOf(hypervisor.address);
+        balance1 = await token1.balanceOf(hypervisor.address);
+        console.log("Token0 in unisw pool: " + ethers.utils.formatEther(amount0));
+        console.log("Token1 in unisw pool: " + ethers.utils.formatEther(amount1));
+        console.log("Token0 in hypervisor: " + ethers.utils.formatEther(balance0));
+        console.log("Token1 in hypervisor: " + ethers.utils.formatEther(balance1));
+
+        console.log("==============================exactInputSingle swap==============================")
+        // do a test swap
+        await token0.connect(carol).approve(router.address, ethers.utils.parseEther('10000000000'))
+        await token1.connect(carol).approve(router.address, ethers.utils.parseEther('10000000000'))
+        await router.connect(carol).exactInputSingle({
+            tokenIn: token1.address,
+            tokenOut: token0.address,
+            fee: FeeAmount.MEDIUM,
+            recipient: carol.address,
+            deadline: 2000000000, // Wed May 18 2033 03:33:20 GMT+0000
+            amountIn: ethers.utils.parseEther('1000'),
+            amountOutMinimum: ethers.utils.parseEther('0'),
+            sqrtPriceLimitX96: 0,
+        })
+
+        slots = await uniswapPool.slot0();
+        console.log("SqrtPrice: " + ethers.utils.formatEther(slots[0]));
+        amount0 = await token0.balanceOf(uniswapPool.address);
+        amount1 = await token1.balanceOf(uniswapPool.address);
+        balance0 = await token0.balanceOf(hypervisor.address);
+        balance1 = await token1.balanceOf(hypervisor.address);
+        console.log("Token0 in unisw pool: " + ethers.utils.formatEther(amount0));
+        console.log("Token1 in unisw pool: " + ethers.utils.formatEther(amount1));
+        console.log("Token0 in hypervisor: " + ethers.utils.formatEther(balance0));
+        console.log("Token1 in hypervisor: " + ethers.utils.formatEther(balance1));
     })
 
 })
