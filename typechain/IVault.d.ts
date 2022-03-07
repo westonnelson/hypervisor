@@ -23,7 +23,7 @@ interface IVaultInterface extends ethers.utils.Interface {
   functions: {
     "deposit(uint256,uint256,address,address)": FunctionFragment;
     "getTotalAmounts()": FunctionFragment;
-    "rebalance(int24,int24,int24,int24,address,int256,int256)": FunctionFragment;
+    "rebalance(int24,int24,int24,int24,address,int256,int256,uint160)": FunctionFragment;
     "withdraw(uint256,address,address)": FunctionFragment;
   };
 
@@ -43,6 +43,7 @@ interface IVaultInterface extends ethers.utils.Interface {
       BigNumberish,
       BigNumberish,
       string,
+      BigNumberish,
       BigNumberish,
       BigNumberish
     ]
@@ -164,6 +165,7 @@ export class IVault extends BaseContract {
       feeRecipient: string,
       swapQuantity: BigNumberish,
       amountMin: BigNumberish,
+      sqrtPriceLimitX96: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -193,6 +195,7 @@ export class IVault extends BaseContract {
     feeRecipient: string,
     swapQuantity: BigNumberish,
     amountMin: BigNumberish,
+    sqrtPriceLimitX96: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -222,6 +225,7 @@ export class IVault extends BaseContract {
       feeRecipient: string,
       swapQuantity: BigNumberish,
       amountMin: BigNumberish,
+      sqrtPriceLimitX96: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -360,6 +364,7 @@ export class IVault extends BaseContract {
       feeRecipient: string,
       swapQuantity: BigNumberish,
       amountMin: BigNumberish,
+      sqrtPriceLimitX96: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -390,6 +395,7 @@ export class IVault extends BaseContract {
       feeRecipient: string,
       swapQuantity: BigNumberish,
       amountMin: BigNumberish,
+      sqrtPriceLimitX96: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
