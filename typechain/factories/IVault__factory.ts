@@ -213,11 +213,6 @@ const _abi = [
         name: "amountMin",
         type: "int256",
       },
-      {
-        internalType: "uint160",
-        name: "sqrtPriceLimitX96",
-        type: "uint160",
-      },
     ],
     name: "rebalance",
     outputs: [],

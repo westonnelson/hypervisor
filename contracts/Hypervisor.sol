@@ -258,8 +258,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         int24 _limitUpper,
         address feeRecipient,
         int256 swapQuantity,
-        int256 amountMin,
-        uint160 sqrtPriceLimitX96
+        int256 amountMin
     ) nonReentrant external override onlyOwner {
         require(
             _baseLower < _baseUpper &&
@@ -312,7 +311,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
                 address(this),
                 swapQuantity > 0,
                 swapQuantity > 0 ? swapQuantity : -swapQuantity,
-                sqrtPriceLimitX96,
+                swapQuantity > 0 ? TickMath.MIN_SQRT_RATIO + 1 : TickMath.MAX_SQRT_RATIO - 1,
                 abi.encode(amountMin)
             );
         }

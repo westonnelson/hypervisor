@@ -28,7 +28,7 @@ interface AdminInterface extends ethers.utils.Interface {
     "appendList(address,address[])": FunctionFragment;
     "pendingFees(address)": FunctionFragment;
     "pullLiquidity(address,uint256)": FunctionFragment;
-    "rebalance(address,int24,int24,int24,int24,address,int256,int256,uint160)": FunctionFragment;
+    "rebalance(address,int24,int24,int24,int24,address,int256,int256)": FunctionFragment;
     "removeListed(address,address)": FunctionFragment;
     "rescueERC20(address,address)": FunctionFragment;
     "setDepositMax(address,uint256,uint256)": FunctionFragment;
@@ -67,7 +67,6 @@ interface AdminInterface extends ethers.utils.Interface {
       BigNumberish,
       BigNumberish,
       string,
-      BigNumberish,
       BigNumberish,
       BigNumberish
     ]
@@ -249,7 +248,6 @@ export class Admin extends BaseContract {
       _feeRecipient: string,
       swapQuantity: BigNumberish,
       amountMin: BigNumberish,
-      sqrtPriceLimitX96: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -344,7 +342,6 @@ export class Admin extends BaseContract {
     _feeRecipient: string,
     swapQuantity: BigNumberish,
     amountMin: BigNumberish,
-    sqrtPriceLimitX96: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -446,7 +443,6 @@ export class Admin extends BaseContract {
       _feeRecipient: string,
       swapQuantity: BigNumberish,
       amountMin: BigNumberish,
-      sqrtPriceLimitX96: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -541,7 +537,6 @@ export class Admin extends BaseContract {
       _feeRecipient: string,
       swapQuantity: BigNumberish,
       amountMin: BigNumberish,
-      sqrtPriceLimitX96: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -637,7 +632,6 @@ export class Admin extends BaseContract {
       _feeRecipient: string,
       swapQuantity: BigNumberish,
       amountMin: BigNumberish,
-      sqrtPriceLimitX96: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
