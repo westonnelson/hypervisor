@@ -94,7 +94,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         uint256 deposit1,
         address to,
         address from
-    ) external override returns (uint256 shares) {
+    ) nonReentrant external override returns (uint256 shares) {
         require(deposit0 > 0 || deposit1 > 0);
         require(deposit0 <= deposit0Max && deposit1 <= deposit1Max);
         require(to != address(0) && to != address(this), "to");

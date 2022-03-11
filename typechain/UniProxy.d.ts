@@ -38,6 +38,7 @@ interface UniProxyInterface extends ethers.utils.Interface {
     "setDeltaScale(uint256)": FunctionFragment;
     "setDepositDelta(uint256)": FunctionFragment;
     "setPriceThreshold(uint256)": FunctionFragment;
+    "setPriceThresholdPos(address,uint256)": FunctionFragment;
     "setTwapInterval(uint32)": FunctionFragment;
     "setTwapOverride(address,bool,uint32)": FunctionFragment;
     "toggleDepositFree()": FunctionFragment;
@@ -110,6 +111,10 @@ interface UniProxyInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "setPriceThreshold",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setPriceThresholdPos",
+    values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setTwapInterval",
@@ -199,6 +204,10 @@ interface UniProxyInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setPriceThresholdPos",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setTwapInterval",
     data: BytesLike
   ): Result;
@@ -239,6 +248,7 @@ interface UniProxyInterface extends ethers.utils.Interface {
     "ListAppended(address,address[])": EventFragment;
     "ListRemoved(address,address)": EventFragment;
     "PositionAdded(address,uint8)": EventFragment;
+    "PriceThresholdPosSet(address,uint256)": EventFragment;
     "PriceThresholdSet(uint256)": EventFragment;
     "TwapIntervalSet(uint32)": EventFragment;
     "TwapOverrideSet(address,bool,uint32)": EventFragment;
@@ -254,6 +264,7 @@ interface UniProxyInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "ListAppended"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "ListRemoved"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "PositionAdded"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "PriceThresholdPosSet"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "PriceThresholdSet"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TwapIntervalSet"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TwapOverrideSet"): EventFragment;
@@ -297,6 +308,10 @@ export type ListRemovedEvent = TypedEvent<
 
 export type PositionAddedEvent = TypedEvent<
   [string, number] & { arg0: string; arg1: number }
+>;
+
+export type PriceThresholdPosSetEvent = TypedEvent<
+  [string, BigNumber] & { pos: string; _priceThreshold: BigNumber }
 >;
 
 export type PriceThresholdSetEvent = TypedEvent<
@@ -469,6 +484,12 @@ export class UniProxy extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setPriceThresholdPos(
+      pos: string,
+      _priceThreshold: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setTwapInterval(
       _twapInterval: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -613,6 +634,12 @@ export class UniProxy extends BaseContract {
   ): Promise<ContractTransaction>;
 
   setPriceThreshold(
+    _priceThreshold: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setPriceThresholdPos(
+    pos: string,
     _priceThreshold: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -765,6 +792,12 @@ export class UniProxy extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setPriceThresholdPos(
+      pos: string,
+      _priceThreshold: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setTwapInterval(
       _twapInterval: BigNumberish,
       overrides?: CallOverrides
@@ -888,6 +921,22 @@ export class UniProxy extends BaseContract {
       undefined?: null
     ): TypedEventFilter<[string, number], { arg0: string; arg1: number }>;
 
+    "PriceThresholdPosSet(address,uint256)"(
+      pos?: null,
+      _priceThreshold?: null
+    ): TypedEventFilter<
+      [string, BigNumber],
+      { pos: string; _priceThreshold: BigNumber }
+    >;
+
+    PriceThresholdPosSet(
+      pos?: null,
+      _priceThreshold?: null
+    ): TypedEventFilter<
+      [string, BigNumber],
+      { pos: string; _priceThreshold: BigNumber }
+    >;
+
     "PriceThresholdSet(uint256)"(
       _priceThreshold?: null
     ): TypedEventFilter<[BigNumber], { _priceThreshold: BigNumber }>;
@@ -1005,6 +1054,12 @@ export class UniProxy extends BaseContract {
     ): Promise<BigNumber>;
 
     setPriceThreshold(
+      _priceThreshold: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setPriceThresholdPos(
+      pos: string,
       _priceThreshold: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -1130,6 +1185,12 @@ export class UniProxy extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     setPriceThreshold(
+      _priceThreshold: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setPriceThresholdPos(
+      pos: string,
       _priceThreshold: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
