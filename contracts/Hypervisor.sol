@@ -247,12 +247,19 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
     /// @param _limitLower The lower tick of the limit position
     /// @param _limitUpper The upper tick of the limit position
     /// @param feeRecipient Address of recipient of 10% of earned fees since last rebalance
+    /// @param swapQuantity Quantity of tokens to swap; if quantity is positive,
+    /// `swapQuantity` token0 are swaped for token1, if negative, `swapQuantity`
+    /// token1 is swaped for token0
+    /// @param amountMin Minimum Amount of tokens should be received in swap
     function rebalance(
         int24 _baseLower,
         int24 _baseUpper,
         int24 _limitLower,
         int24 _limitUpper,
-        address feeRecipient
+        address feeRecipient,
+        int256 swapQuantity,
+        int256 amountMin,
+        uint160 sqrtPriceLimitX96
     ) nonReentrant external override onlyOwner {
         require(
             _baseLower < _baseUpper &&
@@ -297,6 +304,18 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
             fees1,
             totalSupply()
         );
+
+        /// swap tokens if required
+        if (swapQuantity != 0) {
+            rebalanceCalled = true;
+            pool.swap(
+                address(this),
+                swapQuantity > 0,
+                swapQuantity > 0 ? swapQuantity : -swapQuantity,
+                sqrtPriceLimitX96,
+                abi.encode(amountMin)
+            );
+        }
 
         baseLower = _baseLower;
         baseUpper = _baseUpper;
