@@ -6,13 +6,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 interface IHypervisor {
-
-    function deposit(
-        uint256,
-        uint256,
-        address
-    ) external returns (uint256);
-
     function deposit(
         uint256,
         uint256,
@@ -32,10 +25,7 @@ interface IHypervisor {
         int24 _baseUpper,
         int24 _limitLower,
         int24 _limitUpper,
-        address _feeRecipient,
-        int256 swapQuantity,
-        int256 amountMin,
-        uint160 sqrtPriceLimitX96
+        address _feeRecipient
     ) external;
 
     function addBaseLiquidity(

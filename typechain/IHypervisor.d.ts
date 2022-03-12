@@ -300,18 +300,11 @@ export class IHypervisor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[number] & { tick: number }>;
 
-    "deposit(uint256,uint256,address,address)"(
+    deposit(
       arg0: BigNumberish,
       arg1: BigNumberish,
       arg2: string,
       arg3: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "deposit(uint256,uint256,address)"(
-      arg0: BigNumberish,
-      arg1: BigNumberish,
-      arg2: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -431,18 +424,11 @@ export class IHypervisor extends BaseContract {
 
   currentTick(overrides?: CallOverrides): Promise<number>;
 
-  "deposit(uint256,uint256,address,address)"(
+  deposit(
     arg0: BigNumberish,
     arg1: BigNumberish,
     arg2: string,
     arg3: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "deposit(uint256,uint256,address)"(
-    arg0: BigNumberish,
-    arg1: BigNumberish,
-    arg2: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -564,18 +550,11 @@ export class IHypervisor extends BaseContract {
 
     currentTick(overrides?: CallOverrides): Promise<number>;
 
-    "deposit(uint256,uint256,address,address)"(
+    deposit(
       arg0: BigNumberish,
       arg1: BigNumberish,
       arg2: string,
       arg3: string,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "deposit(uint256,uint256,address)"(
-      arg0: BigNumberish,
-      arg1: BigNumberish,
-      arg2: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -700,18 +679,11 @@ export class IHypervisor extends BaseContract {
 
     currentTick(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "deposit(uint256,uint256,address,address)"(
+    deposit(
       arg0: BigNumberish,
       arg1: BigNumberish,
       arg2: string,
       arg3: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "deposit(uint256,uint256,address)"(
-      arg0: BigNumberish,
-      arg1: BigNumberish,
-      arg2: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -831,18 +803,11 @@ export class IHypervisor extends BaseContract {
 
     currentTick(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "deposit(uint256,uint256,address,address)"(
+    deposit(
       arg0: BigNumberish,
       arg1: BigNumberish,
       arg2: string,
       arg3: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "deposit(uint256,uint256,address)"(
-      arg0: BigNumberish,
-      arg1: BigNumberish,
-      arg2: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

@@ -29,7 +29,7 @@ contract UniProxy is ReentrancyGuard {
   uint256 public deltaScale = 1000; /// must be a power of 10
   uint256 public priceThreshold = 100;
 
-  uint256 constant MAX_INT = 2**256 - 1;
+  uint256 constant MAX_UINT = 2**256 - 1;
 
   struct Position {
     uint8 version; // 1->3 proxy 3 transfers, 2-> proxy two transfers, 3-> proxy no transfers
@@ -52,6 +52,7 @@ contract UniProxy is ReentrancyGuard {
   event DeltaScaleSet(uint256 _deltaScale);
   event TwapIntervalSet(uint32 _twapInterval);
   event TwapOverrideSet(address pos, bool twapOverride, uint32 _twapInterval);
+  event PriceThresholdPosSet(address pos, uint256 _priceThreshold);
   event DepositFreeToggled();
   event DepositOverrideToggled(address pos);
   event DepositFreeOverrideToggled(address pos);
@@ -77,8 +78,8 @@ contract UniProxy is ReentrancyGuard {
     require(p.version == 0, 'already added');
     require(version > 0, 'version < 1');
     p.version = version;
-    IHypervisor(pos).token0().safeApprove(pos, MAX_INT);
-    IHypervisor(pos).token1().safeApprove(pos, MAX_INT);
+    IHypervisor(pos).token0().safeApprove(pos, MAX_UINT);
+    IHypervisor(pos).token1().safeApprove(pos, MAX_UINT);
     emit PositionAdded(pos, version);
   }
 
@@ -142,12 +143,12 @@ contract UniProxy is ReentrancyGuard {
     if (p.version < 3) {
       if (p.version < 2) {
         /// requires lp token transfer from proxy to msg.sender
-        shares = IHypervisor(pos).deposit(deposit0, deposit1, address(this));
+        shares = IHypervisor(pos).deposit(deposit0, deposit1, address(this), address(this));
         IHypervisor(pos).transfer(to, shares);
       }
       else{
         /// transfer lp tokens direct to msg.sender
-        shares = IHypervisor(pos).deposit(deposit0, deposit1, msg.sender);
+        shares = IHypervisor(pos).deposit(deposit0, deposit1, msg.sender, address(this));
       }
     }
     else {
@@ -310,6 +311,14 @@ contract UniProxy is ReentrancyGuard {
     p.twapOverride = twapOverride;
     p.twapInterval = _twapInterval;
     emit TwapOverrideSet(pos, twapOverride, _twapInterval);
+  }
+
+  /// @param pos Hypervisor Address
+  /// @param _priceThreshold Price Threshold
+  function setPriceThresholdPos(address pos, uint256 _priceThreshold) external onlyOwner onlyAddedPosition(pos) {
+    Position storage p = positions[pos];
+    p.priceThreshold = _priceThreshold;
+    emit PriceThresholdPosSet(pos, _priceThreshold);
   }
 
   /// @notice Twap Toggle
