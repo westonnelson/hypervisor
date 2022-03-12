@@ -203,21 +203,6 @@ const _abi = [
         name: "feeRecipient",
         type: "address",
       },
-      {
-        internalType: "int256",
-        name: "swapQuantity",
-        type: "int256",
-      },
-      {
-        internalType: "int256",
-        name: "amountMin",
-        type: "int256",
-      },
-      {
-        internalType: "uint160",
-        name: "sqrtPriceLimitX96",
-        type: "uint160",
-      },
     ],
     name: "rebalance",
     outputs: [],
