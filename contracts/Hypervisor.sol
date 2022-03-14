@@ -12,7 +12,6 @@ import "@openzeppelin/contracts/drafts/ERC20Permit.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.sol";
-import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
@@ -24,7 +23,7 @@ import "./interfaces/IUniversalVault.sol";
 /// @title Hypervisor
 /// @notice A Uniswap V2-like interface with fungible liquidity to Uniswap V3
 /// which allows for arbitrary liquidity provision: one-sided, lop-sided, and balanced
-contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, ERC20Permit, ReentrancyGuard {
+contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
     using SignedSafeMath for int256;
@@ -50,7 +49,6 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
 
     uint256 public constant PRECISION = 1e36;
 
-    bool rebalanceCalled;
     bool mintCalled;
 
     /// events
@@ -480,26 +478,6 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, IUniswapV3SwapCallback, E
         if (amount0 > 0) token0.safeTransfer(msg.sender, amount0);
         if (amount1 > 0) token1.safeTransfer(msg.sender, amount1);
         mintCalled = false;
-    }
-
-    /// @notice Callback function of uniswapV3Pool swap
-    function uniswapV3SwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata data
-    ) external override {
-        require(msg.sender == address(pool));
-        require(rebalanceCalled == true);
-        int256 amountMin = abi.decode(data, (int256));
-
-        if (amount0Delta > 0) {
-            require(amount0Delta >= amountMin);
-            token0.safeTransfer(msg.sender, uint256(amount0Delta));
-        } else if (amount1Delta > 0) {
-            require(amount1Delta >= amountMin);
-            token1.safeTransfer(msg.sender, uint256(amount1Delta));
-        }
-        rebalanceCalled = false;
     }
 
     /// @return total0 Quantity of token0 in both positions and unused in the Hypervisor
