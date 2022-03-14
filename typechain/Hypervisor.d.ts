@@ -69,7 +69,6 @@ interface HypervisorInterface extends ethers.utils.Interface {
     "transferFrom(address,address,uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "uniswapV3MintCallback(uint256,uint256,bytes)": FunctionFragment;
-    "uniswapV3SwapCallback(int256,int256,bytes)": FunctionFragment;
     "whitelisted()": FunctionFragment;
     "withdraw(uint256,address,address)": FunctionFragment;
   };
@@ -230,10 +229,6 @@ interface HypervisorInterface extends ethers.utils.Interface {
     values: [BigNumberish, BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
-    functionFragment: "uniswapV3SwapCallback",
-    values: [BigNumberish, BigNumberish, BytesLike]
-  ): string;
-  encodeFunctionData(
     functionFragment: "whitelisted",
     values?: undefined
   ): string;
@@ -360,10 +355,6 @@ interface HypervisorInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "uniswapV3MintCallback",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "uniswapV3SwapCallback",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -689,13 +680,6 @@ export class Hypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    uniswapV3SwapCallback(
-      amount0Delta: BigNumberish,
-      amount1Delta: BigNumberish,
-      data: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     whitelisted(overrides?: CallOverrides): Promise<[boolean]>;
 
     withdraw(
@@ -901,13 +885,6 @@ export class Hypervisor extends BaseContract {
   uniswapV3MintCallback(
     amount0: BigNumberish,
     amount1: BigNumberish,
-    data: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  uniswapV3SwapCallback(
-    amount0Delta: BigNumberish,
-    amount1Delta: BigNumberish,
     data: BytesLike,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -1123,13 +1100,6 @@ export class Hypervisor extends BaseContract {
     uniswapV3MintCallback(
       amount0: BigNumberish,
       amount1: BigNumberish,
-      data: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    uniswapV3SwapCallback(
-      amount0Delta: BigNumberish,
-      amount1Delta: BigNumberish,
       data: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
@@ -1496,13 +1466,6 @@ export class Hypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    uniswapV3SwapCallback(
-      amount0Delta: BigNumberish,
-      amount1Delta: BigNumberish,
-      data: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     whitelisted(overrides?: CallOverrides): Promise<BigNumber>;
 
     withdraw(
@@ -1700,13 +1663,6 @@ export class Hypervisor extends BaseContract {
     uniswapV3MintCallback(
       amount0: BigNumberish,
       amount1: BigNumberish,
-      data: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    uniswapV3SwapCallback(
-      amount0Delta: BigNumberish,
-      amount1Delta: BigNumberish,
       data: BytesLike,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
