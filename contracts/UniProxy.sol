@@ -108,16 +108,7 @@ contract UniProxy is ReentrancyGuard {
       }
     }
 
-    if (twapCheck || p.twapOverride) {
-      /// check twap
-      checkPriceChange(
-        pos,
-        (p.twapOverride ? p.twapInterval : twapInterval),
-        (p.twapOverride ? p.priceThreshold : priceThreshold)
-      );
-    }
-
-    if (!freeDeposit && !p.list[msg.sender] && !p.freeDeposit) {      
+    if (!freeDeposit && !p.list[msg.sender] && !p.freeDeposit) { 
       // freeDeposit off and hypervisor msg.sender not on list
       if (deposit0 > 0) {
         (uint256 test1Min, uint256 test1Max) = getDepositAmount(pos, address(IHypervisor(pos).token0()), deposit0);
@@ -129,6 +120,15 @@ contract UniProxy is ReentrancyGuard {
 
         require(deposit0 >= test0Min && deposit0 <= test0Max, "Improper ratio"); 
       }
+    }
+
+    if (twapCheck || p.twapOverride) {
+      /// check twap
+      checkPriceChange(
+        pos,
+        (p.twapOverride ? p.twapInterval : twapInterval),
+        (p.twapOverride ? p.priceThreshold : priceThreshold)
+      );
     }
 
     if (p.depositOverride) {
