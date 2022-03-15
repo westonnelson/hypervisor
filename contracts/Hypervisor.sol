@@ -44,7 +44,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
     uint256 public deposit1Max;
     uint256 public maxTotalSupply;
     address public whitelistedAddress;
-    bool public whitelisted; /// depositors must be on list
+    bool public whitelisted = true; /// depositors must be on list
     bool public directDeposit; /// enter uni on deposit (avoid if client uses public rpc)
 
     uint256 public constant PRECISION = 1e36;
