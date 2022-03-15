@@ -43,8 +43,8 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
     uint256 public deposit0Max;
     uint256 public deposit1Max;
     uint256 public maxTotalSupply;
-    mapping(address => bool) public list; /// whitelist of depositors
-    bool public whitelisted; /// depositors must be on list
+    address public whitelistedAddress;
+    bool public whitelisted = true; /// depositors must be on list
     bool public directDeposit; /// enter uni on deposit (avoid if client uses public rpc)
 
     uint256 public constant PRECISION = 1e36;
@@ -96,7 +96,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
         require(deposit0 > 0 || deposit1 > 0);
         require(deposit0 <= deposit0Max && deposit1 <= deposit1Max);
         require(to != address(0) && to != address(this), "to");
-        require(!whitelisted || list[msg.sender]);
+        require(!whitelisted || msg.sender == whitelistedAddress);
 
         /// update fees
         (uint128 baseLiquidity, uint128 limitLiquidity) = zeroBurn();
@@ -323,35 +323,35 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
     /// @return limitToken0Owed Pending fees of limit token0
     /// @return limitToken1Owed Pending fees of limit token1
     function compound() external onlyOwner returns (
-      uint128 baseToken0Owed,
-      uint128 baseToken1Owed,
-      uint128 limitToken0Owed,
-      uint128 limitToken1Owed
+        uint128 baseToken0Owed,
+        uint128 baseToken1Owed,
+        uint128 limitToken0Owed,
+        uint128 limitToken1Owed
     ) {
-      // update fees for compounding
-      zeroBurn();
-      (, baseToken0Owed,baseToken1Owed) = _position(baseLower, baseUpper);
-      (, limitToken0Owed,limitToken1Owed) = _position(limitLower, limitUpper);
-      
-      // collect fees
-      pool.collect(address(this), baseLower, baseLower, baseToken0Owed, baseToken1Owed);
-      pool.collect(address(this), limitLower, limitUpper, limitToken0Owed, limitToken1Owed);
-      
-      uint128 baseLiquidity = _liquidityForAmounts(
-        baseLower,
-        baseUpper,
-        token0.balanceOf(address(this)),
-        token1.balanceOf(address(this))
-      );
-      _mintLiquidity(baseLower, baseUpper, baseLiquidity, address(this));
+        // update fees for compounding
+        zeroBurn();
+        (, baseToken0Owed,baseToken1Owed) = _position(baseLower, baseUpper);
+        (, limitToken0Owed,limitToken1Owed) = _position(limitLower, limitUpper);
+        
+        // collect fees
+        pool.collect(address(this), baseLower, baseLower, baseToken0Owed, baseToken1Owed);
+        pool.collect(address(this), limitLower, limitUpper, limitToken0Owed, limitToken1Owed);
+        
+        uint128 baseLiquidity = _liquidityForAmounts(
+            baseLower,
+            baseUpper,
+            token0.balanceOf(address(this)),
+            token1.balanceOf(address(this))
+        );
+        _mintLiquidity(baseLower, baseUpper, baseLiquidity, address(this));
 
-      uint128 limitLiquidity = _liquidityForAmounts(
-        limitLower,
-        limitUpper,
-        token0.balanceOf(address(this)),
-        token1.balanceOf(address(this))
-      );
-      _mintLiquidity(limitLower, limitUpper, limitLiquidity, address(this));
+        uint128 limitLiquidity = _liquidityForAmounts(
+            limitLower,
+            limitUpper,
+            token0.balanceOf(address(this)),
+            token1.balanceOf(address(this))
+        );
+        _mintLiquidity(limitLower, limitUpper, limitLiquidity, address(this));
     }
 
     /// @notice Add tokens to base liquidity
@@ -604,16 +604,14 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
         emit DepositMaxSet(_deposit0Max, _deposit1Max);
     }
 
-    /// @param listed Array of addresses to be appended
-    function appendList(address[] memory listed) external onlyOwner {
-        for (uint8 i; i < listed.length; i++) {
-            list[listed[i]] = true;
-        }
+    /// @param _address Array of addresses to be appended
+    function setWhitelist(address _address) external onlyOwner {
+        whitelistedAddress = _address;
     }
 
-    /// @param listed Address of listed to remove
-    function removeListed(address listed) external onlyOwner {
-        list[listed] = false;
+    /// @notice Remove Whitelisted
+    function removeWhitelisted() external onlyOwner {
+        whitelistedAddress = address(0);
     }
 
     /// @notice Toggle Direct Deposit

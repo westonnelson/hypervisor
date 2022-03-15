@@ -84,9 +84,9 @@ interface IHypervisor {
 
     function setDepositMax(uint256 _deposit0Max, uint256 _deposit1Max) external;
 
-    function appendList(address[] memory listed) external;
+    function setWhitelist(address _address) external;
 
-    function removeListed(address listed) external;
+    function removeWhitelisted() external;
 
     function toggleWhitelist() external;
 

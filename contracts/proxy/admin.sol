@@ -109,15 +109,14 @@ contract Admin {
     }
 
     /// @param _hypervisor Hypervisor Address
-    /// @param listed Array of addresses to be appended
-    function appendList(address _hypervisor, address[] memory listed) external onlyAdmin {
-        IHypervisor(_hypervisor).appendList(listed);
+    /// @param _address Array of addresses to be appended
+    function setWhitelist(address _hypervisor, address _address) external onlyAdmin {
+        IHypervisor(_hypervisor).setWhitelist(_address);
     }
 
     /// @param _hypervisor Hypervisor Address
-    /// @param listed Address of listed to remove
-    function removeListed(address _hypervisor, address listed) external onlyAdmin {
-        IHypervisor(_hypervisor).removeListed(listed);
+    function removeWhitelisted(address _hypervisor) external onlyAdmin {
+        IHypervisor(_hypervisor).removeWhitelisted();
     }
 
     /// @param newAdmin New Admin Address

@@ -46,19 +46,6 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "address[]",
-        name: "listed",
-        type: "address[]",
-      },
-    ],
-    name: "appendList",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "address",
         name: "",
         type: "address",
@@ -317,14 +304,8 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "listed",
-        type: "address",
-      },
-    ],
-    name: "removeListed",
+    inputs: [],
+    name: "removeWhitelisted",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -356,6 +337,19 @@ const _abi = [
       },
     ],
     name: "setMaxTotalSupply",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_address",
+        type: "address",
+      },
+    ],
+    name: "setWhitelist",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
