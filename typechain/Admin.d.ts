@@ -25,14 +25,14 @@ interface AdminInterface extends ethers.utils.Interface {
     "addLimitLiquidity(address,uint256,uint256)": FunctionFragment;
     "admin()": FunctionFragment;
     "advisor()": FunctionFragment;
-    "appendList(address,address[])": FunctionFragment;
     "pendingFees(address)": FunctionFragment;
     "pullLiquidity(address,uint256)": FunctionFragment;
     "rebalance(address,int24,int24,int24,int24,address)": FunctionFragment;
-    "removeListed(address,address)": FunctionFragment;
+    "removeWhitelisted(address)": FunctionFragment;
     "rescueERC20(address,address)": FunctionFragment;
     "setDepositMax(address,uint256,uint256)": FunctionFragment;
     "setMaxTotalSupply(address,uint256)": FunctionFragment;
+    "setWhitelist(address,address)": FunctionFragment;
     "toggleWhitelist(address)": FunctionFragment;
     "transferAdmin(address)": FunctionFragment;
     "transferAdvisor(address)": FunctionFragment;
@@ -49,10 +49,6 @@ interface AdminInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "admin", values?: undefined): string;
   encodeFunctionData(functionFragment: "advisor", values?: undefined): string;
-  encodeFunctionData(
-    functionFragment: "appendList",
-    values: [string, string[]]
-  ): string;
   encodeFunctionData(functionFragment: "pendingFees", values: [string]): string;
   encodeFunctionData(
     functionFragment: "pullLiquidity",
@@ -70,8 +66,8 @@ interface AdminInterface extends ethers.utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "removeListed",
-    values: [string, string]
+    functionFragment: "removeWhitelisted",
+    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "rescueERC20",
@@ -84,6 +80,10 @@ interface AdminInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "setMaxTotalSupply",
     values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setWhitelist",
+    values: [string, string]
   ): string;
   encodeFunctionData(
     functionFragment: "toggleWhitelist",
@@ -112,7 +112,6 @@ interface AdminInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "admin", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "advisor", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "appendList", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "pendingFees",
     data: BytesLike
@@ -123,7 +122,7 @@ interface AdminInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "rebalance", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "removeListed",
+    functionFragment: "removeWhitelisted",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -136,6 +135,10 @@ interface AdminInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "setMaxTotalSupply",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setWhitelist",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -220,12 +223,6 @@ export class Admin extends BaseContract {
 
     advisor(overrides?: CallOverrides): Promise<[string]>;
 
-    appendList(
-      _hypervisor: string,
-      listed: string[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     pendingFees(
       _hypervisor: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -247,9 +244,8 @@ export class Admin extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    removeListed(
+    removeWhitelisted(
       _hypervisor: string,
-      listed: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -269,6 +265,12 @@ export class Admin extends BaseContract {
     setMaxTotalSupply(
       _hypervisor: string,
       _maxTotalSupply: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setWhitelist(
+      _hypervisor: string,
+      _address: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -312,12 +314,6 @@ export class Admin extends BaseContract {
 
   advisor(overrides?: CallOverrides): Promise<string>;
 
-  appendList(
-    _hypervisor: string,
-    listed: string[],
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   pendingFees(
     _hypervisor: string,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -339,9 +335,8 @@ export class Admin extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  removeListed(
+  removeWhitelisted(
     _hypervisor: string,
-    listed: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -361,6 +356,12 @@ export class Admin extends BaseContract {
   setMaxTotalSupply(
     _hypervisor: string,
     _maxTotalSupply: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setWhitelist(
+    _hypervisor: string,
+    _address: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -404,12 +405,6 @@ export class Admin extends BaseContract {
 
     advisor(overrides?: CallOverrides): Promise<string>;
 
-    appendList(
-      _hypervisor: string,
-      listed: string[],
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     pendingFees(
       _hypervisor: string,
       overrides?: CallOverrides
@@ -438,9 +433,8 @@ export class Admin extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    removeListed(
+    removeWhitelisted(
       _hypervisor: string,
-      listed: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -460,6 +454,12 @@ export class Admin extends BaseContract {
     setMaxTotalSupply(
       _hypervisor: string,
       _maxTotalSupply: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setWhitelist(
+      _hypervisor: string,
+      _address: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -503,12 +503,6 @@ export class Admin extends BaseContract {
 
     advisor(overrides?: CallOverrides): Promise<BigNumber>;
 
-    appendList(
-      _hypervisor: string,
-      listed: string[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     pendingFees(
       _hypervisor: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -530,9 +524,8 @@ export class Admin extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    removeListed(
+    removeWhitelisted(
       _hypervisor: string,
-      listed: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -552,6 +545,12 @@ export class Admin extends BaseContract {
     setMaxTotalSupply(
       _hypervisor: string,
       _maxTotalSupply: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setWhitelist(
+      _hypervisor: string,
+      _address: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -596,12 +595,6 @@ export class Admin extends BaseContract {
 
     advisor(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    appendList(
-      _hypervisor: string,
-      listed: string[],
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     pendingFees(
       _hypervisor: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -623,9 +616,8 @@ export class Admin extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    removeListed(
+    removeWhitelisted(
       _hypervisor: string,
-      listed: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -645,6 +637,12 @@ export class Admin extends BaseContract {
     setMaxTotalSupply(
       _hypervisor: string,
       _maxTotalSupply: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setWhitelist(
+      _hypervisor: string,
+      _address: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
