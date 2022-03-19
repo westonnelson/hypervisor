@@ -119,6 +119,11 @@ contract Admin {
         IHypervisor(_hypervisor).removeWhitelisted();
     }
 
+    /// @param _slippage Maximum slippage permitted when minting liquidity from pool 
+    function setMaxTotalSupply(address _hypervisor, uint24 _slippage) external onlyAdmin {
+        IHypervisor(_hypervisor).setSlippage(_slippage);
+    }
+
     /// @param newAdmin New Admin Address
     function transferAdmin(address newAdmin) external onlyAdmin {
         require(newAdmin != address(0), "newAdmin should be non-zero");
