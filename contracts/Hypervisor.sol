@@ -32,6 +32,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
     IERC20 public token0;
     IERC20 public token1;
     uint24 public fee;
+    uint24 public slippage;
     int24 public tickSpacing;
 
     int24 public baseLower;
@@ -44,7 +45,7 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
     uint256 public deposit1Max;
     uint256 public maxTotalSupply;
     address public whitelistedAddress;
-    bool public whitelisted = true; /// depositors must be on list
+    bool public whitelisted; /// depositors must be on list
     bool public directDeposit; /// enter uni on deposit (avoid if client uses public rpc)
 
     uint256 public constant PRECISION = 1e36;
@@ -72,13 +73,14 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
         require(address(token1) != address(0));
         fee = pool.fee();
         tickSpacing = pool.tickSpacing();
+        slippage = 10;
 
         owner = _owner;
 
         maxTotalSupply = 0; /// no cap
         deposit0Max = uint256(-1);
         deposit1Max = uint256(-1);
-        whitelisted = false;
+        whitelisted = true;
     }
 
     /// @notice Deposit tokens
@@ -96,10 +98,10 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
         require(deposit0 > 0 || deposit1 > 0);
         require(deposit0 <= deposit0Max && deposit1 <= deposit1Max);
         require(to != address(0) && to != address(this), "to");
-        require(!whitelisted || msg.sender == whitelistedAddress);
+        require(!whitelisted || msg.sender == whitelistedAddress, "WHE");
 
         /// update fees
-        (uint128 baseLiquidity, uint128 limitLiquidity) = zeroBurn();
+        zeroBurn();
 
         uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(currentTick());
         uint256 price = FullMath.mulDiv(uint256(sqrtPrice).mul(uint256(sqrtPrice)), PRECISION, 2**(96 * 2));
@@ -120,21 +122,8 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
           uint256 pool0PricedInToken1 = pool0.mul(price).div(PRECISION);
           shares = shares.mul(total).div(pool0PricedInToken1.add(pool1));
           if (directDeposit) {
-            baseLiquidity = _liquidityForAmounts(
-                baseLower,
-                baseUpper,
-                token0.balanceOf(address(this)),
-                token1.balanceOf(address(this))
-            );
-            _mintLiquidity(baseLower, baseUpper, baseLiquidity, address(this));
-
-            limitLiquidity = _liquidityForAmounts(
-                limitLower,
-                limitUpper,
-                token0.balanceOf(address(this)),
-                token1.balanceOf(address(this))
-            );
-            _mintLiquidity(limitLower, limitUpper, limitLiquidity, address(this));
+            addLiquidity(baseLower, baseUpper, address(this), token0.balanceOf(address(this)), token1.balanceOf(address(this)));
+            addLiquidity(limitLower, limitUpper, address(this), token0.balanceOf(address(this)), token1.balanceOf(address(this)));
           }
         }
         _mint(to, shares);
@@ -298,23 +287,11 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
 
         baseLower = _baseLower;
         baseUpper = _baseUpper;
-        baseLiquidity = _liquidityForAmounts(
-            baseLower,
-            baseUpper,
-            token0.balanceOf(address(this)),
-            token1.balanceOf(address(this))
-        );
-        _mintLiquidity(baseLower, baseUpper, baseLiquidity, address(this));
+        addLiquidity(baseLower, baseUpper, address(this), token0.balanceOf(address(this)), token1.balanceOf(address(this)));
 
         limitLower = _limitLower;
         limitUpper = _limitUpper;
-        limitLiquidity = _liquidityForAmounts(
-            limitLower,
-            limitUpper,
-            token0.balanceOf(address(this)),
-            token1.balanceOf(address(this))
-        );
-        _mintLiquidity(limitLower, limitUpper, limitLiquidity, address(this));
+        addLiquidity(limitLower, limitUpper, address(this), token0.balanceOf(address(this)), token1.balanceOf(address(this)));
     }
 
     /// @notice Compound pending fees
@@ -337,47 +314,46 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
         pool.collect(address(this), baseLower, baseLower, baseToken0Owed, baseToken1Owed);
         pool.collect(address(this), limitLower, limitUpper, limitToken0Owed, limitToken1Owed);
         
-        uint128 baseLiquidity = _liquidityForAmounts(
-            baseLower,
-            baseUpper,
-            token0.balanceOf(address(this)),
-            token1.balanceOf(address(this))
-        );
-        _mintLiquidity(baseLower, baseUpper, baseLiquidity, address(this));
-
-        uint128 limitLiquidity = _liquidityForAmounts(
-            limitLower,
-            limitUpper,
-            token0.balanceOf(address(this)),
-            token1.balanceOf(address(this))
-        );
-        _mintLiquidity(limitLower, limitUpper, limitLiquidity, address(this));
+        addLiquidity(baseLower, baseUpper, address(this), token0.balanceOf(address(this)), token1.balanceOf(address(this)));
+        addLiquidity(limitLower, limitUpper, address(this), token0.balanceOf(address(this)), token1.balanceOf(address(this)));
     }
 
     /// @notice Add tokens to base liquidity
     /// @param amount0 Amount of token0 to add
     /// @param amount1 Amount of token1 to add
     function addBaseLiquidity(uint256 amount0, uint256 amount1) external onlyOwner {
-        uint128 baseLiquidity = _liquidityForAmounts(
+        addLiquidity(
             baseLower,
             baseUpper,
+            address(this),
             amount0 == 0 && amount1 == 0 ? token0.balanceOf(address(this)) : amount0,
             amount0 == 0 && amount1 == 0 ? token1.balanceOf(address(this)) : amount1
         );
-        _mintLiquidity(baseLower, baseUpper, baseLiquidity, address(this));
     }
 
     /// @notice Add tokens to limit liquidity
     /// @param amount0 Amount of token0 to add
     /// @param amount1 Amount of token1 to add
     function addLimitLiquidity(uint256 amount0, uint256 amount1) external onlyOwner {
-        uint128 limitLiquidity = _liquidityForAmounts(
+        addLiquidity(
             limitLower,
             limitUpper,
+            address(this),
             amount0 == 0 && amount1 == 0 ? token0.balanceOf(address(this)) : amount0,
             amount0 == 0 && amount1 == 0 ? token1.balanceOf(address(this)) : amount1
         );
-        _mintLiquidity(limitLower, limitUpper, limitLiquidity, address(this));
+    }
+
+    /// @notice Add Liquidity
+    function addLiquidity(
+        int24 tickLower,
+        int24 tickUpper,
+        address payer,
+        uint256 amount0,
+        uint256 amount1
+    ) internal {        
+        uint128 liquidity = _liquidityForAmounts(tickLower, tickUpper, amount0, amount1);
+        _mintLiquidity(tickLower, tickUpper, liquidity, payer, _getSlippageMin(amount0), _getSlippageMin(amount1));
     }
 
     /// @notice Adds the liquidity for the given position
@@ -385,23 +361,26 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
     /// @param tickUpper The upper tick of the position in which to add liquidity
     /// @param liquidity The amount of liquidity to mint
     /// @param payer Payer Data
-    /// @return amount0 The amount of token0 that was paid to mint the given amount of liquidity
-    /// @return amount1 The amount of token1 that was paid to mint the given amount of liquidity
+    /// @param amount0Min Minimum amount of token0 that should be paid
+    /// @param amount1Min Minimum amount of token1 that should be paid
     function _mintLiquidity(
         int24 tickLower,
         int24 tickUpper,
         uint128 liquidity,
-        address payer
-    ) internal returns (uint256 amount0, uint256 amount1) {
+        address payer,
+        uint256 amount0Min,
+        uint256 amount1Min
+    ) internal {
         if (liquidity > 0) {
             mintCalled = true;
-            (amount0, amount1) = pool.mint(
+            (uint256 amount0, uint256 amount1) = pool.mint(
                 address(this),
                 tickLower,
                 tickUpper,
                 liquidity,
                 abi.encode(payer)
             );
+            require(amount0 >= amount0Min && amount1 >= amount1Min, 'PSC');
         }
     }
 
@@ -580,6 +559,11 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
             );
     }
 
+    /// @notice Get slippage amount
+    function _getSlippageMin(uint256 amount) internal view returns (uint256) {
+        return amount.sub(amount.mul(slippage).div(100));
+    }
+
     /// @return tick Uniswap pool's current price tick
     function currentTick() public view returns (int24 tick) {
         (, tick, , , , , ) = pool.slot0();
@@ -622,6 +606,12 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
     /// @notice Toogle Whitelist configuration
     function toggleWhitelist() external onlyOwner {
         whitelisted = !whitelisted;
+    }
+
+    /// @notice Set Slippage
+    /// @param _slippage Slippage value in %
+    function setSlippage(uint24 _slippage) external onlyOwner {
+        slippage = _slippage;
     }
 
     function transferOwnership(address newOwner) external onlyOwner {

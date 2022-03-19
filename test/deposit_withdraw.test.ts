@@ -31,9 +31,6 @@ describe('Hypervisor', () => {
     const [wallet, alice, bob, carol, other,
            user0, user1, user2, user3, user4] = waffle.provider.getWallets()
 
-    const minSqrtPrice = 4295128740;
-    const maxSqrtPrice = 1461446703485210103287273052203988822378723970341;
-
     let factory: IUniswapV3Factory
     let router: ISwapRouter
     let token0: TestERC20
@@ -89,6 +86,9 @@ describe('Hypervisor', () => {
         let alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(0)
         // establishing 1:1 ratio in hypervisor
+        await expect(uniProxy.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, hypervisor.address)).to.be.revertedWith("WHE")
+        await hypervisor.setWhitelist(uniProxy.address);
+
         await uniProxy.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, hypervisor.address)
         await hypervisor.rebalance(-1800, 1800, 0, 600, bob.address)
         // attempting 2 unbalanced deposits & expecting failure
@@ -111,8 +111,10 @@ describe('Hypervisor', () => {
         let alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(0)
 
-        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address)
+        await expect(hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address)).to.be.revertedWith("WHE")
 
+        await hypervisor.setWhitelist(alice.address)
+        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address)
         let token0hypervisor = await token0.balanceOf(hypervisor.address)
         let token1hypervisor = await token1.balanceOf(hypervisor.address)
         expect(token0hypervisor).to.equal(ethers.utils.parseEther('1000'))
@@ -262,11 +264,16 @@ describe('Hypervisor', () => {
         await token0.connect(user4).approve(hypervisor.address, tokenAmount)
         await token1.connect(user4).approve(hypervisor.address, tokenAmount)
 
+        await hypervisor.setWhitelist(user0.address)
         await hypervisor.connect(user0).deposit(tokenAmount, tokenAmount, user0.address, user0.address)
         await hypervisor.rebalance(-1800, 1800, 0, 600, bob.address)
+        await hypervisor.setWhitelist(user1.address)
         await hypervisor.connect(user1).deposit(tokenAmount, tokenAmount, user1.address, user1.address)
+        await hypervisor.setWhitelist(user2.address)
         await hypervisor.connect(user2).deposit(tokenAmount, tokenAmount, user2.address, user2.address)
+        await hypervisor.setWhitelist(user3.address)
         await hypervisor.connect(user3).deposit(tokenAmount, tokenAmount, user3.address, user3.address)
+        await hypervisor.setWhitelist(user4.address)
         await hypervisor.connect(user4).deposit(tokenAmount, tokenAmount, user4.address, user4.address)
 
         let user0token0Amount = await token0.balanceOf(user0.address)
@@ -344,6 +351,7 @@ describe('Hypervisor', () => {
         let alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(0)
 
+        await hypervisor.setWhitelist(alice.address)
         await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address)
         alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(ethers.utils.parseEther('2000'))
@@ -363,6 +371,8 @@ describe('Hypervisor', () => {
         await token1.mint(user0.address, tokenAmount)
         await token0.connect(user0).approve(hypervisor.address, tokenAmount)
         await token1.connect(user0).approve(hypervisor.address, tokenAmount)
+
+        await hypervisor.setWhitelist(user0.address)
         await hypervisor.connect(user0).deposit(tokenAmount, tokenAmount, user0.address, user0.address)
         let token0Balance = await token0.balanceOf(user0.address)
         let token1Balance = await token1.balanceOf(user0.address)
@@ -396,11 +406,12 @@ describe('Hypervisor', () => {
         let alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(0)
 
+        await hypervisor.setWhitelist(alice.address)
         await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address)        
         alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(ethers.utils.parseEther('2000'))
 
-        await hypervisor.rebalance(-120, 120, 0, 60, bob.address)
+        await hypervisor.rebalance(-240, 240, -120, 120, bob.address)
 
         let basePosition = await hypervisor.getBasePosition()
         let limitPosition = await hypervisor.getLimitPosition()
@@ -456,6 +467,7 @@ describe('Hypervisor', () => {
         await token0.connect(carol).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
         await token1.connect(carol).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
 
+        await hypervisor.setWhitelist(carol.address)
         await hypervisor.connect(carol).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), carol.address, carol.address)
 
         await hypervisor.rebalance(-120, 120, 0, 60, bob.address)
@@ -469,6 +481,7 @@ describe('Hypervisor', () => {
         let alice_liq_balance = await hypervisor.balanceOf(alice.address)
 
         // alice direct deposits, should add to liquidity immediately
+        await hypervisor.setWhitelist(alice.address)
         await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address)
         alice_liq_balance = await hypervisor.balanceOf(alice.address)
 
@@ -489,6 +502,7 @@ describe('Hypervisor', () => {
         let alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(0)
 
+        await hypervisor.setWhitelist(alice.address)
         await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address)
 
         // liquidity positions will only be created once rebalance is called

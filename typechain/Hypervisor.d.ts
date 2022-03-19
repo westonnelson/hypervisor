@@ -56,7 +56,9 @@ interface HypervisorInterface extends ethers.utils.Interface {
     "removeWhitelisted()": FunctionFragment;
     "setDepositMax(uint256,uint256)": FunctionFragment;
     "setMaxTotalSupply(uint256)": FunctionFragment;
+    "setSlippage(uint24)": FunctionFragment;
     "setWhitelist(address)": FunctionFragment;
+    "slippage()": FunctionFragment;
     "symbol()": FunctionFragment;
     "tickSpacing()": FunctionFragment;
     "toggleDirectDeposit()": FunctionFragment;
@@ -189,9 +191,14 @@ interface HypervisorInterface extends ethers.utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "setSlippage",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setWhitelist",
     values: [string]
   ): string;
+  encodeFunctionData(functionFragment: "slippage", values?: undefined): string;
   encodeFunctionData(functionFragment: "symbol", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "tickSpacing",
@@ -327,9 +334,14 @@ interface HypervisorInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setSlippage",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setWhitelist",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "slippage", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "symbol", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "tickSpacing",
@@ -638,10 +650,17 @@ export class Hypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setSlippage(
+      _slippage: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setWhitelist(
       _address: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    slippage(overrides?: CallOverrides): Promise<[number]>;
 
     symbol(overrides?: CallOverrides): Promise<[string]>;
 
@@ -846,10 +865,17 @@ export class Hypervisor extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setSlippage(
+    _slippage: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   setWhitelist(
     _address: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
+
+  slippage(overrides?: CallOverrides): Promise<number>;
 
   symbol(overrides?: CallOverrides): Promise<string>;
 
@@ -1068,7 +1094,14 @@ export class Hypervisor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setSlippage(
+      _slippage: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setWhitelist(_address: string, overrides?: CallOverrides): Promise<void>;
+
+    slippage(overrides?: CallOverrides): Promise<number>;
 
     symbol(overrides?: CallOverrides): Promise<string>;
 
@@ -1422,10 +1455,17 @@ export class Hypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setSlippage(
+      _slippage: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setWhitelist(
       _address: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    slippage(overrides?: CallOverrides): Promise<BigNumber>;
 
     symbol(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1619,10 +1659,17 @@ export class Hypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    setSlippage(
+      _slippage: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     setWhitelist(
       _address: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
+
+    slippage(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     symbol(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 

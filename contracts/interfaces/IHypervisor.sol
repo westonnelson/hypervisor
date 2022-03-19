@@ -85,8 +85,10 @@ interface IHypervisor {
     function setDepositMax(uint256 _deposit0Max, uint256 _deposit1Max) external;
 
     function setWhitelist(address _address) external;
-
+    
     function removeWhitelisted() external;
+
+    function setSlippage(uint24 slippage) external;
 
     function toggleWhitelist() external;
 
