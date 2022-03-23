@@ -400,8 +400,10 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
         bool collectAll
     ) internal returns (uint256 amount0, uint256 amount1) {
         if (liquidity > 0) {
+            (uint256 pool0, uint256 pool1) = _amountsForLiquidity(tickLower, tickUpper, liquidity);
             /// Burn liquidity
             (uint256 owed0, uint256 owed1) = pool.burn(tickLower, tickUpper, liquidity);
+            require(owed0 >= _getSlippageMin(pool0) && owed1 >= _getSlippageMin(pool1), "PSC");
 
             // Collect amount owed
             uint128 collect0 = collectAll ? type(uint128).max : _uint128Safe(owed0);

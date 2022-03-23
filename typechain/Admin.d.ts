@@ -262,9 +262,15 @@ export class Admin extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setMaxTotalSupply(
+    "setMaxTotalSupply(address,uint256)"(
       _hypervisor: string,
       _maxTotalSupply: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "setMaxTotalSupply(address,uint24)"(
+      _hypervisor: string,
+      _slippage: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -353,9 +359,15 @@ export class Admin extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setMaxTotalSupply(
+  "setMaxTotalSupply(address,uint256)"(
     _hypervisor: string,
     _maxTotalSupply: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "setMaxTotalSupply(address,uint24)"(
+    _hypervisor: string,
+    _slippage: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -451,9 +463,15 @@ export class Admin extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    setMaxTotalSupply(
+    "setMaxTotalSupply(address,uint256)"(
       _hypervisor: string,
       _maxTotalSupply: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "setMaxTotalSupply(address,uint24)"(
+      _hypervisor: string,
+      _slippage: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -542,9 +560,15 @@ export class Admin extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setMaxTotalSupply(
+    "setMaxTotalSupply(address,uint256)"(
       _hypervisor: string,
       _maxTotalSupply: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "setMaxTotalSupply(address,uint24)"(
+      _hypervisor: string,
+      _slippage: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -634,9 +658,15 @@ export class Admin extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setMaxTotalSupply(
+    "setMaxTotalSupply(address,uint256)"(
       _hypervisor: string,
       _maxTotalSupply: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "setMaxTotalSupply(address,uint24)"(
+      _hypervisor: string,
+      _slippage: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

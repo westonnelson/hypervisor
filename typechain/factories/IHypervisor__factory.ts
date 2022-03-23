@@ -344,6 +344,19 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "uint24",
+        name: "slippage",
+        type: "uint24",
+      },
+    ],
+    name: "setSlippage",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "_address",
         type: "address",
