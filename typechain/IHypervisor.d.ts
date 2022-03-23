@@ -38,6 +38,7 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     "removeWhitelisted()": FunctionFragment;
     "setDepositMax(uint256,uint256)": FunctionFragment;
     "setMaxTotalSupply(uint256)": FunctionFragment;
+    "setSlippage(uint24)": FunctionFragment;
     "setWhitelist(address)": FunctionFragment;
     "toggleWhitelist()": FunctionFragment;
     "token0()": FunctionFragment;
@@ -106,6 +107,10 @@ interface IHypervisorInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "setMaxTotalSupply",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setSlippage",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -187,6 +192,10 @@ interface IHypervisorInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "setMaxTotalSupply",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setSlippage",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -342,6 +351,11 @@ export class IHypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setSlippage(
+      slippage: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setWhitelist(
       _address: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -457,6 +471,11 @@ export class IHypervisor extends BaseContract {
 
   setMaxTotalSupply(
     _maxTotalSupply: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setSlippage(
+    slippage: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -592,6 +611,11 @@ export class IHypervisor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setSlippage(
+      slippage: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     setWhitelist(_address: string, overrides?: CallOverrides): Promise<void>;
 
     toggleWhitelist(overrides?: CallOverrides): Promise<void>;
@@ -703,6 +727,11 @@ export class IHypervisor extends BaseContract {
 
     setMaxTotalSupply(
       _maxTotalSupply: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setSlippage(
+      slippage: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -823,6 +852,11 @@ export class IHypervisor extends BaseContract {
 
     setMaxTotalSupply(
       _maxTotalSupply: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setSlippage(
+      slippage: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
