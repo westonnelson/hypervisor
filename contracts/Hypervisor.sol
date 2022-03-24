@@ -154,7 +154,9 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
     /// @return limit0 amount of token0 received from limit position
     /// @return limit1 amount of token1 received from limit position
     function pullLiquidity(
-      uint256 shares
+      uint256 shares,
+      uint256 amount0Min,
+      uint256 amount1Min
     ) external onlyOwner returns(
         uint256 base0,
         uint256 base1,
@@ -167,16 +169,28 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
             baseUpper,
             _liquidityForShares(baseLower, baseUpper, shares),
             address(this),
-            false
+            false,
+            amount0Min,
+            amount1Min
         );
         (limit0, limit1) = _burnLiquidity(
             limitLower,
             limitUpper,
             _liquidityForShares(limitLower, limitUpper, shares),
             address(this),
-            false
+            false,
+            amount0Min,
+            amount1Min
         );
     } 
+
+    function _baseLiquidityForShares(uint256 shares) internal view returns (uint128) {
+        return _liquidityForShares(baseLower, baseUpper, shares);
+    }
+
+    function _limitLiquidityForShares(uint256 shares) internal view returns (uint128) {
+        return _liquidityForShares(limitLower, limitUpper, shares);
+    }
 
     /// @param shares Number of liquidity tokens to redeem as pool assets
     /// @param to Address to which redeemed pool assets are sent
@@ -186,7 +200,9 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
     function withdraw(
         uint256 shares,
         address to,
-        address from
+        address from,
+        uint256 amount0Min,
+        uint256 amount1Min
     ) nonReentrant external override returns (uint256 amount0, uint256 amount1) {
         require(shares > 0, "shares");
         require(to != address(0), "to");
@@ -198,22 +214,25 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
         (uint256 base0, uint256 base1) = _burnLiquidity(
             baseLower,
             baseUpper,
-            _liquidityForShares(baseLower, baseUpper, shares),
+            _baseLiquidityForShares(shares),
             to,
-            false
+            false,
+            amount0Min,
+            amount1Min
         );
         (uint256 limit0, uint256 limit1) = _burnLiquidity(
             limitLower,
             limitUpper,
-            _liquidityForShares(limitLower, limitUpper, shares),
+            _limitLiquidityForShares(shares),
             to,
-            false
+            false,
+            amount0Min,
+            amount1Min
         );
 
         // Push tokens proportional to unused balances
-        uint256 supply = totalSupply();
-        uint256 unusedAmount0 = token0.balanceOf(address(this)).mul(shares).div(supply);
-        uint256 unusedAmount1 = token1.balanceOf(address(this)).mul(shares).div(supply);
+        uint256 unusedAmount0 = token0.balanceOf(address(this)).mul(shares).div(totalSupply());
+        uint256 unusedAmount1 = token1.balanceOf(address(this)).mul(shares).div(totalSupply());
         if (unusedAmount0 > 0) token0.safeTransfer(to, unusedAmount0);
         if (unusedAmount1 > 0) token1.safeTransfer(to, unusedAmount1);
 
@@ -239,7 +258,9 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
         int24 _baseUpper,
         int24 _limitLower,
         int24 _limitUpper,
-        address feeRecipient
+        address feeRecipient,
+        uint256 amount0Min,
+        uint256 amount1Min
     ) nonReentrant external override onlyOwner {
         require(
             _baseLower < _baseUpper &&
@@ -269,8 +290,8 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
         (baseLiquidity, , ) = _position(baseLower, baseUpper);
         (limitLiquidity, , ) = _position(limitLower, limitUpper);
 
-        _burnLiquidity(baseLower, baseUpper, baseLiquidity, address(this), true);
-        _burnLiquidity(limitLower, limitUpper, limitLiquidity, address(this), true);
+        _burnLiquidity(baseLower, baseUpper, baseLiquidity, address(this), true, amount0Min, amount1Min);
+        _burnLiquidity(limitLower, limitUpper, limitLiquidity, address(this), true, amount0Min, amount1Min);
 
         /// transfer 10% of fees for VISR buybacks
         if (fees0 > 0) token0.safeTransfer(feeRecipient, fees0.div(10));
@@ -397,13 +418,14 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
         int24 tickUpper,
         uint128 liquidity,
         address to,
-        bool collectAll
+        bool collectAll,
+        uint256 amount0Min,
+        uint256 amount1Min
     ) internal returns (uint256 amount0, uint256 amount1) {
         if (liquidity > 0) {
-            (uint256 pool0, uint256 pool1) = _amountsForLiquidity(tickLower, tickUpper, liquidity);
             /// Burn liquidity
             (uint256 owed0, uint256 owed1) = pool.burn(tickLower, tickUpper, liquidity);
-            require(owed0 >= _getSlippageMin(pool0) && owed1 >= _getSlippageMin(pool1), "PSC");
+            require(owed0 >= amount0Min && owed1 >= amount1Min, "PSC");
 
             // Collect amount owed
             uint128 collect0 = collectAll ? type(uint128).max : _uint128Safe(owed0);

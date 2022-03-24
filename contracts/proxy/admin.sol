@@ -41,9 +41,11 @@ contract Admin {
         int24 _baseUpper,
         int24 _limitLower,
         int24 _limitUpper,
-        address _feeRecipient
+        address _feeRecipient,
+        uint256 _amount0Min,
+        uint256 _amount1Min
     ) external onlyAdvisor {
-        IHypervisor(_hypervisor).rebalance(_baseLower, _baseUpper, _limitLower, _limitUpper, _feeRecipient);
+        IHypervisor(_hypervisor).rebalance(_baseLower, _baseUpper, _limitLower, _limitUpper, _feeRecipient, _amount0Min, _amount1Min);
     }
 
     /// @notice Pull liquidity tokens from liquidity and receive the tokens
@@ -55,14 +57,16 @@ contract Admin {
     /// @return limit1 amount of token1 received from limit position
     function pullLiquidity(
       address _hypervisor,
-      uint256 shares
+      uint256 shares,
+      uint256 amount0Min,
+      uint256 amount1Min
     ) external onlyAdvisor returns(
         uint256 base0,
         uint256 base1,
         uint256 limit0,
         uint256 limit1
       ) {
-      (base0, base1, limit0, limit1) = IHypervisor(_hypervisor).pullLiquidity(shares);
+      (base0, base1, limit0, limit1) = IHypervisor(_hypervisor).pullLiquidity(shares, amount0Min, amount1Min);
     }
 
     /// @notice Add tokens to base liquidity
