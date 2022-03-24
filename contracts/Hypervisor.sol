@@ -477,10 +477,10 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
     ) external override {
         require(msg.sender == address(pool));
         require(mintCalled == true);
+        mintCalled = false;
 
         if (amount0 > 0) token0.safeTransfer(msg.sender, amount0);
         if (amount1 > 0) token1.safeTransfer(msg.sender, amount1);
-        mintCalled = false;
     }
 
     /// @return total0 Quantity of token0 in both positions and unused in the Hypervisor
