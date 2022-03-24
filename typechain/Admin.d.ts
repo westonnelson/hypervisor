@@ -26,8 +26,8 @@ interface AdminInterface extends ethers.utils.Interface {
     "admin()": FunctionFragment;
     "advisor()": FunctionFragment;
     "pendingFees(address)": FunctionFragment;
-    "pullLiquidity(address,uint256)": FunctionFragment;
-    "rebalance(address,int24,int24,int24,int24,address)": FunctionFragment;
+    "pullLiquidity(address,uint256,uint256,uint256)": FunctionFragment;
+    "rebalance(address,int24,int24,int24,int24,address,uint256,uint256)": FunctionFragment;
     "removeWhitelisted(address)": FunctionFragment;
     "rescueERC20(address,address)": FunctionFragment;
     "setDepositMax(address,uint256,uint256)": FunctionFragment;
@@ -52,7 +52,7 @@ interface AdminInterface extends ethers.utils.Interface {
   encodeFunctionData(functionFragment: "pendingFees", values: [string]): string;
   encodeFunctionData(
     functionFragment: "pullLiquidity",
-    values: [string, BigNumberish]
+    values: [string, BigNumberish, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "rebalance",
@@ -62,7 +62,9 @@ interface AdminInterface extends ethers.utils.Interface {
       BigNumberish,
       BigNumberish,
       BigNumberish,
-      string
+      string,
+      BigNumberish,
+      BigNumberish
     ]
   ): string;
   encodeFunctionData(
@@ -231,6 +233,8 @@ export class Admin extends BaseContract {
     pullLiquidity(
       _hypervisor: string,
       shares: BigNumberish,
+      amount0Min: BigNumberish,
+      amount1Min: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -241,6 +245,8 @@ export class Admin extends BaseContract {
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       _feeRecipient: string,
+      _amount0Min: BigNumberish,
+      _amount1Min: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -328,6 +334,8 @@ export class Admin extends BaseContract {
   pullLiquidity(
     _hypervisor: string,
     shares: BigNumberish,
+    amount0Min: BigNumberish,
+    amount1Min: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -338,6 +346,8 @@ export class Admin extends BaseContract {
     _limitLower: BigNumberish,
     _limitUpper: BigNumberish,
     _feeRecipient: string,
+    _amount0Min: BigNumberish,
+    _amount1Min: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -425,6 +435,8 @@ export class Admin extends BaseContract {
     pullLiquidity(
       _hypervisor: string,
       shares: BigNumberish,
+      amount0Min: BigNumberish,
+      amount1Min: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
       [BigNumber, BigNumber, BigNumber, BigNumber] & {
@@ -442,6 +454,8 @@ export class Admin extends BaseContract {
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       _feeRecipient: string,
+      _amount0Min: BigNumberish,
+      _amount1Min: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -529,6 +543,8 @@ export class Admin extends BaseContract {
     pullLiquidity(
       _hypervisor: string,
       shares: BigNumberish,
+      amount0Min: BigNumberish,
+      amount1Min: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -539,6 +555,8 @@ export class Admin extends BaseContract {
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       _feeRecipient: string,
+      _amount0Min: BigNumberish,
+      _amount1Min: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -627,6 +645,8 @@ export class Admin extends BaseContract {
     pullLiquidity(
       _hypervisor: string,
       shares: BigNumberish,
+      amount0Min: BigNumberish,
+      amount1Min: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -637,6 +657,8 @@ export class Admin extends BaseContract {
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       _feeRecipient: string,
+      _amount0Min: BigNumberish,
+      _amount1Min: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

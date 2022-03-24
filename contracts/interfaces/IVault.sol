@@ -13,7 +13,9 @@ interface IVault {
     function withdraw(
         uint256,
         address,
-        address
+        address,
+        uint256,
+        uint256
     ) external returns (uint256, uint256);
 
     function rebalance(
@@ -21,7 +23,9 @@ interface IVault {
         int24 _baseUpper,
         int24 _limitLower,
         int24 _limitUpper,
-        address feeRecipient
+        address feeRecipient,
+        uint256 _amount0Min,
+        uint256 _amount1Min
     ) external;
 
     function getTotalAmounts() external view returns (uint256, uint256);
