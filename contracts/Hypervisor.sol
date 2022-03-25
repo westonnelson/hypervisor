@@ -374,6 +374,15 @@ contract Hypervisor is IVault, IUniswapV3MintCallback, ERC20Permit, ReentrancyGu
         uint256 amount1
     ) internal {        
         uint128 liquidity = _liquidityForAmounts(tickLower, tickUpper, amount0, amount1);
+
+        (uint160 sqrtRatioX96, , , , , , ) = pool.slot0();
+        (amount0, amount1) = LiquidityAmounts.getAmountsForLiquidity(
+          sqrtRatioX96,
+          TickMath.getSqrtRatioAtTick(tickLower),
+          TickMath.getSqrtRatioAtTick(tickUpper),
+          liquidity
+        );
+
         _mintLiquidity(tickLower, tickUpper, liquidity, payer, _getSlippageMin(amount0), _getSlippageMin(amount1));
     }
 
