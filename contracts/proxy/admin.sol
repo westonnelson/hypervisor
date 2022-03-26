@@ -42,10 +42,10 @@ contract Admin {
         int24 _limitLower,
         int24 _limitUpper,
         address _feeRecipient,
-        uint256 _amount0Min,
-        uint256 _amount1Min
+        uint256[2] memory inMin, 
+        uint256[2] memory outMin
     ) external onlyAdvisor {
-        IHypervisor(_hypervisor).rebalance(_baseLower, _baseUpper, _limitLower, _limitUpper, _feeRecipient, _amount0Min, _amount1Min);
+        IHypervisor(_hypervisor).rebalance(_baseLower, _baseUpper, _limitLower, _limitUpper, _feeRecipient, inMin, outMin);
     }
 
     /// @notice Pull liquidity tokens from liquidity and receive the tokens
@@ -73,16 +73,16 @@ contract Admin {
     /// @param _hypervisor Hypervisor Address
     /// @param amount0 Amount of token0 to add
     /// @param amount1 Amount of token1 to add
-    function addBaseLiquidity(address _hypervisor, uint256 amount0, uint256 amount1) external onlyAdvisor {
-        IHypervisor(_hypervisor).addBaseLiquidity(amount0, amount1);
+    function addBaseLiquidity(address _hypervisor, uint256 amount0, uint256 amount1, uint256[2] memory inMin) external onlyAdvisor {
+        IHypervisor(_hypervisor).addBaseLiquidity(amount0, amount1, inMin);
     }
 
     /// @notice Add tokens to limit liquidity
     /// @param _hypervisor Hypervisor Address
     /// @param amount0 Amount of token0 to add
     /// @param amount1 Amount of token1 to add
-    function addLimitLiquidity(address _hypervisor, uint256 amount0, uint256 amount1) external onlyAdvisor {
-        IHypervisor(_hypervisor).addLimitLiquidity(amount0, amount1);
+    function addLimitLiquidity(address _hypervisor, uint256 amount0, uint256 amount1, uint256[2] memory inMin) external onlyAdvisor {
+        IHypervisor(_hypervisor).addLimitLiquidity(amount0, amount1, inMin);
     }
 
     /// @notice Get the pending fees
@@ -91,19 +91,6 @@ contract Admin {
     /// @return fees1 Pending fees of token1
     function pendingFees(address _hypervisor) external onlyAdvisor returns (uint256 fees0, uint256 fees1) {
         (fees0, fees1) = IHypervisor(_hypervisor).pendingFees();
-    }
-
-    /// @param _hypervisor Hypervisor Address
-    /// @param _deposit0Max The maximum amount of token0 allowed in a deposit
-    /// @param _deposit1Max The maximum amount of token1 allowed in a deposit
-    function setDepositMax(address _hypervisor, uint256 _deposit0Max, uint256 _deposit1Max) external onlyAdmin {
-        IHypervisor(_hypervisor).setDepositMax(_deposit0Max, _deposit1Max);
-    }
-
-    /// @param _hypervisor Hypervisor Address
-    /// @param _maxTotalSupply The maximum liquidity token supply the contract allows
-    function setMaxTotalSupply(address _hypervisor, uint256 _maxTotalSupply) external onlyAdmin {
-        IHypervisor(_hypervisor).setMaxTotalSupply(_maxTotalSupply);
     }
 
     /// @notice Toogle Whitelist configuration
@@ -121,11 +108,6 @@ contract Admin {
     /// @param _hypervisor Hypervisor Address
     function removeWhitelisted(address _hypervisor) external onlyAdmin {
         IHypervisor(_hypervisor).removeWhitelisted();
-    }
-
-    /// @param _slippage Maximum slippage permitted when minting liquidity from pool 
-    function setMaxTotalSupply(address _hypervisor, uint24 _slippage) external onlyAdmin {
-        IHypervisor(_hypervisor).setSlippage(_slippage);
     }
 
     /// @param newAdmin New Admin Address

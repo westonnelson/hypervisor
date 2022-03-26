@@ -23,8 +23,8 @@ interface HypervisorInterface extends ethers.utils.Interface {
   functions: {
     "DOMAIN_SEPARATOR()": FunctionFragment;
     "PRECISION()": FunctionFragment;
-    "addBaseLiquidity(uint256,uint256)": FunctionFragment;
-    "addLimitLiquidity(uint256,uint256)": FunctionFragment;
+    "addBaseLiquidity(uint256,uint256,uint256[2])": FunctionFragment;
+    "addLimitLiquidity(uint256,uint256,uint256[2])": FunctionFragment;
     "allowance(address,address)": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
@@ -34,7 +34,7 @@ interface HypervisorInterface extends ethers.utils.Interface {
     "currentTick()": FunctionFragment;
     "decimals()": FunctionFragment;
     "decreaseAllowance(address,uint256)": FunctionFragment;
-    "deposit(uint256,uint256,address,address)": FunctionFragment;
+    "deposit(uint256,uint256,address,address,uint256[2])": FunctionFragment;
     "deposit0Max()": FunctionFragment;
     "deposit1Max()": FunctionFragment;
     "directDeposit()": FunctionFragment;
@@ -52,10 +52,8 @@ interface HypervisorInterface extends ethers.utils.Interface {
     "permit(address,address,uint256,uint256,uint8,bytes32,bytes32)": FunctionFragment;
     "pool()": FunctionFragment;
     "pullLiquidity(uint256,uint256,uint256)": FunctionFragment;
-    "rebalance(int24,int24,int24,int24,address,uint256,uint256)": FunctionFragment;
+    "rebalance(int24,int24,int24,int24,address,uint256[2],uint256[2])": FunctionFragment;
     "removeWhitelisted()": FunctionFragment;
-    "setDepositMax(uint256,uint256)": FunctionFragment;
-    "setMaxTotalSupply(uint256)": FunctionFragment;
     "setSlippage(uint24)": FunctionFragment;
     "setWhitelist(address)": FunctionFragment;
     "slippage()": FunctionFragment;
@@ -82,11 +80,11 @@ interface HypervisorInterface extends ethers.utils.Interface {
   encodeFunctionData(functionFragment: "PRECISION", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "addBaseLiquidity",
-    values: [BigNumberish, BigNumberish]
+    values: [BigNumberish, BigNumberish, [BigNumberish, BigNumberish]]
   ): string;
   encodeFunctionData(
     functionFragment: "addLimitLiquidity",
-    values: [BigNumberish, BigNumberish]
+    values: [BigNumberish, BigNumberish, [BigNumberish, BigNumberish]]
   ): string;
   encodeFunctionData(
     functionFragment: "allowance",
@@ -111,7 +109,13 @@ interface HypervisorInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "deposit",
-    values: [BigNumberish, BigNumberish, string, string]
+    values: [
+      BigNumberish,
+      BigNumberish,
+      string,
+      string,
+      [BigNumberish, BigNumberish]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "deposit0Max",
@@ -182,21 +186,13 @@ interface HypervisorInterface extends ethers.utils.Interface {
       BigNumberish,
       BigNumberish,
       string,
-      BigNumberish,
-      BigNumberish
+      [BigNumberish, BigNumberish],
+      [BigNumberish, BigNumberish]
     ]
   ): string;
   encodeFunctionData(
     functionFragment: "removeWhitelisted",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setDepositMax",
-    values: [BigNumberish, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setMaxTotalSupply",
-    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setSlippage",
@@ -334,14 +330,6 @@ interface HypervisorInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setDepositMax",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "setMaxTotalSupply",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "setSlippage",
     data: BytesLike
   ): Result;
@@ -395,8 +383,6 @@ interface HypervisorInterface extends ethers.utils.Interface {
   events: {
     "Approval(address,address,uint256)": EventFragment;
     "Deposit(address,address,uint256,uint256,uint256)": EventFragment;
-    "DepositMaxSet(uint256,uint256)": EventFragment;
-    "MaxTotalSupplySet(uint256)": EventFragment;
     "Rebalance(int24,uint256,uint256,uint256,uint256,uint256)": EventFragment;
     "Transfer(address,address,uint256)": EventFragment;
     "Withdraw(address,address,uint256,uint256,uint256)": EventFragment;
@@ -404,8 +390,6 @@ interface HypervisorInterface extends ethers.utils.Interface {
 
   getEvent(nameOrSignatureOrTopic: "Approval"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "DepositMaxSet"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "MaxTotalSupplySet"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Rebalance"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Transfer"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Withdraw"): EventFragment;
@@ -427,14 +411,6 @@ export type DepositEvent = TypedEvent<
     amount0: BigNumber;
     amount1: BigNumber;
   }
->;
-
-export type DepositMaxSetEvent = TypedEvent<
-  [BigNumber, BigNumber] & { _deposit0Max: BigNumber; _deposit1Max: BigNumber }
->;
-
-export type MaxTotalSupplySetEvent = TypedEvent<
-  [BigNumber] & { _maxTotalSupply: BigNumber }
 >;
 
 export type RebalanceEvent = TypedEvent<
@@ -513,12 +489,14 @@ export class Hypervisor extends BaseContract {
     addBaseLiquidity(
       amount0: BigNumberish,
       amount1: BigNumberish,
+      minIn: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     addLimitLiquidity(
       amount0: BigNumberish,
       amount1: BigNumberish,
+      minIn: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -561,6 +539,7 @@ export class Hypervisor extends BaseContract {
       deposit1: BigNumberish,
       to: string,
       from: string,
+      minIn: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -642,23 +621,12 @@ export class Hypervisor extends BaseContract {
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       feeRecipient: string,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      inMin: [BigNumberish, BigNumberish],
+      outMin: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     removeWhitelisted(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    setDepositMax(
-      _deposit0Max: BigNumberish,
-      _deposit1Max: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    setMaxTotalSupply(
-      _maxTotalSupply: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -738,12 +706,14 @@ export class Hypervisor extends BaseContract {
   addBaseLiquidity(
     amount0: BigNumberish,
     amount1: BigNumberish,
+    minIn: [BigNumberish, BigNumberish],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   addLimitLiquidity(
     amount0: BigNumberish,
     amount1: BigNumberish,
+    minIn: [BigNumberish, BigNumberish],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -784,6 +754,7 @@ export class Hypervisor extends BaseContract {
     deposit1: BigNumberish,
     to: string,
     from: string,
+    minIn: [BigNumberish, BigNumberish],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -863,23 +834,12 @@ export class Hypervisor extends BaseContract {
     _limitLower: BigNumberish,
     _limitUpper: BigNumberish,
     feeRecipient: string,
-    amount0Min: BigNumberish,
-    amount1Min: BigNumberish,
+    inMin: [BigNumberish, BigNumberish],
+    outMin: [BigNumberish, BigNumberish],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   removeWhitelisted(
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  setDepositMax(
-    _deposit0Max: BigNumberish,
-    _deposit1Max: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  setMaxTotalSupply(
-    _maxTotalSupply: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -959,12 +919,14 @@ export class Hypervisor extends BaseContract {
     addBaseLiquidity(
       amount0: BigNumberish,
       amount1: BigNumberish,
+      minIn: [BigNumberish, BigNumberish],
       overrides?: CallOverrides
     ): Promise<void>;
 
     addLimitLiquidity(
       amount0: BigNumberish,
       amount1: BigNumberish,
+      minIn: [BigNumberish, BigNumberish],
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -989,11 +951,12 @@ export class Hypervisor extends BaseContract {
     compound(
       overrides?: CallOverrides
     ): Promise<
-      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+      [BigNumber, BigNumber, BigNumber, BigNumber, [BigNumber, BigNumber]] & {
         baseToken0Owed: BigNumber;
         baseToken1Owed: BigNumber;
         limitToken0Owed: BigNumber;
         limitToken1Owed: BigNumber;
+        minIn: [BigNumber, BigNumber];
       }
     >;
 
@@ -1012,6 +975,7 @@ export class Hypervisor extends BaseContract {
       deposit1: BigNumberish,
       to: string,
       from: string,
+      minIn: [BigNumberish, BigNumberish],
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -1100,23 +1064,12 @@ export class Hypervisor extends BaseContract {
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       feeRecipient: string,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      inMin: [BigNumberish, BigNumberish],
+      outMin: [BigNumberish, BigNumberish],
       overrides?: CallOverrides
     ): Promise<void>;
 
     removeWhitelisted(overrides?: CallOverrides): Promise<void>;
-
-    setDepositMax(
-      _deposit0Max: BigNumberish,
-      _deposit1Max: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setMaxTotalSupply(
-      _maxTotalSupply: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
 
     setSlippage(
       _slippage: BigNumberish,
@@ -1235,30 +1188,6 @@ export class Hypervisor extends BaseContract {
       }
     >;
 
-    "DepositMaxSet(uint256,uint256)"(
-      _deposit0Max?: null,
-      _deposit1Max?: null
-    ): TypedEventFilter<
-      [BigNumber, BigNumber],
-      { _deposit0Max: BigNumber; _deposit1Max: BigNumber }
-    >;
-
-    DepositMaxSet(
-      _deposit0Max?: null,
-      _deposit1Max?: null
-    ): TypedEventFilter<
-      [BigNumber, BigNumber],
-      { _deposit0Max: BigNumber; _deposit1Max: BigNumber }
-    >;
-
-    "MaxTotalSupplySet(uint256)"(
-      _maxTotalSupply?: null
-    ): TypedEventFilter<[BigNumber], { _maxTotalSupply: BigNumber }>;
-
-    MaxTotalSupplySet(
-      _maxTotalSupply?: null
-    ): TypedEventFilter<[BigNumber], { _maxTotalSupply: BigNumber }>;
-
     "Rebalance(int24,uint256,uint256,uint256,uint256,uint256)"(
       tick?: null,
       totalAmount0?: null,
@@ -1358,12 +1287,14 @@ export class Hypervisor extends BaseContract {
     addBaseLiquidity(
       amount0: BigNumberish,
       amount1: BigNumberish,
+      minIn: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     addLimitLiquidity(
       amount0: BigNumberish,
       amount1: BigNumberish,
+      minIn: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1404,6 +1335,7 @@ export class Hypervisor extends BaseContract {
       deposit1: BigNumberish,
       to: string,
       from: string,
+      minIn: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1465,23 +1397,12 @@ export class Hypervisor extends BaseContract {
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       feeRecipient: string,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      inMin: [BigNumberish, BigNumberish],
+      outMin: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     removeWhitelisted(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    setDepositMax(
-      _deposit0Max: BigNumberish,
-      _deposit1Max: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    setMaxTotalSupply(
-      _maxTotalSupply: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1562,12 +1483,14 @@ export class Hypervisor extends BaseContract {
     addBaseLiquidity(
       amount0: BigNumberish,
       amount1: BigNumberish,
+      minIn: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     addLimitLiquidity(
       amount0: BigNumberish,
       amount1: BigNumberish,
+      minIn: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1611,6 +1534,7 @@ export class Hypervisor extends BaseContract {
       deposit1: BigNumberish,
       to: string,
       from: string,
+      minIn: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1675,23 +1599,12 @@ export class Hypervisor extends BaseContract {
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       feeRecipient: string,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      inMin: [BigNumberish, BigNumberish],
+      outMin: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     removeWhitelisted(
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setDepositMax(
-      _deposit0Max: BigNumberish,
-      _deposit1Max: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setMaxTotalSupply(
-      _maxTotalSupply: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

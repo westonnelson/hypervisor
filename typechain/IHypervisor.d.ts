@@ -23,18 +23,20 @@ interface IHypervisorInterface extends ethers.utils.Interface {
   functions: {
     "addBaseLiquidity(uint256,uint256)": FunctionFragment;
     "addLimitLiquidity(uint256,uint256)": FunctionFragment;
+    "appendList(address[])": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
     "compound()": FunctionFragment;
     "currentTick()": FunctionFragment;
-    "deposit(uint256,uint256,address,address)": FunctionFragment;
+    "deposit(uint256,uint256,address,address,uint256[2])": FunctionFragment;
     "deposit0Max()": FunctionFragment;
     "deposit1Max()": FunctionFragment;
     "getTotalAmounts()": FunctionFragment;
     "pendingFees()": FunctionFragment;
     "pool()": FunctionFragment;
-    "pullLiquidity(uint256,uint256,uint256)": FunctionFragment;
-    "rebalance(int24,int24,int24,int24,address,uint256,uint256)": FunctionFragment;
+    "pullLiquidity(uint256)": FunctionFragment;
+    "rebalance(int24,int24,int24,int24,address,int256)": FunctionFragment;
+    "removeListed(address)": FunctionFragment;
     "removeWhitelisted()": FunctionFragment;
     "setDepositMax(uint256,uint256)": FunctionFragment;
     "setMaxTotalSupply(uint256)": FunctionFragment;
@@ -59,6 +61,10 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "appendList",
+    values: [string[]]
+  ): string;
+  encodeFunctionData(
     functionFragment: "approve",
     values: [string, BigNumberish]
   ): string;
@@ -70,7 +76,13 @@ interface IHypervisorInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "deposit",
-    values: [BigNumberish, BigNumberish, string, string]
+    values: [
+      BigNumberish,
+      BigNumberish,
+      string,
+      string,
+      [BigNumberish, BigNumberish]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "deposit0Max",
@@ -91,7 +103,7 @@ interface IHypervisorInterface extends ethers.utils.Interface {
   encodeFunctionData(functionFragment: "pool", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "pullLiquidity",
-    values: [BigNumberish, BigNumberish, BigNumberish]
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "rebalance",
@@ -101,9 +113,12 @@ interface IHypervisorInterface extends ethers.utils.Interface {
       BigNumberish,
       BigNumberish,
       string,
-      BigNumberish,
       BigNumberish
     ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "removeListed",
+    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "removeWhitelisted",
@@ -160,6 +175,7 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     functionFragment: "addLimitLiquidity",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "appendList", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "compound", data: BytesLike): Result;
@@ -190,6 +206,10 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "rebalance", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "removeListed",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "removeWhitelisted",
     data: BytesLike
@@ -290,6 +310,11 @@ export class IHypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    appendList(
+      listed: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     approve(
       arg0: string,
       arg1: BigNumberish,
@@ -306,7 +331,16 @@ export class IHypervisor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[number] & { tick: number }>;
 
-    deposit(
+    "deposit(uint256,uint256,address,address,uint256[2])"(
+      arg0: BigNumberish,
+      arg1: BigNumberish,
+      arg2: string,
+      arg3: string,
+      minIn: [BigNumberish, BigNumberish],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "deposit(uint256,uint256,address,address)"(
       arg0: BigNumberish,
       arg1: BigNumberish,
       arg2: string,
@@ -330,21 +364,62 @@ export class IHypervisor extends BaseContract {
 
     pool(overrides?: CallOverrides): Promise<[string]>;
 
-    pullLiquidity(
+    "pullLiquidity(uint256)"(
+      shares: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "pullLiquidity(uint256,uint256,uint256)"(
       shares: BigNumberish,
       amount0Min: BigNumberish,
       amount1Min: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    rebalance(
+    "rebalance(int24,int24,int24,int24,address,int256)"(
       _baseLower: BigNumberish,
       _baseUpper: BigNumberish,
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       _feeRecipient: string,
-      _amount0Min: BigNumberish,
-      _amount1Min: BigNumberish,
+      swapQuantity: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "rebalance(int24,int24,int24,int24,address)"(
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "rebalance(int24,int24,int24,int24,address,uint256[2],uint256[2])"(
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      minIn: [BigNumberish, BigNumberish],
+      outMin: [BigNumberish, BigNumberish],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "rebalance(int24,int24,int24,int24,address,int256,int256,uint160)"(
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      swapQuantity: BigNumberish,
+      amountMin: BigNumberish,
+      sqrtPriceLimitX96: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    removeListed(
+      listed: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -423,6 +498,11 @@ export class IHypervisor extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  appendList(
+    listed: string[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   approve(
     arg0: string,
     arg1: BigNumberish,
@@ -437,7 +517,16 @@ export class IHypervisor extends BaseContract {
 
   currentTick(overrides?: CallOverrides): Promise<number>;
 
-  deposit(
+  "deposit(uint256,uint256,address,address,uint256[2])"(
+    arg0: BigNumberish,
+    arg1: BigNumberish,
+    arg2: string,
+    arg3: string,
+    minIn: [BigNumberish, BigNumberish],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "deposit(uint256,uint256,address,address)"(
     arg0: BigNumberish,
     arg1: BigNumberish,
     arg2: string,
@@ -459,21 +548,62 @@ export class IHypervisor extends BaseContract {
 
   pool(overrides?: CallOverrides): Promise<string>;
 
-  pullLiquidity(
+  "pullLiquidity(uint256)"(
+    shares: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "pullLiquidity(uint256,uint256,uint256)"(
     shares: BigNumberish,
     amount0Min: BigNumberish,
     amount1Min: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  rebalance(
+  "rebalance(int24,int24,int24,int24,address,int256)"(
     _baseLower: BigNumberish,
     _baseUpper: BigNumberish,
     _limitLower: BigNumberish,
     _limitUpper: BigNumberish,
     _feeRecipient: string,
-    _amount0Min: BigNumberish,
-    _amount1Min: BigNumberish,
+    swapQuantity: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "rebalance(int24,int24,int24,int24,address)"(
+    _baseLower: BigNumberish,
+    _baseUpper: BigNumberish,
+    _limitLower: BigNumberish,
+    _limitUpper: BigNumberish,
+    _feeRecipient: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "rebalance(int24,int24,int24,int24,address,uint256[2],uint256[2])"(
+    _baseLower: BigNumberish,
+    _baseUpper: BigNumberish,
+    _limitLower: BigNumberish,
+    _limitUpper: BigNumberish,
+    _feeRecipient: string,
+    minIn: [BigNumberish, BigNumberish],
+    outMin: [BigNumberish, BigNumberish],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "rebalance(int24,int24,int24,int24,address,int256,int256,uint160)"(
+    _baseLower: BigNumberish,
+    _baseUpper: BigNumberish,
+    _limitLower: BigNumberish,
+    _limitUpper: BigNumberish,
+    _feeRecipient: string,
+    swapQuantity: BigNumberish,
+    amountMin: BigNumberish,
+    sqrtPriceLimitX96: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  removeListed(
+    listed: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -552,6 +682,8 @@ export class IHypervisor extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    appendList(listed: string[], overrides?: CallOverrides): Promise<void>;
+
     approve(
       arg0: string,
       arg1: BigNumberish,
@@ -573,7 +705,16 @@ export class IHypervisor extends BaseContract {
 
     currentTick(overrides?: CallOverrides): Promise<number>;
 
-    deposit(
+    "deposit(uint256,uint256,address,address,uint256[2])"(
+      arg0: BigNumberish,
+      arg1: BigNumberish,
+      arg2: string,
+      arg3: string,
+      minIn: [BigNumberish, BigNumberish],
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "deposit(uint256,uint256,address,address)"(
       arg0: BigNumberish,
       arg1: BigNumberish,
       arg2: string,
@@ -597,7 +738,19 @@ export class IHypervisor extends BaseContract {
 
     pool(overrides?: CallOverrides): Promise<string>;
 
-    pullLiquidity(
+    "pullLiquidity(uint256)"(
+      shares: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        base0: BigNumber;
+        base1: BigNumber;
+        limit0: BigNumber;
+        limit1: BigNumber;
+      }
+    >;
+
+    "pullLiquidity(uint256,uint256,uint256)"(
       shares: BigNumberish,
       amount0Min: BigNumberish,
       amount1Min: BigNumberish,
@@ -611,16 +764,49 @@ export class IHypervisor extends BaseContract {
       }
     >;
 
-    rebalance(
+    "rebalance(int24,int24,int24,int24,address,int256)"(
       _baseLower: BigNumberish,
       _baseUpper: BigNumberish,
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       _feeRecipient: string,
-      _amount0Min: BigNumberish,
-      _amount1Min: BigNumberish,
+      swapQuantity: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
+
+    "rebalance(int24,int24,int24,int24,address)"(
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "rebalance(int24,int24,int24,int24,address,uint256[2],uint256[2])"(
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      minIn: [BigNumberish, BigNumberish],
+      outMin: [BigNumberish, BigNumberish],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "rebalance(int24,int24,int24,int24,address,int256,int256,uint160)"(
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      swapQuantity: BigNumberish,
+      amountMin: BigNumberish,
+      sqrtPriceLimitX96: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    removeListed(listed: string, overrides?: CallOverrides): Promise<void>;
 
     removeWhitelisted(overrides?: CallOverrides): Promise<void>;
 
@@ -693,6 +879,11 @@ export class IHypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    appendList(
+      listed: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     approve(
       arg0: string,
       arg1: BigNumberish,
@@ -707,7 +898,16 @@ export class IHypervisor extends BaseContract {
 
     currentTick(overrides?: CallOverrides): Promise<BigNumber>;
 
-    deposit(
+    "deposit(uint256,uint256,address,address,uint256[2])"(
+      arg0: BigNumberish,
+      arg1: BigNumberish,
+      arg2: string,
+      arg3: string,
+      minIn: [BigNumberish, BigNumberish],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "deposit(uint256,uint256,address,address)"(
       arg0: BigNumberish,
       arg1: BigNumberish,
       arg2: string,
@@ -727,21 +927,62 @@ export class IHypervisor extends BaseContract {
 
     pool(overrides?: CallOverrides): Promise<BigNumber>;
 
-    pullLiquidity(
+    "pullLiquidity(uint256)"(
+      shares: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "pullLiquidity(uint256,uint256,uint256)"(
       shares: BigNumberish,
       amount0Min: BigNumberish,
       amount1Min: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    rebalance(
+    "rebalance(int24,int24,int24,int24,address,int256)"(
       _baseLower: BigNumberish,
       _baseUpper: BigNumberish,
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       _feeRecipient: string,
-      _amount0Min: BigNumberish,
-      _amount1Min: BigNumberish,
+      swapQuantity: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "rebalance(int24,int24,int24,int24,address)"(
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "rebalance(int24,int24,int24,int24,address,uint256[2],uint256[2])"(
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      minIn: [BigNumberish, BigNumberish],
+      outMin: [BigNumberish, BigNumberish],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "rebalance(int24,int24,int24,int24,address,int256,int256,uint160)"(
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      swapQuantity: BigNumberish,
+      amountMin: BigNumberish,
+      sqrtPriceLimitX96: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    removeListed(
+      listed: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -821,6 +1062,11 @@ export class IHypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    appendList(
+      listed: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     approve(
       arg0: string,
       arg1: BigNumberish,
@@ -838,7 +1084,16 @@ export class IHypervisor extends BaseContract {
 
     currentTick(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    deposit(
+    "deposit(uint256,uint256,address,address,uint256[2])"(
+      arg0: BigNumberish,
+      arg1: BigNumberish,
+      arg2: string,
+      arg3: string,
+      minIn: [BigNumberish, BigNumberish],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "deposit(uint256,uint256,address,address)"(
       arg0: BigNumberish,
       arg1: BigNumberish,
       arg2: string,
@@ -858,21 +1113,62 @@ export class IHypervisor extends BaseContract {
 
     pool(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    pullLiquidity(
+    "pullLiquidity(uint256)"(
+      shares: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "pullLiquidity(uint256,uint256,uint256)"(
       shares: BigNumberish,
       amount0Min: BigNumberish,
       amount1Min: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    rebalance(
+    "rebalance(int24,int24,int24,int24,address,int256)"(
       _baseLower: BigNumberish,
       _baseUpper: BigNumberish,
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       _feeRecipient: string,
-      _amount0Min: BigNumberish,
-      _amount1Min: BigNumberish,
+      swapQuantity: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "rebalance(int24,int24,int24,int24,address)"(
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "rebalance(int24,int24,int24,int24,address,uint256[2],uint256[2])"(
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      minIn: [BigNumberish, BigNumberish],
+      outMin: [BigNumberish, BigNumberish],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "rebalance(int24,int24,int24,int24,address,int256,int256,uint160)"(
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      swapQuantity: BigNumberish,
+      amountMin: BigNumberish,
+      sqrtPriceLimitX96: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    removeListed(
+      listed: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
