@@ -13,6 +13,14 @@ interface IHypervisor {
     address
   ) external returns (uint256);
 
+  function deposit(
+      uint256,
+      uint256,
+      address,
+      address,
+      uint256[2] memory minIn
+  ) external returns (uint256);
+
   function withdraw(
     uint256,
     address,
@@ -21,6 +29,23 @@ interface IHypervisor {
     uint256
   ) external returns (uint256, uint256);
 
+  function rebalance(
+    int24 _baseLower,
+    int24 _baseUpper,
+    int24 _limitLower,
+    int24 _limitUpper,
+    address _feeRecipient,
+    uint256[2] memory minIn, 
+    uint256[2] memory outMin
+    ) external;
+
+  function rebalance(
+    int24 _baseLower,
+    int24 _baseUpper,
+    int24 _limitLower,
+    int24 _limitUpper,
+    address _feeRecipient
+  ) external;
 
   function rebalance(
     int24 _baseLower,
@@ -28,18 +53,30 @@ interface IHypervisor {
     int24 _limitLower,
     int24 _limitUpper,
     address _feeRecipient,
-    uint256 _amount0Min,
-    uint256 _amount1Min
+    int256 swapQuantity
+  ) external;
+
+  function rebalance(
+    int24 _baseLower,
+    int24 _baseUpper,
+    int24 _limitLower,
+    int24 _limitUpper,
+    address _feeRecipient,
+    int256 swapQuantity,
+    int256 amountMin,
+    uint160 sqrtPriceLimitX96
   ) external;
 
   function addBaseLiquidity(
     uint256 amount0, 
-    uint256 amount1
+    uint256 amount1,
+    uint256[2] memory minIn
   ) external;
 
   function addLimitLiquidity(
     uint256 amount0, 
-    uint256 amount1
+    uint256 amount1,
+    uint256[2] memory minIn
   ) external;   
 
   function pullLiquidity(
@@ -47,6 +84,14 @@ interface IHypervisor {
     uint256 amount0Min,
     uint256 amount1Min
   ) external returns (
+    uint256 base0,
+    uint256 base1,
+    uint256 limit0,
+    uint256 limit1
+  );
+
+  function pullLiquidity(uint256 shares)
+    external returns(
     uint256 base0,
     uint256 base1,
     uint256 limit0,
@@ -94,9 +139,13 @@ interface IHypervisor {
   
   function removeWhitelisted() external;
 
-  function setSlippage(uint24 slippage) external;
+  function appendList(address[] memory listed) external;
+
+  function removeListed(address listed) external;
 
   function toggleWhitelist() external;
+
+  function setSlippage(uint24 slippage) external;
 
   function transferOwnership(address newOwner) external;
 

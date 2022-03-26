@@ -25,13 +25,18 @@ interface AdminInterface extends ethers.utils.Interface {
     "addLimitLiquidity(address,uint256,uint256)": FunctionFragment;
     "admin()": FunctionFragment;
     "advisor()": FunctionFragment;
-    "pendingFees(address)": FunctionFragment;
+    "appendList(address,address[])": FunctionFragment;
+    "compound(address)": FunctionFragment;
+    "managers(address)": FunctionFragment;
     "pullLiquidity(address,uint256,uint256,uint256)": FunctionFragment;
-    "rebalance(address,int24,int24,int24,int24,address,uint256,uint256)": FunctionFragment;
+    "rebalance(address,int24,int24,int24,int24,address,int256)": FunctionFragment;
+    "removeListed(address,address)": FunctionFragment;
     "removeWhitelisted(address)": FunctionFragment;
     "rescueERC20(address,address)": FunctionFragment;
     "setDepositMax(address,uint256,uint256)": FunctionFragment;
+    "setManager(address,address)": FunctionFragment;
     "setMaxTotalSupply(address,uint256)": FunctionFragment;
+    "setSlippage(address,uint24)": FunctionFragment;
     "setWhitelist(address,address)": FunctionFragment;
     "toggleWhitelist(address)": FunctionFragment;
     "transferAdmin(address)": FunctionFragment;
@@ -49,7 +54,12 @@ interface AdminInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(functionFragment: "admin", values?: undefined): string;
   encodeFunctionData(functionFragment: "advisor", values?: undefined): string;
-  encodeFunctionData(functionFragment: "pendingFees", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "appendList",
+    values: [string, string[]]
+  ): string;
+  encodeFunctionData(functionFragment: "compound", values: [string]): string;
+  encodeFunctionData(functionFragment: "managers", values: [string]): string;
   encodeFunctionData(
     functionFragment: "pullLiquidity",
     values: [string, BigNumberish, BigNumberish, BigNumberish]
@@ -63,9 +73,12 @@ interface AdminInterface extends ethers.utils.Interface {
       BigNumberish,
       BigNumberish,
       string,
-      BigNumberish,
       BigNumberish
     ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "removeListed",
+    values: [string, string]
   ): string;
   encodeFunctionData(
     functionFragment: "removeWhitelisted",
@@ -80,7 +93,15 @@ interface AdminInterface extends ethers.utils.Interface {
     values: [string, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "setManager",
+    values: [string, string]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setMaxTotalSupply",
+    values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setSlippage",
     values: [string, BigNumberish]
   ): string;
   encodeFunctionData(
@@ -114,15 +135,18 @@ interface AdminInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "admin", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "advisor", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "pendingFees",
-    data: BytesLike
-  ): Result;
+  decodeFunctionResult(functionFragment: "appendList", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "compound", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "managers", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "pullLiquidity",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "rebalance", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "removeListed",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "removeWhitelisted",
     data: BytesLike
@@ -135,8 +159,13 @@ interface AdminInterface extends ethers.utils.Interface {
     functionFragment: "setDepositMax",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "setManager", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setMaxTotalSupply",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setSlippage",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -225,12 +254,20 @@ export class Admin extends BaseContract {
 
     advisor(overrides?: CallOverrides): Promise<[string]>;
 
-    pendingFees(
+    appendList(
+      _hypervisor: string,
+      listed: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    compound(
       _hypervisor: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    pullLiquidity(
+    managers(arg0: string, overrides?: CallOverrides): Promise<[string]>;
+
+    "pullLiquidity(address,uint256,uint256,uint256)"(
       _hypervisor: string,
       shares: BigNumberish,
       amount0Min: BigNumberish,
@@ -238,15 +275,61 @@ export class Admin extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    rebalance(
+    "pullLiquidity(address,uint256)"(
+      _hypervisor: string,
+      shares: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "rebalance(address,int24,int24,int24,int24,address,int256)"(
       _hypervisor: string,
       _baseLower: BigNumberish,
       _baseUpper: BigNumberish,
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       _feeRecipient: string,
-      _amount0Min: BigNumberish,
-      _amount1Min: BigNumberish,
+      _swapQuantity: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "rebalance(address,int24,int24,int24,int24,address,uint256[2],uint256[2])"(
+      _hypervisor: string,
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      inMin: [BigNumberish, BigNumberish],
+      outMin: [BigNumberish, BigNumberish],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "rebalance(address,int24,int24,int24,int24,address,int256,int256,uint160)"(
+      _hypervisor: string,
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      _swapQuantity: BigNumberish,
+      _amountMin: BigNumberish,
+      _sqrtPriceLimitX96: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "rebalance(address,int24,int24,int24,int24,address)"(
+      _hypervisor: string,
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    removeListed(
+      _hypervisor: string,
+      listed: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -268,6 +351,12 @@ export class Admin extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setManager(
+      _hypervisor: string,
+      newManager: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     "setMaxTotalSupply(address,uint256)"(
       _hypervisor: string,
       _maxTotalSupply: BigNumberish,
@@ -277,6 +366,12 @@ export class Admin extends BaseContract {
     "setMaxTotalSupply(address,uint24)"(
       _hypervisor: string,
       _slippage: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    setSlippage(
+      _hypervisor: string,
+      slippage: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -326,12 +421,20 @@ export class Admin extends BaseContract {
 
   advisor(overrides?: CallOverrides): Promise<string>;
 
-  pendingFees(
+  appendList(
+    _hypervisor: string,
+    listed: string[],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  compound(
     _hypervisor: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  pullLiquidity(
+  managers(arg0: string, overrides?: CallOverrides): Promise<string>;
+
+  "pullLiquidity(address,uint256,uint256,uint256)"(
     _hypervisor: string,
     shares: BigNumberish,
     amount0Min: BigNumberish,
@@ -339,15 +442,61 @@ export class Admin extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  rebalance(
+  "pullLiquidity(address,uint256)"(
+    _hypervisor: string,
+    shares: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "rebalance(address,int24,int24,int24,int24,address,int256)"(
     _hypervisor: string,
     _baseLower: BigNumberish,
     _baseUpper: BigNumberish,
     _limitLower: BigNumberish,
     _limitUpper: BigNumberish,
     _feeRecipient: string,
-    _amount0Min: BigNumberish,
-    _amount1Min: BigNumberish,
+    _swapQuantity: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "rebalance(address,int24,int24,int24,int24,address,uint256[2],uint256[2])"(
+    _hypervisor: string,
+    _baseLower: BigNumberish,
+    _baseUpper: BigNumberish,
+    _limitLower: BigNumberish,
+    _limitUpper: BigNumberish,
+    _feeRecipient: string,
+    inMin: [BigNumberish, BigNumberish],
+    outMin: [BigNumberish, BigNumberish],
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "rebalance(address,int24,int24,int24,int24,address,int256,int256,uint160)"(
+    _hypervisor: string,
+    _baseLower: BigNumberish,
+    _baseUpper: BigNumberish,
+    _limitLower: BigNumberish,
+    _limitUpper: BigNumberish,
+    _feeRecipient: string,
+    _swapQuantity: BigNumberish,
+    _amountMin: BigNumberish,
+    _sqrtPriceLimitX96: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "rebalance(address,int24,int24,int24,int24,address)"(
+    _hypervisor: string,
+    _baseLower: BigNumberish,
+    _baseUpper: BigNumberish,
+    _limitLower: BigNumberish,
+    _limitUpper: BigNumberish,
+    _feeRecipient: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  removeListed(
+    _hypervisor: string,
+    listed: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -369,6 +518,12 @@ export class Admin extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  setManager(
+    _hypervisor: string,
+    newManager: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   "setMaxTotalSupply(address,uint256)"(
     _hypervisor: string,
     _maxTotalSupply: BigNumberish,
@@ -378,6 +533,12 @@ export class Admin extends BaseContract {
   "setMaxTotalSupply(address,uint24)"(
     _hypervisor: string,
     _slippage: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setSlippage(
+    _hypervisor: string,
+    slippage: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -427,12 +588,27 @@ export class Admin extends BaseContract {
 
     advisor(overrides?: CallOverrides): Promise<string>;
 
-    pendingFees(
+    appendList(
+      _hypervisor: string,
+      listed: string[],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    compound(
       _hypervisor: string,
       overrides?: CallOverrides
-    ): Promise<[BigNumber, BigNumber] & { fees0: BigNumber; fees1: BigNumber }>;
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        baseToken0Owed: BigNumber;
+        baseToken1Owed: BigNumber;
+        limitToken0Owed: BigNumber;
+        limitToken1Owed: BigNumber;
+      }
+    >;
 
-    pullLiquidity(
+    managers(arg0: string, overrides?: CallOverrides): Promise<string>;
+
+    "pullLiquidity(address,uint256,uint256,uint256)"(
       _hypervisor: string,
       shares: BigNumberish,
       amount0Min: BigNumberish,
@@ -447,15 +623,68 @@ export class Admin extends BaseContract {
       }
     >;
 
-    rebalance(
+    "pullLiquidity(address,uint256)"(
+      _hypervisor: string,
+      shares: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<
+      [BigNumber, BigNumber, BigNumber, BigNumber] & {
+        base0: BigNumber;
+        base1: BigNumber;
+        limit0: BigNumber;
+        limit1: BigNumber;
+      }
+    >;
+
+    "rebalance(address,int24,int24,int24,int24,address,int256)"(
       _hypervisor: string,
       _baseLower: BigNumberish,
       _baseUpper: BigNumberish,
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       _feeRecipient: string,
-      _amount0Min: BigNumberish,
-      _amount1Min: BigNumberish,
+      _swapQuantity: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "rebalance(address,int24,int24,int24,int24,address,uint256[2],uint256[2])"(
+      _hypervisor: string,
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      inMin: [BigNumberish, BigNumberish],
+      outMin: [BigNumberish, BigNumberish],
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "rebalance(address,int24,int24,int24,int24,address,int256,int256,uint160)"(
+      _hypervisor: string,
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      _swapQuantity: BigNumberish,
+      _amountMin: BigNumberish,
+      _sqrtPriceLimitX96: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "rebalance(address,int24,int24,int24,int24,address)"(
+      _hypervisor: string,
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    removeListed(
+      _hypervisor: string,
+      listed: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -477,6 +706,12 @@ export class Admin extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    setManager(
+      _hypervisor: string,
+      newManager: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     "setMaxTotalSupply(address,uint256)"(
       _hypervisor: string,
       _maxTotalSupply: BigNumberish,
@@ -486,6 +721,12 @@ export class Admin extends BaseContract {
     "setMaxTotalSupply(address,uint24)"(
       _hypervisor: string,
       _slippage: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    setSlippage(
+      _hypervisor: string,
+      slippage: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -535,12 +776,20 @@ export class Admin extends BaseContract {
 
     advisor(overrides?: CallOverrides): Promise<BigNumber>;
 
-    pendingFees(
+    appendList(
+      _hypervisor: string,
+      listed: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    compound(
       _hypervisor: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    pullLiquidity(
+    managers(arg0: string, overrides?: CallOverrides): Promise<BigNumber>;
+
+    "pullLiquidity(address,uint256,uint256,uint256)"(
       _hypervisor: string,
       shares: BigNumberish,
       amount0Min: BigNumberish,
@@ -548,15 +797,61 @@ export class Admin extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    rebalance(
+    "pullLiquidity(address,uint256)"(
+      _hypervisor: string,
+      shares: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "rebalance(address,int24,int24,int24,int24,address,int256)"(
       _hypervisor: string,
       _baseLower: BigNumberish,
       _baseUpper: BigNumberish,
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       _feeRecipient: string,
-      _amount0Min: BigNumberish,
-      _amount1Min: BigNumberish,
+      _swapQuantity: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "rebalance(address,int24,int24,int24,int24,address,uint256[2],uint256[2])"(
+      _hypervisor: string,
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      inMin: [BigNumberish, BigNumberish],
+      outMin: [BigNumberish, BigNumberish],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "rebalance(address,int24,int24,int24,int24,address,int256,int256,uint160)"(
+      _hypervisor: string,
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      _swapQuantity: BigNumberish,
+      _amountMin: BigNumberish,
+      _sqrtPriceLimitX96: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "rebalance(address,int24,int24,int24,int24,address)"(
+      _hypervisor: string,
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    removeListed(
+      _hypervisor: string,
+      listed: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -578,6 +873,12 @@ export class Admin extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setManager(
+      _hypervisor: string,
+      newManager: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     "setMaxTotalSupply(address,uint256)"(
       _hypervisor: string,
       _maxTotalSupply: BigNumberish,
@@ -587,6 +888,12 @@ export class Admin extends BaseContract {
     "setMaxTotalSupply(address,uint24)"(
       _hypervisor: string,
       _slippage: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    setSlippage(
+      _hypervisor: string,
+      slippage: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -637,12 +944,23 @@ export class Admin extends BaseContract {
 
     advisor(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    pendingFees(
+    appendList(
+      _hypervisor: string,
+      listed: string[],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    compound(
       _hypervisor: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    pullLiquidity(
+    managers(
+      arg0: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "pullLiquidity(address,uint256,uint256,uint256)"(
       _hypervisor: string,
       shares: BigNumberish,
       amount0Min: BigNumberish,
@@ -650,15 +968,61 @@ export class Admin extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    rebalance(
+    "pullLiquidity(address,uint256)"(
+      _hypervisor: string,
+      shares: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "rebalance(address,int24,int24,int24,int24,address,int256)"(
       _hypervisor: string,
       _baseLower: BigNumberish,
       _baseUpper: BigNumberish,
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       _feeRecipient: string,
-      _amount0Min: BigNumberish,
-      _amount1Min: BigNumberish,
+      _swapQuantity: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "rebalance(address,int24,int24,int24,int24,address,uint256[2],uint256[2])"(
+      _hypervisor: string,
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      inMin: [BigNumberish, BigNumberish],
+      outMin: [BigNumberish, BigNumberish],
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "rebalance(address,int24,int24,int24,int24,address,int256,int256,uint160)"(
+      _hypervisor: string,
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      _swapQuantity: BigNumberish,
+      _amountMin: BigNumberish,
+      _sqrtPriceLimitX96: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "rebalance(address,int24,int24,int24,int24,address)"(
+      _hypervisor: string,
+      _baseLower: BigNumberish,
+      _baseUpper: BigNumberish,
+      _limitLower: BigNumberish,
+      _limitUpper: BigNumberish,
+      _feeRecipient: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    removeListed(
+      _hypervisor: string,
+      listed: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -680,6 +1044,12 @@ export class Admin extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    setManager(
+      _hypervisor: string,
+      newManager: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     "setMaxTotalSupply(address,uint256)"(
       _hypervisor: string,
       _maxTotalSupply: BigNumberish,
@@ -689,6 +1059,12 @@ export class Admin extends BaseContract {
     "setMaxTotalSupply(address,uint24)"(
       _hypervisor: string,
       _slippage: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setSlippage(
+      _hypervisor: string,
+      slippage: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

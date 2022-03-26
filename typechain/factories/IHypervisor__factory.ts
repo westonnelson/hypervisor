@@ -46,6 +46,19 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "address[]",
+        name: "listed",
+        type: "address[]",
+      },
+    ],
+    name: "appendList",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "",
         type: "address",
@@ -125,6 +138,45 @@ const _abi = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+      {
+        internalType: "uint256[2]",
+        name: "minIn",
+        type: "uint256[2]",
+      },
+    ],
+    name: "deposit",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -243,6 +295,40 @@ const _abi = [
         name: "shares",
         type: "uint256",
       },
+    ],
+    name: "pullLiquidity",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "base0",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "base1",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "limit0",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "limit1",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "shares",
+        type: "uint256",
+      },
       {
         internalType: "uint256",
         name: "amount0Min",
@@ -308,17 +394,149 @@ const _abi = [
         type: "address",
       },
       {
-        internalType: "uint256",
-        name: "_amount0Min",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_amount1Min",
-        type: "uint256",
+        internalType: "int256",
+        name: "swapQuantity",
+        type: "int256",
       },
     ],
     name: "rebalance",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "int24",
+        name: "_baseLower",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "_baseUpper",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "_limitLower",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "_limitUpper",
+        type: "int24",
+      },
+      {
+        internalType: "address",
+        name: "_feeRecipient",
+        type: "address",
+      },
+    ],
+    name: "rebalance",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "int24",
+        name: "_baseLower",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "_baseUpper",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "_limitLower",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "_limitUpper",
+        type: "int24",
+      },
+      {
+        internalType: "address",
+        name: "_feeRecipient",
+        type: "address",
+      },
+      {
+        internalType: "uint256[2]",
+        name: "minIn",
+        type: "uint256[2]",
+      },
+      {
+        internalType: "uint256[2]",
+        name: "outMin",
+        type: "uint256[2]",
+      },
+    ],
+    name: "rebalance",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "int24",
+        name: "_baseLower",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "_baseUpper",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "_limitLower",
+        type: "int24",
+      },
+      {
+        internalType: "int24",
+        name: "_limitUpper",
+        type: "int24",
+      },
+      {
+        internalType: "address",
+        name: "_feeRecipient",
+        type: "address",
+      },
+      {
+        internalType: "int256",
+        name: "swapQuantity",
+        type: "int256",
+      },
+      {
+        internalType: "int256",
+        name: "amountMin",
+        type: "int256",
+      },
+      {
+        internalType: "uint160",
+        name: "sqrtPriceLimitX96",
+        type: "uint160",
+      },
+    ],
+    name: "rebalance",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "listed",
+        type: "address",
+      },
+    ],
+    name: "removeListed",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
