@@ -6,19 +6,13 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 interface IHypervisor {
-  function deposit(
-    uint256,
-    uint256,
-    address,
-    address
-  ) external returns (uint256);
 
   function deposit(
       uint256,
       uint256,
       address,
       address,
-      uint256[2] memory minIn
+      uint256[4] memory minIn
   ) external returns (uint256);
 
   function withdraw(
@@ -35,37 +29,9 @@ interface IHypervisor {
     int24 _limitLower,
     int24 _limitUpper,
     address _feeRecipient,
-    uint256[2] memory minIn, 
-    uint256[2] memory outMin
+    uint256[4] memory minIn, 
+    uint256[4] memory outMin
     ) external;
-
-  function rebalance(
-    int24 _baseLower,
-    int24 _baseUpper,
-    int24 _limitLower,
-    int24 _limitUpper,
-    address _feeRecipient
-  ) external;
-
-  function rebalance(
-    int24 _baseLower,
-    int24 _baseUpper,
-    int24 _limitLower,
-    int24 _limitUpper,
-    address _feeRecipient,
-    int256 swapQuantity
-  ) external;
-
-  function rebalance(
-    int24 _baseLower,
-    int24 _baseUpper,
-    int24 _limitLower,
-    int24 _limitUpper,
-    address _feeRecipient,
-    int256 swapQuantity,
-    int256 amountMin,
-    uint160 sqrtPriceLimitX96
-  ) external;
 
   function addBaseLiquidity(
     uint256 amount0, 
@@ -84,14 +50,6 @@ interface IHypervisor {
     uint256 amount0Min,
     uint256 amount1Min
   ) external returns (
-    uint256 base0,
-    uint256 base1,
-    uint256 limit0,
-    uint256 limit1
-  );
-
-  function pullLiquidity(uint256 shares)
-    external returns(
     uint256 base0,
     uint256 base1,
     uint256 limit0,
@@ -127,25 +85,11 @@ interface IHypervisor {
 
   function getTotalAmounts() external view returns (uint256 total0, uint256 total1);
 
-  function pendingFees() external returns (uint256 fees0, uint256 fees1);
-  
   function totalSupply() external view returns (uint256 );
-
-  function setMaxTotalSupply(uint256 _maxTotalSupply) external;
-
-  function setDepositMax(uint256 _deposit0Max, uint256 _deposit1Max) external;
 
   function setWhitelist(address _address) external;
   
   function removeWhitelisted() external;
-
-  function appendList(address[] memory listed) external;
-
-  function removeListed(address listed) external;
-
-  function toggleWhitelist() external;
-
-  function setSlippage(uint24 slippage) external;
 
   function transferOwnership(address newOwner) external;
 

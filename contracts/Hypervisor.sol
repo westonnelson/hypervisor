@@ -28,7 +28,6 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     IERC20 public token0;
     IERC20 public token1;
     uint24 public fee;
-    uint24 public slippage;
     int24 public tickSpacing;
 
     int24 public baseLower;
@@ -41,7 +40,6 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     uint256 public deposit1Max;
     uint256 public maxTotalSupply;
     address public whitelistedAddress;
-    bool public whitelisted; /// depositors must be on list
     bool public directDeposit; /// enter uni on deposit (avoid if client uses public rpc)
 
     uint256 public constant PRECISION = 1e36;
@@ -90,14 +88,12 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         require(address(token1) != address(0));
         fee = pool.fee();
         tickSpacing = pool.tickSpacing();
-        slippage = 10;
 
         owner = _owner;
 
         maxTotalSupply = 0; /// no cap
         deposit0Max = uint256(-1);
         deposit1Max = uint256(-1);
-        whitelisted = true;
     }
 
     /// @notice Deposit tokens
@@ -111,12 +107,12 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         uint256 deposit1,
         address to,
         address from,
-        uint256[2] memory minIn
+        uint256[4] memory inMin
     ) nonReentrant external returns (uint256 shares) {
         require(deposit0 > 0 || deposit1 > 0);
         require(deposit0 <= deposit0Max && deposit1 <= deposit1Max);
         require(to != address(0) && to != address(this), "to");
-        require(!whitelisted || msg.sender == whitelistedAddress, "WHE");
+        require(msg.sender == whitelistedAddress, "WHE");
 
         /// update fees
         zeroBurn();
@@ -140,8 +136,22 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
           uint256 pool0PricedInToken1 = pool0.mul(price).div(PRECISION);
           shares = shares.mul(total).div(pool0PricedInToken1.add(pool1));
           if (directDeposit) {
-            addLiquidity(baseLower, baseUpper, address(this), token0.balanceOf(address(this)), token1.balanceOf(address(this)), minIn);
-            addLiquidity(limitLower, limitUpper, address(this), token0.balanceOf(address(this)), token1.balanceOf(address(this)), minIn);
+            addLiquidity(
+              baseLower,
+              baseUpper,
+              address(this),
+              token0.balanceOf(address(this)),
+              token1.balanceOf(address(this)),
+              [inMin[0], inMin[1]]
+            );
+            addLiquidity(
+              limitLower,
+              limitUpper,
+              address(this),
+              token0.balanceOf(address(this)),
+              token1.balanceOf(address(this)),
+              [inMin[2],inMin[3]]
+            );
           }
         }
         _mint(to, shares);
@@ -274,8 +284,8 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         int24 _limitLower,
         int24 _limitUpper,
         address feeRecipient,
-        uint256[2] memory inMin, 
-        uint256[2] memory outMin
+        uint256[4] memory inMin, 
+        uint256[4] memory outMin
     ) nonReentrant external onlyOwner {
         require(
             _baseLower < _baseUpper &&
@@ -306,7 +316,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         (limitLiquidity, , ) = _position(limitLower, limitUpper);
 
         _burnLiquidity(baseLower, baseUpper, baseLiquidity, address(this), true, outMin[0], outMin[1]);
-        _burnLiquidity(limitLower, limitUpper, limitLiquidity, address(this), true, outMin[0], outMin[1]);
+        _burnLiquidity(limitLower, limitUpper, limitLiquidity, address(this), true, outMin[2], outMin[3]);
 
         /// transfer 10% of fees for VISR buybacks
         if (fees0 > 0) token0.safeTransfer(feeRecipient, fees0.div(10));
@@ -321,6 +331,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
             totalSupply()
         );
 
+        uint256[2] memory addMins = [inMin[0],inMin[1]];
         baseLower = _baseLower;
         baseUpper = _baseUpper;
         addLiquidity(
@@ -329,9 +340,10 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
           address(this),
           token0.balanceOf(address(this)),
           token1.balanceOf(address(this)),
-          inMin
+          addMins 
         );
 
+        addMins = [inMin[2],inMin[3]];
         limitLower = _limitLower;
         limitUpper = _limitUpper;
         addLiquidity(
@@ -340,7 +352,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
           address(this),
           token0.balanceOf(address(this)),
           token1.balanceOf(address(this)),
-          inMin
+          addMins
         );
     }
 
@@ -354,7 +366,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         uint128 baseToken1Owed,
         uint128 limitToken0Owed,
         uint128 limitToken1Owed,
-        uint256[2] memory minIn
+        uint256[4] memory inMin
     ) {
         // update fees for compounding
         zeroBurn();
@@ -365,35 +377,49 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         pool.collect(address(this), baseLower, baseLower, baseToken0Owed, baseToken1Owed);
         pool.collect(address(this), limitLower, limitUpper, limitToken0Owed, limitToken1Owed);
         
-        addLiquidity(baseLower, baseUpper, address(this), token0.balanceOf(address(this)), token1.balanceOf(address(this)), minIn);
-        addLiquidity(limitLower, limitUpper, address(this), token0.balanceOf(address(this)), token1.balanceOf(address(this)), minIn);
+        addLiquidity(
+          baseLower,
+          baseUpper,
+          address(this),
+          token0.balanceOf(address(this)),
+          token1.balanceOf(address(this)),
+          [inMin[0],inMin[1]]
+        );
+        addLiquidity(
+          limitLower,
+          limitUpper,
+          address(this),
+          token0.balanceOf(address(this)),
+          token1.balanceOf(address(this)),
+          [inMin[2],inMin[3]]
+        );
     }
 
     /// @notice Add tokens to base liquidity
     /// @param amount0 Amount of token0 to add
     /// @param amount1 Amount of token1 to add
-    function addBaseLiquidity(uint256 amount0, uint256 amount1, uint256[2] memory minIn) external onlyOwner {
+    function addBaseLiquidity(uint256 amount0, uint256 amount1, uint256[2] memory inMin) external onlyOwner {
         addLiquidity(
             baseLower,
             baseUpper,
             address(this),
             amount0 == 0 && amount1 == 0 ? token0.balanceOf(address(this)) : amount0,
             amount0 == 0 && amount1 == 0 ? token1.balanceOf(address(this)) : amount1,
-            minIn
+            inMin
         );
     }
 
     /// @notice Add tokens to limit liquidity
     /// @param amount0 Amount of token0 to add
     /// @param amount1 Amount of token1 to add
-    function addLimitLiquidity(uint256 amount0, uint256 amount1, uint256[2] memory minIn) external onlyOwner {
+    function addLimitLiquidity(uint256 amount0, uint256 amount1, uint256[2] memory inMin) external onlyOwner {
         addLiquidity(
             limitLower,
             limitUpper,
             address(this),
             amount0 == 0 && amount1 == 0 ? token0.balanceOf(address(this)) : amount0,
             amount0 == 0 && amount1 == 0 ? token1.balanceOf(address(this)) : amount1,
-            minIn
+            inMin
         );
     }
 
@@ -639,17 +665,6 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     /// @notice Toggle Direct Deposit
     function toggleDirectDeposit() external onlyOwner {
         directDeposit = !directDeposit;
-    }
-
-    /// @notice Toogle Whitelist configuration
-    function toggleWhitelist() external onlyOwner {
-        whitelisted = !whitelisted;
-    }
-
-    /// @notice Set Slippage
-    /// @param _slippage Slippage value in %
-    function setSlippage(uint24 _slippage) external onlyOwner {
-        slippage = _slippage;
     }
 
     function transferOwnership(address newOwner) external onlyOwner {

@@ -94,7 +94,7 @@ contract UniProxy is ReentrancyGuard {
     uint256 deposit1,
     address to,
     address pos,
-    uint256[2] memory minIn
+    uint256[4] memory minIn
   ) nonReentrant external onlyAddedPosition(pos) returns (uint256 shares) {
     require(to != address(0), "to should be non-zero");
     Position storage p = positions[pos];
@@ -141,32 +141,8 @@ contract UniProxy is ReentrancyGuard {
       }
     }
 
-    if (p.version < 4) {
-      if (p.version < 3) {
-        if (p.version < 2) {
-          /// requires lp token transfer from proxy to msg.sender
-          shares = IHypervisor(pos).deposit(deposit0, deposit1, address(this), address(this));
-          IHypervisor(pos).transfer(to, shares);
-        }
-        else{
-          /// transfer lp tokens direct to msg.sender
-          shares = IHypervisor(pos).deposit(deposit0, deposit1, msg.sender, address(this));
-        }
-      }
-      else {
-        /// transfer lp tokens direct to msg.sender
-        shares = IHypervisor(pos).deposit(deposit0, deposit1, msg.sender, msg.sender);
-      }
-
-      if (p.depositOverride) {
-        require(IHypervisor(pos).totalSupply() <= p.maxTotalSupply, "supply exceeds");
-      }
-
-    }
-    else {
-        /// transfer lp tokens direct to msg.sender and provide minIn
-        shares = IHypervisor(pos).deposit(deposit0, deposit1, msg.sender, msg.sender, minIn);
-    }
+    /// transfer lp tokens direct to msg.sender and provide minIn
+    shares = IHypervisor(pos).deposit(deposit0, deposit1, msg.sender, msg.sender, minIn);
   }
 
   /// @notice Get the amount of token to deposit for the given amount of pair token
