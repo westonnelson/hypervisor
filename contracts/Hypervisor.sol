@@ -183,8 +183,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     /// @return limit1 amount of token1 received from limit position
     function pullLiquidity(
       uint256 shares,
-      uint256 amount0Min,
-      uint256 amount1Min
+      uint256[4] memory minAmounts
     ) external onlyOwner returns(
         uint256 base0,
         uint256 base1,
@@ -198,8 +197,8 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
             _liquidityForShares(baseLower, baseUpper, shares),
             address(this),
             false,
-            amount0Min,
-            amount1Min
+            minAmounts[0],
+            minAmounts[1] 
         );
         (limit0, limit1) = _burnLiquidity(
             limitLower,
@@ -207,8 +206,8 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
             _liquidityForShares(limitLower, limitUpper, shares),
             address(this),
             false,
-            amount0Min,
-            amount1Min
+            minAmounts[2],
+            minAmounts[3] 
         );
     } 
 

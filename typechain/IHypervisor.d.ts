@@ -32,12 +32,10 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     "deposit1Max()": FunctionFragment;
     "getTotalAmounts()": FunctionFragment;
     "pool()": FunctionFragment;
-    "pullLiquidity(uint256,uint256,uint256)": FunctionFragment;
+    "pullLiquidity(uint256,uint256[4])": FunctionFragment;
     "rebalance(int24,int24,int24,int24,address,uint256[4],uint256[4])": FunctionFragment;
     "removeWhitelisted()": FunctionFragment;
-    "setSlippage(uint24)": FunctionFragment;
     "setWhitelist(address)": FunctionFragment;
-    "toggleWhitelist()": FunctionFragment;
     "token0()": FunctionFragment;
     "token1()": FunctionFragment;
     "totalSupply()": FunctionFragment;
@@ -90,7 +88,10 @@ interface IHypervisorInterface extends ethers.utils.Interface {
   encodeFunctionData(functionFragment: "pool", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "pullLiquidity",
-    values: [BigNumberish, BigNumberish, BigNumberish]
+    values: [
+      BigNumberish,
+      [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "rebalance",
@@ -109,16 +110,8 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "setSlippage",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "setWhitelist",
     values: [string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "toggleWhitelist",
-    values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "token0", values?: undefined): string;
   encodeFunctionData(functionFragment: "token1", values?: undefined): string;
@@ -182,15 +175,7 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setSlippage",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "setWhitelist",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "toggleWhitelist",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "token0", data: BytesLike): Result;
@@ -310,8 +295,7 @@ export class IHypervisor extends BaseContract {
 
     pullLiquidity(
       shares: BigNumberish,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -330,17 +314,8 @@ export class IHypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setSlippage(
-      slippage: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     setWhitelist(
       _address: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    toggleWhitelist(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -427,8 +402,7 @@ export class IHypervisor extends BaseContract {
 
   pullLiquidity(
     shares: BigNumberish,
-    amount0Min: BigNumberish,
-    amount1Min: BigNumberish,
+    minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -447,17 +421,8 @@ export class IHypervisor extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setSlippage(
-    slippage: BigNumberish,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   setWhitelist(
     _address: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  toggleWhitelist(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -553,8 +518,7 @@ export class IHypervisor extends BaseContract {
 
     pullLiquidity(
       shares: BigNumberish,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: CallOverrides
     ): Promise<
       [BigNumber, BigNumber, BigNumber, BigNumber] & {
@@ -578,14 +542,7 @@ export class IHypervisor extends BaseContract {
 
     removeWhitelisted(overrides?: CallOverrides): Promise<void>;
 
-    setSlippage(
-      slippage: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     setWhitelist(_address: string, overrides?: CallOverrides): Promise<void>;
-
-    toggleWhitelist(overrides?: CallOverrides): Promise<void>;
 
     token0(overrides?: CallOverrides): Promise<string>;
 
@@ -671,8 +628,7 @@ export class IHypervisor extends BaseContract {
 
     pullLiquidity(
       shares: BigNumberish,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -691,17 +647,8 @@ export class IHypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setSlippage(
-      slippage: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     setWhitelist(
       _address: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    toggleWhitelist(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -790,8 +737,7 @@ export class IHypervisor extends BaseContract {
 
     pullLiquidity(
       shares: BigNumberish,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -810,17 +756,8 @@ export class IHypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setSlippage(
-      slippage: BigNumberish,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     setWhitelist(
       _address: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    toggleWhitelist(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

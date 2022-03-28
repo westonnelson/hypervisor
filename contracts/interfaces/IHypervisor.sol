@@ -47,8 +47,7 @@ interface IHypervisor {
 
   function pullLiquidity(
     uint256 shares,
-    uint256 amount0Min,
-    uint256 amount1Min
+    uint256[4] memory minAmounts
   ) external returns (
     uint256 base0,
     uint256 base1,
@@ -57,6 +56,7 @@ interface IHypervisor {
   );
 
   function compound() external returns (
+
     uint128 baseToken0Owed,
     uint128 baseToken1Owed,
     uint128 limitToken0Owed,

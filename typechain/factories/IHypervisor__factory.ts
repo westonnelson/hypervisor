@@ -241,14 +241,9 @@ const _abi = [
         type: "uint256",
       },
       {
-        internalType: "uint256",
-        name: "amount0Min",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "amount1Min",
-        type: "uint256",
+        internalType: "uint256[4]",
+        name: "minAmounts",
+        type: "uint256[4]",
       },
     ],
     name: "pullLiquidity",
@@ -330,32 +325,12 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint24",
-        name: "slippage",
-        type: "uint24",
-      },
-    ],
-    name: "setSlippage",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "address",
         name: "_address",
         type: "address",
       },
     ],
     name: "setWhitelist",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "toggleWhitelist",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

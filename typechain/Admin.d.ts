@@ -25,12 +25,11 @@ interface AdminInterface extends ethers.utils.Interface {
     "addLimitLiquidity(address,uint256,uint256,uint256[2])": FunctionFragment;
     "admin()": FunctionFragment;
     "advisor()": FunctionFragment;
-    "pullLiquidity(address,uint256,uint256,uint256)": FunctionFragment;
+    "pullLiquidity(address,uint256,uint256[4])": FunctionFragment;
     "rebalance(address,int24,int24,int24,int24,address,uint256[4],uint256[4])": FunctionFragment;
     "removeWhitelisted(address)": FunctionFragment;
     "rescueERC20(address,address)": FunctionFragment;
     "setWhitelist(address,address)": FunctionFragment;
-    "toggleWhitelist(address)": FunctionFragment;
     "transferAdmin(address)": FunctionFragment;
     "transferAdvisor(address)": FunctionFragment;
     "transferHypervisorOwner(address,address)": FunctionFragment;
@@ -48,7 +47,11 @@ interface AdminInterface extends ethers.utils.Interface {
   encodeFunctionData(functionFragment: "advisor", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "pullLiquidity",
-    values: [string, BigNumberish, BigNumberish, BigNumberish]
+    values: [
+      string,
+      BigNumberish,
+      [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+    ]
   ): string;
   encodeFunctionData(
     functionFragment: "rebalance",
@@ -74,10 +77,6 @@ interface AdminInterface extends ethers.utils.Interface {
   encodeFunctionData(
     functionFragment: "setWhitelist",
     values: [string, string]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "toggleWhitelist",
-    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "transferAdmin",
@@ -117,10 +116,6 @@ interface AdminInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "setWhitelist",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "toggleWhitelist",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -206,8 +201,7 @@ export class Admin extends BaseContract {
     pullLiquidity(
       _hypervisor: string,
       shares: BigNumberish,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -237,11 +231,6 @@ export class Admin extends BaseContract {
     setWhitelist(
       _hypervisor: string,
       _address: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    toggleWhitelist(
-      _hypervisor: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -285,8 +274,7 @@ export class Admin extends BaseContract {
   pullLiquidity(
     _hypervisor: string,
     shares: BigNumberish,
-    amount0Min: BigNumberish,
-    amount1Min: BigNumberish,
+    minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -316,11 +304,6 @@ export class Admin extends BaseContract {
   setWhitelist(
     _hypervisor: string,
     _address: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  toggleWhitelist(
-    _hypervisor: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -364,8 +347,7 @@ export class Admin extends BaseContract {
     pullLiquidity(
       _hypervisor: string,
       shares: BigNumberish,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: CallOverrides
     ): Promise<
       [BigNumber, BigNumber, BigNumber, BigNumber] & {
@@ -402,11 +384,6 @@ export class Admin extends BaseContract {
     setWhitelist(
       _hypervisor: string,
       _address: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    toggleWhitelist(
-      _hypervisor: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -450,8 +427,7 @@ export class Admin extends BaseContract {
     pullLiquidity(
       _hypervisor: string,
       shares: BigNumberish,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -481,11 +457,6 @@ export class Admin extends BaseContract {
     setWhitelist(
       _hypervisor: string,
       _address: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    toggleWhitelist(
-      _hypervisor: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -530,8 +501,7 @@ export class Admin extends BaseContract {
     pullLiquidity(
       _hypervisor: string,
       shares: BigNumberish,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -561,11 +531,6 @@ export class Admin extends BaseContract {
     setWhitelist(
       _hypervisor: string,
       _address: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    toggleWhitelist(
-      _hypervisor: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

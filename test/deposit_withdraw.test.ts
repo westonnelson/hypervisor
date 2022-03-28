@@ -416,7 +416,7 @@ describe('Hypervisor', () => {
         let limitPosition = await hypervisor.getLimitPosition()
         expect(basePosition[0]).to.be.gt(0)
 
-        await hypervisor.pullLiquidity(ethers.utils.parseEther('2000'), 0, 0)
+        await hypervisor.pullLiquidity(ethers.utils.parseEther('2000'), [0,0,0,0])
 
         basePosition = await hypervisor.getBasePosition()
         limitPosition = await hypervisor.getLimitPosition()
@@ -445,7 +445,7 @@ describe('Hypervisor', () => {
         expect(basePosition[0]).to.gt(0)
         expect(limitPosition[0]).to.equal(0)
 
-        await hypervisor.pullLiquidity(ethers.utils.parseEther('2000'), 0, 0)
+        await hypervisor.pullLiquidity(ethers.utils.parseEther('2000'), [0,0,0,0])
 
         // add limit liquidity
         await hypervisor.addLimitLiquidity(0, 0, [0,0])
