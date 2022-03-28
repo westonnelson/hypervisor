@@ -19,8 +19,7 @@ interface IHypervisor {
     uint256,
     address,
     address,
-    uint256,
-    uint256
+    uint256[4] memory
   ) external returns (uint256, uint256);
 
   function rebalance(

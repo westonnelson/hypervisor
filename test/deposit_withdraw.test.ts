@@ -308,11 +308,11 @@ describe('Hypervisor', () => {
         const user3_liq_balance = await hypervisor.balanceOf(user3.address)
         const user4_liq_balance = await hypervisor.balanceOf(user4.address)
 
-        await hypervisor.connect(user0).withdraw(user0_liq_balance, user0.address, user0.address, 0, 0)
-        await hypervisor.connect(user1).withdraw(user1_liq_balance, user1.address, user1.address, 0, 0)
-        await hypervisor.connect(user2).withdraw(user2_liq_balance, user2.address, user2.address, 0, 0)
-        await hypervisor.connect(user3).withdraw(user3_liq_balance, user3.address, user3.address, 0, 0)
-        await hypervisor.connect(user4).withdraw(user4_liq_balance, user4.address, user4.address, 0, 0)
+        await hypervisor.connect(user0).withdraw(user0_liq_balance, user0.address, user0.address, [0,0,0,0])
+        await hypervisor.connect(user1).withdraw(user1_liq_balance, user1.address, user1.address, [0,0,0,0])
+        await hypervisor.connect(user2).withdraw(user2_liq_balance, user2.address, user2.address, [0,0,0,0])
+        await hypervisor.connect(user3).withdraw(user3_liq_balance, user3.address, user3.address, [0,0,0,0])
+        await hypervisor.connect(user4).withdraw(user4_liq_balance, user4.address, user4.address, [0,0,0,0])
 
         user0token0Amount = await token0.balanceOf(user0.address)
         user0token1Amount = await token1.balanceOf(user0.address)
@@ -354,7 +354,7 @@ describe('Hypervisor', () => {
         await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address, [0,0,0,0])
         alice_liq_balance = await hypervisor.balanceOf(alice.address)
         expect(alice_liq_balance).to.equal(ethers.utils.parseEther('2000'))
-        await hypervisor.connect(alice).withdraw(alice_liq_balance, alice.address, alice.address, 0, 0)
+        await hypervisor.connect(alice).withdraw(alice_liq_balance, alice.address, alice.address, [0,0,0,0])
         let tokenAmounts = await hypervisor.getTotalAmounts()
         // verify that all liquidity has been removed from the pool
         expect(tokenAmounts[0]).to.equal(0)
@@ -386,7 +386,7 @@ describe('Hypervisor', () => {
         expect(tokenAmounts[0]).to.be.lt(ethers.utils.parseEther('2001'))
         expect(tokenAmounts[1]).to.be.lt(ethers.utils.parseEther('2001'))
 
-        await hypervisor.connect(user0).withdraw(user0_liq_balance, user0.address, user0.address, 0, 0)
+        await hypervisor.connect(user0).withdraw(user0_liq_balance, user0.address, user0.address, [0,0,0,0])
         token0Balance = await token0.balanceOf(user0.address)
         token1Balance = await token1.balanceOf(user0.address)
         expect(token0Balance).to.equal(ethers.utils.parseEther('1000'))
@@ -424,7 +424,7 @@ describe('Hypervisor', () => {
         expect(limitPosition[0]).to.equal(0)
 
         // withdraw alice's all liq balance
-        await hypervisor.connect(alice).withdraw(alice_liq_balance, alice.address, alice.address, 0, 0)
+        await hypervisor.connect(alice).withdraw(alice_liq_balance, alice.address, alice.address,[0,0,0,0])
         alice_liq_balance = await hypervisor.balanceOf(alice.address)
         
         // expect alice liq balance to be 0

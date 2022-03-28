@@ -458,14 +458,9 @@ const _abi = [
         type: "address",
       },
       {
-        internalType: "uint256",
+        internalType: "uint256[4]",
         name: "",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
+        type: "uint256[4]",
       },
     ],
     name: "withdraw",

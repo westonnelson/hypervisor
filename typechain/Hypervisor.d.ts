@@ -66,7 +66,7 @@ interface HypervisorInterface extends ethers.utils.Interface {
     "transferOwnership(address)": FunctionFragment;
     "uniswapV3MintCallback(uint256,uint256,bytes)": FunctionFragment;
     "whitelistedAddress()": FunctionFragment;
-    "withdraw(uint256,address,address,uint256,uint256)": FunctionFragment;
+    "withdraw(uint256,address,address,uint256[4])": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -234,7 +234,12 @@ interface HypervisorInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [BigNumberish, string, string, BigNumberish, BigNumberish]
+    values: [
+      BigNumberish,
+      string,
+      string,
+      [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+    ]
   ): string;
 
   decodeFunctionResult(
@@ -652,8 +657,7 @@ export class Hypervisor extends BaseContract {
       shares: BigNumberish,
       to: string,
       from: string,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
@@ -851,8 +855,7 @@ export class Hypervisor extends BaseContract {
     shares: BigNumberish,
     to: string,
     from: string,
-    amount0Min: BigNumberish,
-    amount1Min: BigNumberish,
+    minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -1066,8 +1069,7 @@ export class Hypervisor extends BaseContract {
       shares: BigNumberish,
       to: string,
       from: string,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: CallOverrides
     ): Promise<
       [BigNumber, BigNumber] & { amount0: BigNumber; amount1: BigNumber }
@@ -1394,8 +1396,7 @@ export class Hypervisor extends BaseContract {
       shares: BigNumberish,
       to: string,
       from: string,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
@@ -1584,8 +1585,7 @@ export class Hypervisor extends BaseContract {
       shares: BigNumberish,
       to: string,
       from: string,
-      amount0Min: BigNumberish,
-      amount1Min: BigNumberish,
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

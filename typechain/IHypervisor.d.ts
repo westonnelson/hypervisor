@@ -42,7 +42,7 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     "transfer(address,uint256)": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
-    "withdraw(uint256,address,address,uint256,uint256)": FunctionFragment;
+    "withdraw(uint256,address,address,uint256[4])": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -133,7 +133,12 @@ interface IHypervisorInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [BigNumberish, string, string, BigNumberish, BigNumberish]
+    values: [
+      BigNumberish,
+      string,
+      string,
+      [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+    ]
   ): string;
 
   decodeFunctionResult(
@@ -347,8 +352,7 @@ export class IHypervisor extends BaseContract {
       arg0: BigNumberish,
       arg1: string,
       arg2: string,
-      arg3: BigNumberish,
-      arg4: BigNumberish,
+      arg3: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
@@ -454,8 +458,7 @@ export class IHypervisor extends BaseContract {
     arg0: BigNumberish,
     arg1: string,
     arg2: string,
-    arg3: BigNumberish,
-    arg4: BigNumberish,
+    arg3: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -572,8 +575,7 @@ export class IHypervisor extends BaseContract {
       arg0: BigNumberish,
       arg1: string,
       arg2: string,
-      arg3: BigNumberish,
-      arg4: BigNumberish,
+      arg3: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: CallOverrides
     ): Promise<[BigNumber, BigNumber]>;
   };
@@ -680,8 +682,7 @@ export class IHypervisor extends BaseContract {
       arg0: BigNumberish,
       arg1: string,
       arg2: string,
-      arg3: BigNumberish,
-      arg4: BigNumberish,
+      arg3: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
@@ -789,8 +790,7 @@ export class IHypervisor extends BaseContract {
       arg0: BigNumberish,
       arg1: string,
       arg2: string,
-      arg3: BigNumberish,
-      arg4: BigNumberish,
+      arg3: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

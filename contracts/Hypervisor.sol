@@ -228,8 +228,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         uint256 shares,
         address to,
         address from,
-        uint256 amount0Min,
-        uint256 amount1Min
+        uint256[4] memory minAmounts
     ) nonReentrant external returns (uint256 amount0, uint256 amount1) {
         require(shares > 0, "shares");
         require(to != address(0), "to");
@@ -244,8 +243,8 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
             _baseLiquidityForShares(shares),
             to,
             false,
-            amount0Min,
-            amount1Min
+            minAmounts[0],
+            minAmounts[1]
         );
         (uint256 limit0, uint256 limit1) = _burnLiquidity(
             limitLower,
@@ -253,8 +252,8 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
             _limitLiquidityForShares(shares),
             to,
             false,
-            amount0Min,
-            amount1Min
+            minAmounts[2],
+            minAmounts[3]
         );
 
         // Push tokens proportional to unused balances
