@@ -93,7 +93,8 @@ contract UniProxy is ReentrancyGuard {
     uint256 deposit0,
     uint256 deposit1,
     address to,
-    address pos
+    address pos,
+    uint256[4] memory minIn
   ) nonReentrant external onlyAddedPosition(pos) returns (uint256 shares) {
     require(to != address(0), "to should be non-zero");
     Position storage p = positions[pos];
@@ -108,16 +109,7 @@ contract UniProxy is ReentrancyGuard {
       }
     }
 
-    if (twapCheck || p.twapOverride) {
-      /// check twap
-      checkPriceChange(
-        pos,
-        (p.twapOverride ? p.twapInterval : twapInterval),
-        (p.twapOverride ? p.priceThreshold : priceThreshold)
-      );
-    }
-
-    if (!freeDeposit && !p.list[msg.sender] && !p.freeDeposit) {      
+    if (!freeDeposit && !p.list[msg.sender] && !p.freeDeposit) { 
       // freeDeposit off and hypervisor msg.sender not on list
       if (deposit0 > 0) {
         (uint256 test1Min, uint256 test1Max) = getDepositAmount(pos, address(IHypervisor(pos).token0()), deposit0);
@@ -131,6 +123,15 @@ contract UniProxy is ReentrancyGuard {
       }
     }
 
+    if (twapCheck || p.twapOverride) {
+      /// check twap
+      checkPriceChange(
+        pos,
+        (p.twapOverride ? p.twapInterval : twapInterval),
+        (p.twapOverride ? p.priceThreshold : priceThreshold)
+      );
+    }
+
     if (p.depositOverride) {
       if (p.deposit0Max > 0) {
         require(deposit0 <= p.deposit0Max, "token0 exceeds");
@@ -140,26 +141,8 @@ contract UniProxy is ReentrancyGuard {
       }
     }
 
-    if (p.version < 3) {
-      if (p.version < 2) {
-        /// requires lp token transfer from proxy to msg.sender
-        shares = IHypervisor(pos).deposit(deposit0, deposit1, address(this), address(this));
-        IHypervisor(pos).transfer(to, shares);
-      }
-      else{
-        /// transfer lp tokens direct to msg.sender
-        shares = IHypervisor(pos).deposit(deposit0, deposit1, msg.sender, address(this));
-      }
-    }
-    else {
-      /// transfer lp tokens direct to msg.sender
-      shares = IHypervisor(pos).deposit(deposit0, deposit1, msg.sender, msg.sender);
-    }
-
-    if (p.depositOverride) {
-      require(IHypervisor(pos).totalSupply() <= p.maxTotalSupply, "supply exceeds");
-    }
-
+    /// transfer lp tokens direct to msg.sender and provide minIn
+    shares = IHypervisor(pos).deposit(deposit0, deposit1, msg.sender, msg.sender, minIn);
   }
 
   /// @notice Get the amount of token to deposit for the given amount of pair token

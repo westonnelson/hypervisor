@@ -9,6 +9,8 @@ import './tasks/swap'
 import { parseUnits } from 'ethers/lib/utils'
 import { HardhatUserConfig } from 'hardhat/types'
 require('dotenv').config()
+const mnemonic = process.env.DEV_MNEMONIC || ''
+const archive_node = process.env.ETHEREUM_ARCHIVE_URL || ''
 
 const config: HardhatUserConfig = {
   networks: {
@@ -17,11 +19,10 @@ const config: HardhatUserConfig = {
       },
       mainnet: {
         url: `https://eth-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-        accounts: [process.env.MAINNET_PRIVATE_KEY as string],
-      },
-      polygon: {
-        url: `https://polygon-mainnet.g.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
-        accounts: [process.env.MAINNET_PRIVATE_KEY as string],
+          accounts: {
+            mnemonic,
+          },
+
       },
   },
   watcher: {
@@ -53,10 +54,7 @@ const config: HardhatUserConfig = {
 
   },
   etherscan: {
-    apiKey: {
-      mainnet: process.env.ETHERSCAN_APIKEY,
-      polygon: process.env.POLYGONSCAN_APIKEY
-    }
+    apiKey: process.env.ETHERSCAN_APIKEY,
   },
   mocha: {
     timeout: 2000000
