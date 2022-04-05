@@ -21,21 +21,15 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface IVaultInterface extends ethers.utils.Interface {
   functions: {
-    "deposit(uint256,uint256,address,address,uint256[2])": FunctionFragment;
+    "deposit(uint256,uint256,address,address)": FunctionFragment;
     "getTotalAmounts()": FunctionFragment;
-    "rebalance(int24,int24,int24,int24,address,uint256[2],uint256[2])": FunctionFragment;
+    "rebalance(int24,int24,int24,int24,address,uint256,uint256)": FunctionFragment;
     "withdraw(uint256,address,address,uint256,uint256)": FunctionFragment;
   };
 
   encodeFunctionData(
     functionFragment: "deposit",
-    values: [
-      BigNumberish,
-      BigNumberish,
-      string,
-      string,
-      [BigNumberish, BigNumberish]
-    ]
+    values: [BigNumberish, BigNumberish, string, string]
   ): string;
   encodeFunctionData(
     functionFragment: "getTotalAmounts",
@@ -49,8 +43,8 @@ interface IVaultInterface extends ethers.utils.Interface {
       BigNumberish,
       BigNumberish,
       string,
-      [BigNumberish, BigNumberish],
-      [BigNumberish, BigNumberish]
+      BigNumberish,
+      BigNumberish
     ]
   ): string;
   encodeFunctionData(
@@ -157,7 +151,6 @@ export class IVault extends BaseContract {
       arg1: BigNumberish,
       arg2: string,
       arg3: string,
-      minIn: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -169,8 +162,8 @@ export class IVault extends BaseContract {
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       feeRecipient: string,
-      minIn: [BigNumberish, BigNumberish],
-      outMin: [BigNumberish, BigNumberish],
+      _amount0Min: BigNumberish,
+      _amount1Min: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -189,7 +182,6 @@ export class IVault extends BaseContract {
     arg1: BigNumberish,
     arg2: string,
     arg3: string,
-    minIn: [BigNumberish, BigNumberish],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -201,8 +193,8 @@ export class IVault extends BaseContract {
     _limitLower: BigNumberish,
     _limitUpper: BigNumberish,
     feeRecipient: string,
-    minIn: [BigNumberish, BigNumberish],
-    outMin: [BigNumberish, BigNumberish],
+    _amount0Min: BigNumberish,
+    _amount1Min: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -221,7 +213,6 @@ export class IVault extends BaseContract {
       arg1: BigNumberish,
       arg2: string,
       arg3: string,
-      minIn: [BigNumberish, BigNumberish],
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
@@ -233,8 +224,8 @@ export class IVault extends BaseContract {
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       feeRecipient: string,
-      minIn: [BigNumberish, BigNumberish],
-      outMin: [BigNumberish, BigNumberish],
+      _amount0Min: BigNumberish,
+      _amount1Min: BigNumberish,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -362,7 +353,6 @@ export class IVault extends BaseContract {
       arg1: BigNumberish,
       arg2: string,
       arg3: string,
-      minIn: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -374,8 +364,8 @@ export class IVault extends BaseContract {
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       feeRecipient: string,
-      minIn: [BigNumberish, BigNumberish],
-      outMin: [BigNumberish, BigNumberish],
+      _amount0Min: BigNumberish,
+      _amount1Min: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -395,7 +385,6 @@ export class IVault extends BaseContract {
       arg1: BigNumberish,
       arg2: string,
       arg3: string,
-      minIn: [BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -407,8 +396,8 @@ export class IVault extends BaseContract {
       _limitLower: BigNumberish,
       _limitUpper: BigNumberish,
       feeRecipient: string,
-      minIn: [BigNumberish, BigNumberish],
-      outMin: [BigNumberish, BigNumberish],
+      _amount0Min: BigNumberish,
+      _amount1Min: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

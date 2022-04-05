@@ -6,7 +6,8 @@ import {
     IUniswapV3Factory,
     ISwapRouter,
     HypervisorFactory,
-    MockUniswapV3PoolDeployer
+    MockUniswapV3PoolDeployer,
+    TokeHypervisorFactory
 } from "../../typechain";
 
 import { Fixture } from 'ethereum-waffle'
@@ -57,6 +58,16 @@ async function hypervisorFactoryFixture(factory: IUniswapV3Factory): Promise<Hyp
     const hypervisorFactory = (await hypervisorFactoryFactory.deploy(factory.address)) as HypervisorFactory
     return { hypervisorFactory }
 }
+interface TokeHypervisorFactoryFixture {
+    tokeHypervisorFactory: TokeHypervisorFactory
+}
+
+async function tokeHypervisorFactoryFixture(factory: IUniswapV3Factory): Promise<TokeHypervisorFactoryFixture> {
+    const tokeHypervisorFactoryFactory = await ethers.getContractFactory('TokeHypervisorFactory')
+    const tokeHypervisorFactory = (await tokeHypervisorFactoryFactory.deploy(factory.address)) as TokeHypervisorFactory
+    return { tokeHypervisorFactory }
+}
+
 
 interface OurFactoryFixture {
     ourFactory: MockUniswapV3PoolDeployer
@@ -99,5 +110,22 @@ export const hypervisorTestFixture: Fixture<HypervisorTestFixture> = async funct
         factory,
         router,
         hypervisorFactory,
+    }
+}
+
+type TokeHypervisorTestFixture = UniswapV3Fixture & TokensFixture & TokeHypervisorFactoryFixture
+
+export const tokeHypervisorTestFixture: Fixture<TokeHypervisorTestFixture> = async function (): Promise<TokeHypervisorTestFixture> {
+    const { factory, router } = await uniswapV3Fixture()
+    const { token0, token1, token2 } = await tokensFixture()
+    const { tokeHypervisorFactory } = await tokeHypervisorFactoryFixture(factory)
+
+    return {
+        token0,
+        token1,
+        token2,
+        factory,
+        router,
+        tokeHypervisorFactory,
     }
 }

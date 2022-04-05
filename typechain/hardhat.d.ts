@@ -33,6 +33,14 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IERC20__factory>;
     getContractFactory(
+      name: "IUniswapV2Factory",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IUniswapV2Factory__factory>;
+    getContractFactory(
+      name: "IUniswapV2Pair",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IUniswapV2Pair__factory>;
+    getContractFactory(
       name: "IUniswapV3FlashCallback",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.IUniswapV3FlashCallback__factory>;
@@ -205,6 +213,30 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.V3Migrator__factory>;
     getContractFactory(
+      name: "BaseController",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.BaseController__factory>;
+    getContractFactory(
+      name: "GammaController",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.GammaController__factory>;
+    getContractFactory(
+      name: "IHypervisorFactory",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.IHypervisorFactory__factory>;
+    getContractFactory(
+      name: "ITokeHypervisor",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ITokeHypervisor__factory>;
+    getContractFactory(
+      name: "TokeHypervisor",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TokeHypervisor__factory>;
+    getContractFactory(
+      name: "TokeHypervisorFactory",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.TokeHypervisorFactory__factory>;
+    getContractFactory(
       name: "Hypervisor",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.Hypervisor__factory>;
@@ -282,6 +314,16 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.IERC20>;
+    getContractAt(
+      name: "IUniswapV2Factory",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IUniswapV2Factory>;
+    getContractAt(
+      name: "IUniswapV2Pair",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IUniswapV2Pair>;
     getContractAt(
       name: "IUniswapV3FlashCallback",
       address: string,
@@ -497,6 +539,36 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.V3Migrator>;
+    getContractAt(
+      name: "BaseController",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.BaseController>;
+    getContractAt(
+      name: "GammaController",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.GammaController>;
+    getContractAt(
+      name: "IHypervisorFactory",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.IHypervisorFactory>;
+    getContractAt(
+      name: "ITokeHypervisor",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ITokeHypervisor>;
+    getContractAt(
+      name: "TokeHypervisor",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TokeHypervisor>;
+    getContractAt(
+      name: "TokeHypervisorFactory",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.TokeHypervisorFactory>;
     getContractAt(
       name: "Hypervisor",
       address: string,

@@ -146,11 +146,6 @@ const _abi = [
         name: "",
         type: "address",
       },
-      {
-        internalType: "uint256[2]",
-        name: "minIn",
-        type: "uint256[2]",
-      },
     ],
     name: "deposit",
     outputs: [
@@ -209,14 +204,14 @@ const _abi = [
         type: "address",
       },
       {
-        internalType: "uint256[2]",
-        name: "minIn",
-        type: "uint256[2]",
+        internalType: "uint256",
+        name: "_amount0Min",
+        type: "uint256",
       },
       {
-        internalType: "uint256[2]",
-        name: "outMin",
-        type: "uint256[2]",
+        internalType: "uint256",
+        name: "_amount1Min",
+        type: "uint256",
       },
     ],
     name: "rebalance",

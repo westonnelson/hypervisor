@@ -197,7 +197,7 @@ describe('Hypervisor', () => {
         })
         currentTick = await hypervisor.currentTick()
         let totalAmounts0 = await hypervisor.getTotalAmounts();
-        await hypervisor.compound();
+        await hypervisor.compound([0,0,0,0]);
         let totalAmounts1 = await hypervisor.getTotalAmounts();
         // pending fees from swap should be realized after compounding
         expect(totalAmounts0.total1).to.lt(totalAmounts1.total1);
@@ -533,7 +533,7 @@ describe('Hypervisor', () => {
         expect(tokenAmounts[0] > tokenAmounts[1])
 
         let totalAmounts0 = await hypervisor.getTotalAmounts();
-        await hypervisor.compound();
+        await hypervisor.compound([0,0,0,0]);
         let totalAmounts1 = await hypervisor.getTotalAmounts();
         // pending fees from swap should be realized after compounding
         expect(totalAmounts0.total1).to.lt(totalAmounts1.total1);

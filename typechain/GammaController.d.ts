@@ -23,10 +23,9 @@ interface GammaControllerInterface extends ethers.utils.Interface {
   functions: {
     "N_COINS()": FunctionFragment;
     "addressRegistry()": FunctionFragment;
-    "deploy(uint256,uint256,address,uint256)": FunctionFragment;
+    "deploy(uint256,uint256,address,address,uint24,uint256,uint256[4])": FunctionFragment;
     "manager()": FunctionFragment;
-    "uniProxy()": FunctionFragment;
-    "withdraw(address,uint256,uint256[2])": FunctionFragment;
+    "withdraw(address,address,uint24,uint256,uint256[4])": FunctionFragment;
   };
 
   encodeFunctionData(functionFragment: "N_COINS", values?: undefined): string;
@@ -36,13 +35,26 @@ interface GammaControllerInterface extends ethers.utils.Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "deploy",
-    values: [BigNumberish, BigNumberish, string, BigNumberish]
+    values: [
+      BigNumberish,
+      BigNumberish,
+      string,
+      string,
+      BigNumberish,
+      BigNumberish,
+      [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+    ]
   ): string;
   encodeFunctionData(functionFragment: "manager", values?: undefined): string;
-  encodeFunctionData(functionFragment: "uniProxy", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "withdraw",
-    values: [string, BigNumberish, [BigNumberish, BigNumberish]]
+    values: [
+      string,
+      string,
+      BigNumberish,
+      BigNumberish,
+      [BigNumberish, BigNumberish, BigNumberish, BigNumberish]
+    ]
   ): string;
 
   decodeFunctionResult(functionFragment: "N_COINS", data: BytesLike): Result;
@@ -52,7 +64,6 @@ interface GammaControllerInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "deploy", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "manager", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "uniProxy", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
 
   events: {};
@@ -109,19 +120,22 @@ export class GammaController extends BaseContract {
     deploy(
       amount0: BigNumberish,
       amount1: BigNumberish,
-      lpTokenAddress: string,
+      token0: string,
+      token1: string,
+      fee: BigNumberish,
       minMintAmount: BigNumberish,
+      inMin: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     manager(overrides?: CallOverrides): Promise<[string]>;
 
-    uniProxy(overrides?: CallOverrides): Promise<[string]>;
-
     withdraw(
-      lpTokenAddress: string,
+      token0: string,
+      token1: string,
+      fee: BigNumberish,
       amount: BigNumberish,
-      minAmounts: [BigNumberish, BigNumberish],
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
@@ -133,19 +147,22 @@ export class GammaController extends BaseContract {
   deploy(
     amount0: BigNumberish,
     amount1: BigNumberish,
-    lpTokenAddress: string,
+    token0: string,
+    token1: string,
+    fee: BigNumberish,
     minMintAmount: BigNumberish,
+    inMin: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   manager(overrides?: CallOverrides): Promise<string>;
 
-  uniProxy(overrides?: CallOverrides): Promise<string>;
-
   withdraw(
-    lpTokenAddress: string,
+    token0: string,
+    token1: string,
+    fee: BigNumberish,
     amount: BigNumberish,
-    minAmounts: [BigNumberish, BigNumberish],
+    minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -157,19 +174,22 @@ export class GammaController extends BaseContract {
     deploy(
       amount0: BigNumberish,
       amount1: BigNumberish,
-      lpTokenAddress: string,
+      token0: string,
+      token1: string,
+      fee: BigNumberish,
       minMintAmount: BigNumberish,
+      inMin: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: CallOverrides
     ): Promise<void>;
 
     manager(overrides?: CallOverrides): Promise<string>;
 
-    uniProxy(overrides?: CallOverrides): Promise<string>;
-
     withdraw(
-      lpTokenAddress: string,
+      token0: string,
+      token1: string,
+      fee: BigNumberish,
       amount: BigNumberish,
-      minAmounts: [BigNumberish, BigNumberish],
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: CallOverrides
     ): Promise<void>;
   };
@@ -184,19 +204,22 @@ export class GammaController extends BaseContract {
     deploy(
       amount0: BigNumberish,
       amount1: BigNumberish,
-      lpTokenAddress: string,
+      token0: string,
+      token1: string,
+      fee: BigNumberish,
       minMintAmount: BigNumberish,
+      inMin: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     manager(overrides?: CallOverrides): Promise<BigNumber>;
 
-    uniProxy(overrides?: CallOverrides): Promise<BigNumber>;
-
     withdraw(
-      lpTokenAddress: string,
+      token0: string,
+      token1: string,
+      fee: BigNumberish,
       amount: BigNumberish,
-      minAmounts: [BigNumberish, BigNumberish],
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
@@ -209,19 +232,22 @@ export class GammaController extends BaseContract {
     deploy(
       amount0: BigNumberish,
       amount1: BigNumberish,
-      lpTokenAddress: string,
+      token0: string,
+      token1: string,
+      fee: BigNumberish,
       minMintAmount: BigNumberish,
+      inMin: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     manager(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    uniProxy(overrides?: CallOverrides): Promise<PopulatedTransaction>;
-
     withdraw(
-      lpTokenAddress: string,
+      token0: string,
+      token1: string,
+      fee: BigNumberish,
       amount: BigNumberish,
-      minAmounts: [BigNumberish, BigNumberish],
+      minAmounts: [BigNumberish, BigNumberish, BigNumberish, BigNumberish],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

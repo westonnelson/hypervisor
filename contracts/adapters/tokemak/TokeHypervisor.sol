@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: BUSL-1.1
-
 pragma solidity 0.7.6;
 
 import "@openzeppelin/contracts/math/Math.sol";
@@ -16,10 +15,10 @@ import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import "@uniswap/v3-periphery/contracts/libraries/LiquidityAmounts.sol";
 
-/// @title Hypervisor
+/// @title TokeHypervisor
 /// @notice A Uniswap V2-like interface with fungible liquidity to Uniswap V3
 /// which allows for arbitrary liquidity provision: one-sided, lop-sided, and balanced
-contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
+contract TokeHypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
     using SignedSafeMath for int256;
@@ -46,7 +45,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
 
     bool mintCalled;
 
-   event Deposit(
+    event Deposit(
         address indexed sender,
         address indexed to,
         uint256 shares,
@@ -101,7 +100,6 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     /// @param deposit1 Amount of token1 transfered from sender to Hypervisor
     /// @param to Address to which liquidity tokens are minted
     /// @param from Address from which asset tokens are transferred
-    /// @param inMin min spend for directDeposit is true 
     /// @return shares Quantity of liquidity tokens minted as a result of deposit
     function deposit(
         uint256 deposit0,
@@ -210,7 +208,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
             minAmounts[2],
             minAmounts[3] 
         );
-    } 
+    }
 
     function _baseLiquidityForShares(uint256 shares) internal view returns (uint128) {
         return _liquidityForShares(baseLower, baseUpper, shares);
@@ -234,6 +232,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     ) nonReentrant external returns (uint256 amount0, uint256 amount1) {
         require(shares > 0, "shares");
         require(to != address(0), "to");
+        require(msg.sender == whitelistedAddress, "WHE");
 
         /// update fees
         zeroBurn();
@@ -267,7 +266,6 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         amount0 = base0.add(limit0).add(unusedAmount0);
         amount1 = base1.add(limit1).add(unusedAmount1);
 
-        require( from == msg.sender, "own");
         _burn(from, shares);
 
         emit Withdraw(from, to, shares, amount0, amount1);
@@ -368,7 +366,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         uint128 baseToken0Owed,
         uint128 baseToken1Owed,
         uint128 limitToken0Owed,
-        uint128 limitToken1Owed 
+        uint128 limitToken1Owed
     ) {
         // update fees for compounding
         zeroBurn();
