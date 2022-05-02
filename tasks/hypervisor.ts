@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { constants, Wallet } from 'ethers'
-import { formatEther, parseEther} from 'ethers/lib/utils'
+import { formatEther, parseEther, formatUnits, parseUnits } from 'ethers/lib/utils'
 import { task } from 'hardhat/config'
 import { deployContract, signPermission } from './utils'
 import {
@@ -9,8 +9,13 @@ import {
     encodePriceSqrt,
     getPositionKey,
     getMinTick,
-    getMaxTick
+    getMaxTick,
+    MaxUint256
 } from './shared/utilities'
+import {
+  baseTicksFromCurrentTick,
+  limitTicksFromCurrentTick
+} from './shared/tick'
 
 task('deploy-hypervisor-factory', 'Deploy Hypervisor contract')
   .setAction(async (cliArgs, { ethers, run, network }) => {
@@ -182,7 +187,7 @@ task('verify-hypervisor', 'Verify Hypervisor contract')
 
   });
 
-  task('deploy-uniproxy', 'Deploy UniProxy contract')
+task('deploy-uniproxy', 'Deploy UniProxy contract')
   .setAction(async (cliArgs, { ethers, run, network }) => {
 
     await run('compile')
@@ -211,7 +216,7 @@ task('verify-hypervisor', 'Verify Hypervisor contract')
     })
   })
 
-  task('verify-uniproxy', 'Verify UniProxy contract')
+task('verify-uniproxy', 'Verify UniProxy contract')
   .addParam('uniproxy', 'the UniProxy to verify')
   .setAction(async (cliArgs, { ethers, run, network }) => {
 
@@ -237,3 +242,135 @@ task('verify-hypervisor', 'Verify Hypervisor contract')
       address: uniProxy.address
     })
   })
+
+task('initialize-hypervisor', 'Initialize Hypervisor contract')
+  .addParam('hypervisor', 'the hypervisor')
+  .addParam('amount0', 'the amount of token0')
+  .addParam('amount1', 'the amount of token1')
+  .addParam('uniProxy', 'the uniProxy')
+  .addParam('adminAddress', 'the admin address')
+  .setAction(async (cliArgs, { ethers, run, network }) => {
+
+    console.log('Network')
+    console.log('  ', network.name)
+
+    await run('compile')
+
+    // get signer
+
+    const signer = (await ethers.getSigners())[0]
+    console.log('Signer')
+    console.log('  at', signer.address)
+    console.log('  ETH', formatEther(await signer.getBalance()))
+
+    const args = {
+      hypervisor: cliArgs.hypervisor,
+      owner: signer.address,
+      amount0: cliArgs.amount0,
+      amount1: cliArgs.amount1,
+      uniProxy: cliArgs.uniProxy,
+      adminAddress: cliArgs.adminAddress
+    }
+
+    console.log('Task Args')
+    console.log(args)
+
+    const hypervisor = await ethers.getContractAt(
+      'Hypervisor',
+      cliArgs.hypervisor,
+      signer,
+    )
+
+    const token0 = await ethers.getContractAt(
+      'ERC20',
+      await hypervisor.token0(),
+      signer
+    )
+
+    const token1 = await ethers.getContractAt(
+      'ERC20',
+      await hypervisor.token1(),
+      signer
+    )
+
+    console.log('Signer')
+    console.log('  at', signer.address)
+    console.log(' ', (await token0.symbol()), ' ', formatUnits(await token0.balanceOf(signer.address), await token0.decimals()))
+    console.log(' ', (await token1.symbol()), ' ', formatUnits(await token1.balanceOf(signer.address), await token1.decimals()))
+
+    // Token Approval
+    console.log('Token Approving...')
+    await token0.approve(hypervisor.address, MaxUint256)
+    await token1.approve(hypervisor.address, MaxUint256)
+    console.log('Approval Success')
+
+    // Set Whitelist
+    console.log('Whitelist Signer...')
+    await hypervisor.setWhitelist(signer.address)
+    console.log('Success')
+
+    // Make First Deposit
+    console.log('First Depositing...')
+    await hypervisor.deposit(
+      parseUnits(cliArgs.amount0, (await token0.decimals())),
+      parseUnits(cliArgs.amount1, (await token1.decimals())),
+      signer.address,
+      signer.address,
+      [0, 0, 0, 0]
+    )
+    console.log('Success')
+
+    // Rebalance
+    console.log('Rebalancing')
+    const pool = await ethers.getContractAt(
+      'UniswapV3Pool',
+      await hypervisor.pool(),
+      signer
+    )
+    const tickSpacing = 10
+    const percent = 8
+    let currentTick: number
+    [, currentTick] = await pool.slot0()
+    let [baseLower, baseUpper] = baseTicksFromCurrentTick(
+      currentTick,
+      await token0.decimals(),
+      await token1.decimals(),
+      tickSpacing,
+      percent
+    )
+    let [limitLower, limitUpper] = limitTicksFromCurrentTick(
+      currentTick,
+      await token0.decimals(),
+      await token1.decimals(),
+      tickSpacing,
+      percent,
+      true
+    )
+    
+    console.log(baseLower)
+    console.log(baseUpper)
+    console.log(limitLower)
+    console.log(limitUpper)
+
+    await hypervisor.rebalance(
+      baseLower,
+      baseUpper,
+      limitLower,
+      limitUpper,
+      signer.address,
+      [0, 0, 0, 0],
+      [0, 0, 0, 0]
+    )
+    console.log('Success')
+
+    // Whitelist uniProxy
+    console.log('Whitelist uniProxy')
+    await hypervisor.setWhitelist(cliArgs.uniProxy)
+    console.log('Success')
+
+    // TransferOnwership
+    console.log('Transferring Ownership')
+    await hypervisor.transferOwnership(cliArgs.adminAddress)
+    console.log('Success')
+
+  });
