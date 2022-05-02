@@ -247,8 +247,8 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
   .addParam('hypervisor', 'the hypervisor')
   .addParam('amount0', 'the amount of token0')
   .addParam('amount1', 'the amount of token1')
-  .addParam('uniProxy', 'the uniProxy')
-  .addParam('adminAddress', 'the admin address')
+  .addParam('uniproxy', 'the uniproxy')
+  .addParam('adminaddress', 'the admin address')
   .setAction(async (cliArgs, { ethers, run, network }) => {
 
     console.log('Network')
@@ -268,8 +268,8 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
       owner: signer.address,
       amount0: cliArgs.amount0,
       amount1: cliArgs.amount1,
-      uniProxy: cliArgs.uniProxy,
-      adminAddress: cliArgs.adminAddress
+      uniproxy: cliArgs.uniproxy,
+      adminaddress: cliArgs.adminaddress
     }
 
     console.log('Task Args')
@@ -299,15 +299,15 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
     console.log(' ', (await token1.symbol()), ' ', formatUnits(await token1.balanceOf(signer.address), await token1.decimals()))
 
     // Token Approval
-    console.log('Token Approving...')
-    await token0.approve(hypervisor.address, MaxUint256)
-    await token1.approve(hypervisor.address, MaxUint256)
-    console.log('Approval Success')
+    // console.log('Token Approving...')
+    // await token0.approve(hypervisor.address, MaxUint256)
+    // await token1.approve(hypervisor.address, MaxUint256)
+    // console.log('Approval Success')
 
     // Set Whitelist
-    console.log('Whitelist Signer...')
-    await hypervisor.setWhitelist(signer.address)
-    console.log('Success')
+    // console.log('Whitelist Signer...')
+    // await hypervisor.setWhitelist(signer.address)
+    // console.log('Success')
 
     // Make First Deposit
     console.log('First Depositing...')
@@ -327,7 +327,7 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
       await hypervisor.pool(),
       signer
     )
-    const tickSpacing = 10
+    const tickSpacing = 100
     const percent = 8
     let currentTick: number
     [, currentTick] = await pool.slot0()
@@ -363,14 +363,14 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
     )
     console.log('Success')
 
-    // Whitelist uniProxy
-    console.log('Whitelist uniProxy')
-    await hypervisor.setWhitelist(cliArgs.uniProxy)
-    console.log('Success')
+    // Whitelist uniproxy
+    // console.log('Whitelist uniproxy')
+    // await hypervisor.setWhitelist(cliArgs.uniproxy)
+    // console.log('Success')
 
-    // TransferOnwership
-    console.log('Transferring Ownership')
-    await hypervisor.transferOwnership(cliArgs.adminAddress)
-    console.log('Success')
+    // // TransferOnwership
+    // console.log('Transferring Ownership')
+    // await hypervisor.transferOwnership(cliArgs.adminaddress)
+    // console.log('Success')
 
   });
