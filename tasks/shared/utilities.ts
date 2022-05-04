@@ -2,6 +2,7 @@ import bn from 'bignumber.js'
 import {BigNumber, BigNumberish, constants, Contract, ContractTransaction, utils, Wallet} from 'ethers'
 
 export const MaxUint128 = BigNumber.from(2).pow(128).sub(1)
+export const MaxUint256 = BigNumber.from(2).pow(256).sub(1)
 
 export const getMinTick = (tickSpacing: number) => Math.ceil(-887272 / tickSpacing) * tickSpacing
 export const getMaxTick = (tickSpacing: number) => Math.floor(887272 / tickSpacing) * tickSpacing
