@@ -17,6 +17,45 @@ import {
   limitTicksFromCurrentTick
 } from './shared/tick'
 
+task('deploy-admin', 'Deploy admin contract')
+  .addParam('admin', 'admin account')
+  .addParam('advisor', 'advisor account')
+  .setAction(async (args, { ethers, run, network }) => {
+    console.log('Network')
+    console.log('  ', network.name)
+    console.log('Task Args')
+    console.log(args)
+
+    // compile
+
+    await run('compile')
+
+    // get signer
+
+    const signer = (await ethers.getSigners())[0]
+    console.log('Signer')
+    console.log('  at', signer.address)
+    console.log('  ETH', formatEther(await signer.getBalance()))
+
+    // deploy contracts
+
+    const adminFactory = await ethers.getContractFactory('Admin')
+
+    const admin = await deployContract(
+      'Admin',
+      await ethers.getContractFactory('Admin'),
+      signer,
+      [args.admin, args.advisor]
+    )
+
+    await admin.deployTransaction.wait(5)
+    await run('verify:verify', {
+      address: admin.address,
+      constructorArguments: [args.admin, args.advisor]
+    })
+
+});
+
 task('deploy-hypervisor-factory', 'Deploy Hypervisor contract')
   .setAction(async (cliArgs, { ethers, run, network }) => {
 
@@ -281,6 +320,12 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
       signer,
     )
 
+    const uniproxy = await ethers.getContractAt(
+      'UniProxy',
+      cliArgs.uniproxy,
+      signer,
+    )
+
     const token0 = await ethers.getContractAt(
       'ERC20',
       await hypervisor.token0(),
@@ -351,6 +396,16 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
     console.log(baseUpper)
     console.log(limitLower)
     console.log(limitUpper)
+    
+    // await hypervisor.rebalance(
+    //   -1000,
+    //   1000,
+    //   1000,
+    //   1500,
+    //   signer.address,
+    //   [0, 0, 0, 0],
+    //   [0, 0, 0, 0]
+    // )
 
     await hypervisor.rebalance(
       baseLower,
@@ -366,6 +421,10 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
     // Whitelist uniproxy
     console.log('Whitelist uniproxy')
     await hypervisor.setWhitelist(cliArgs.uniproxy)
+    console.log('Success')
+
+    console.log('Add to uniproxy');
+    await uniproxy.addPosition(hypervisor.address,4);
     console.log('Success')
 
     // TransferOnwership
