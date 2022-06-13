@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 
 import "../interfaces/IHypervisor.sol";
-// import "@openzeppelin/contracts/math/SignedSafeMath.sol";
+import "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
@@ -77,17 +77,16 @@ contract AutoRebal {
       
      (uint256 liquidity0, uint256 liquidity1, int24 currentTick) = liquidityOptions(); 
 
-
      if(liquidity0 > liquidity1) {
         // extra token1 in limit position = limit below
-        limitUpper = (currentTick / hypervisor.tickSpacing()) * (hypervisor.tickSpacing() - hypervisor.tickSpacing());
+        limitUpper = (currentTick / hypervisor.tickSpacing()) * hypervisor.tickSpacing() - hypervisor.tickSpacing();
         if(limitUpper == currentTick) limitUpper = limitUpper - hypervisor.tickSpacing();
 
         limitLower = limitUpper - hypervisor.tickSpacing(); 
       }
       else {
         // extra token0 in limit position = limit above
-        limitLower = (currentTick / hypervisor.tickSpacing()) * (hypervisor.tickSpacing() + hypervisor.tickSpacing());
+        limitLower = (currentTick / hypervisor.tickSpacing()) * hypervisor.tickSpacing() + hypervisor.tickSpacing();
         if(limitLower == currentTick) limitLower = limitLower + hypervisor.tickSpacing();
 
         limitUpper = limitLower + hypervisor.tickSpacing(); 
