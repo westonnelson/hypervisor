@@ -3,7 +3,7 @@
 pragma solidity 0.7.6;
 
 import "../interfaces/IHypervisor.sol";
-import "@openzeppelin/contracts/math/SignedSafeMath.sol";
+// import "@openzeppelin/contracts/math/SignedSafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
@@ -15,7 +15,6 @@ import "@uniswap/v3-periphery/contracts/libraries/LiquidityAmounts.sol";
 
 contract AutoRebal {
     using SafeMath for uint256;
-    using SignedSafeMath for int256;
 
     address public admin;
     address public advisor;
@@ -44,10 +43,7 @@ contract AutoRebal {
         hypervisor = hypervisor;
     }
 
-    /// @param  outMin min amount0,1 returned for shares of liq 
-    function rebalance(
-        uint256[4] memory outMin
-    ) external onlyAdvisor {
+    function liquidityOptions() internal view returns(uint128 liquidity0, uint128 liquidity1, int24 currentTick) {
 
       (uint256 total0, uint256 total1) = hypervisor.getTotalAmounts();
 
@@ -55,7 +51,7 @@ contract AutoRebal {
 
       (uint256 compliment1, )  = getDepositAmount(address(hypervisor.token1()), total1);
 
-      (uint160 sqrtRatioX96, , , , , , ) = hypervisor.pool().slot0();
+      (uint160 sqrtRatioX96, int24 currentTick, , , , , ) = hypervisor.pool().slot0();
 
       uint128 liquidity0 = LiquidityAmounts.getLiquidityForAmounts(
         sqrtRatioX96,
@@ -72,13 +68,36 @@ contract AutoRebal {
         total1,
         compliment1 > total0 ? total0 : compliment1
       );
+    }
 
-      // extra token1 in limit position = limit below OR extra token0 in limit position = limit above
+    /// @param  outMin min amount0,1 returned for shares of liq 
+    function rebalance(
+        uint256[4] memory outMin
+    ) external onlyAdvisor returns(int24 limitLower, int24 limitUpper) {
+      
+     (uint256 liquidity0, uint256 liquidity1, int24 currentTick) = liquidityOptions(); 
+
+
+     if(liquidity0 > liquidity1) {
+        // extra token1 in limit position = limit below
+        limitUpper = (currentTick / hypervisor.tickSpacing()) * (hypervisor.tickSpacing() - hypervisor.tickSpacing());
+        if(limitUpper == currentTick) limitUpper = limitUpper - hypervisor.tickSpacing();
+
+        limitLower = limitUpper - hypervisor.tickSpacing(); 
+      }
+      else {
+        // extra token0 in limit position = limit above
+        limitLower = (currentTick / hypervisor.tickSpacing()) * (hypervisor.tickSpacing() + hypervisor.tickSpacing());
+        if(limitLower == currentTick) limitLower = limitLower + hypervisor.tickSpacing();
+
+        limitUpper = limitLower + hypervisor.tickSpacing(); 
+      } 
+
       hypervisor.rebalance(
         hypervisor.baseLower(),
         hypervisor.baseUpper(),
-        liquidity0 > liquidity1 ?  hypervisor.baseLower() - hypervisor.tickSpacing() * 2 : hypervisor.baseUpper() + hypervisor.tickSpacing(),
-        liquidity0 <= liquidity1 ?  hypervisor.baseLower() - hypervisor.tickSpacing() : hypervisor.baseLower() + hypervisor.tickSpacing() * 2,
+        limitLower,
+        limitUpper,
         feeRecipient,
         inMin,
         outMin 
