@@ -40,34 +40,35 @@ contract AutoRebal {
         require(_hypervisor != address(0), "_hypervisor should be non-zero");
         admin = _admin;
         advisor = _advisor;
-        hypervisor = hypervisor;
+        hypervisor = IHypervisor(_hypervisor);
     }
 
-    function liquidityOptions() internal view returns(uint128 liquidity0, uint128 liquidity1, int24 currentTick) {
+    function liquidityOptions() public view returns(uint128 liquidity0, uint128 liquidity1, int24 currentTick) {
 
-      (uint256 total0, uint256 total1) = hypervisor.getTotalAmounts();
+        (uint256 total0, uint256 total1) = hypervisor.getTotalAmounts();
 
-      (uint256 compliment0, )  = getDepositAmount(address(hypervisor.token0()), total0);
+        (uint256 compliment0, )  = getDepositAmount(address(hypervisor.token0()), total0);
 
-      (uint256 compliment1, )  = getDepositAmount(address(hypervisor.token1()), total1);
+        (uint256 compliment1, )  = getDepositAmount(address(hypervisor.token1()), total1);
+        
+        uint160 sqrtRatioX96;
+        (sqrtRatioX96, currentTick, , , , , ) = hypervisor.pool().slot0();
 
-      (uint160 sqrtRatioX96, int24 currentTick, , , , , ) = hypervisor.pool().slot0();
+        liquidity0 = LiquidityAmounts.getLiquidityForAmounts(
+            sqrtRatioX96,
+            TickMath.getSqrtRatioAtTick(hypervisor.baseLower()),
+            TickMath.getSqrtRatioAtTick(hypervisor.baseUpper()),
+            total0,
+            compliment0 > total1 ? total1 : compliment0
+        );
 
-      uint128 liquidity0 = LiquidityAmounts.getLiquidityForAmounts(
-        sqrtRatioX96,
-        TickMath.getSqrtRatioAtTick(hypervisor.baseLower()),
-        TickMath.getSqrtRatioAtTick(hypervisor.baseUpper()),
-        total0,
-        compliment0 > total1 ? total1 : compliment0
-      );
-
-      uint128 liquidity1 = LiquidityAmounts.getLiquidityForAmounts(
-        sqrtRatioX96,
-        TickMath.getSqrtRatioAtTick(hypervisor.baseLower()),
-        TickMath.getSqrtRatioAtTick(hypervisor.baseUpper()),
-        total1,
-        compliment1 > total0 ? total0 : compliment1
-      );
+        liquidity1 = LiquidityAmounts.getLiquidityForAmounts(
+            sqrtRatioX96,
+            TickMath.getSqrtRatioAtTick(hypervisor.baseLower()),
+            TickMath.getSqrtRatioAtTick(hypervisor.baseUpper()),
+            total1,
+            compliment1 > total0 ? total0 : compliment1
+        );
     }
 
     /// @param  outMin min amount0,1 returned for shares of liq 
@@ -75,32 +76,32 @@ contract AutoRebal {
         uint256[4] memory outMin
     ) external onlyAdvisor returns(int24 limitLower, int24 limitUpper) {
       
-     (uint256 liquidity0, uint256 liquidity1, int24 currentTick) = liquidityOptions(); 
+        (uint256 liquidity0, uint256 liquidity1, int24 currentTick) = liquidityOptions(); 
 
-     if(liquidity0 > liquidity1) {
-        // extra token1 in limit position = limit below
-        limitUpper = (currentTick / hypervisor.tickSpacing()) * hypervisor.tickSpacing() - hypervisor.tickSpacing();
-        if(limitUpper == currentTick) limitUpper = limitUpper - hypervisor.tickSpacing();
+        if(liquidity0 > liquidity1) {
+            // extra token1 in limit position = limit below
+            limitUpper = (currentTick / hypervisor.tickSpacing()) * hypervisor.tickSpacing() - hypervisor.tickSpacing();
+            if(limitUpper == currentTick) limitUpper = limitUpper - hypervisor.tickSpacing();
 
-        limitLower = limitUpper - hypervisor.tickSpacing(); 
-      }
-      else {
-        // extra token0 in limit position = limit above
-        limitLower = (currentTick / hypervisor.tickSpacing()) * hypervisor.tickSpacing() + hypervisor.tickSpacing();
-        if(limitLower == currentTick) limitLower = limitLower + hypervisor.tickSpacing();
+            limitLower = limitUpper - hypervisor.tickSpacing(); 
+        }
+        else {
+            // extra token0 in limit position = limit above
+            limitLower = (currentTick / hypervisor.tickSpacing()) * hypervisor.tickSpacing() + hypervisor.tickSpacing();
+            if(limitLower == currentTick) limitLower = limitLower + hypervisor.tickSpacing();
 
-        limitUpper = limitLower + hypervisor.tickSpacing(); 
-      } 
+            limitUpper = limitLower + hypervisor.tickSpacing(); 
+        } 
 
-      hypervisor.rebalance(
-        hypervisor.baseLower(),
-        hypervisor.baseUpper(),
-        limitLower,
-        limitUpper,
-        feeRecipient,
-        inMin,
-        outMin 
-      ); 
+        hypervisor.rebalance(
+            hypervisor.baseLower(),
+            hypervisor.baseUpper(),
+            limitLower,
+            limitUpper,
+            feeRecipient,
+            inMin,
+            outMin 
+        ); 
     }
 
     /// @notice Get the amount of token to deposit for the given amount of pair token
@@ -109,33 +110,33 @@ contract AutoRebal {
     /// @return amountStart Minimum amounts of the pair token to deposit
     /// @return amountEnd Maximum amounts of the pair token to deposit
     function getDepositAmount(
-      address token,
-      uint256 _deposit
+        address token,
+        uint256 _deposit
     ) public view returns (uint256 amountStart, uint256 amountEnd) {
-      require(token == address(hypervisor.token0()) || token == address(hypervisor.token1()), "token mistmatch");
-      require(_deposit > 0, "deposits can't be zero");
-      (, uint256 total0, uint256 total1) = hypervisor.getBasePosition();
-      //TODO add token0 balanceOf, token1 balanceof
-      if (hypervisor.totalSupply() == 0 || total0 == 0 || total1 == 0) {
-        amountStart = 0;
-        if (token == address(hypervisor.token0())) {
-          amountEnd = hypervisor.deposit1Max();
+        require(token == address(hypervisor.token0()) || token == address(hypervisor.token1()), "token mistmatch");
+        require(_deposit > 0, "deposits can't be zero");
+        (, uint256 total0, uint256 total1) = hypervisor.getBasePosition();
+        //TODO add token0 balanceOf, token1 balanceof
+        if (hypervisor.totalSupply() == 0 || total0 == 0 || total1 == 0) {
+            amountStart = 0;
+            if (token == address(hypervisor.token0())) {
+                amountEnd = hypervisor.deposit1Max();
+            } else {
+                amountEnd = hypervisor.deposit0Max();
+            }
         } else {
-          amountEnd = hypervisor.deposit0Max();
+            uint256 ratioStart;
+            uint256 ratioEnd;
+            if (token == address(hypervisor.token0())) {
+                ratioStart = FullMath.mulDiv(total0.mul(depositDelta), 1e18, total1.mul(deltaScale));
+                ratioEnd = FullMath.mulDiv(total0.mul(deltaScale), 1e18, total1.mul(depositDelta));
+            } else {
+                ratioStart = FullMath.mulDiv(total1.mul(depositDelta), 1e18, total0.mul(deltaScale));
+                ratioEnd = FullMath.mulDiv(total1.mul(deltaScale), 1e18, total0.mul(depositDelta));
+            }
+            amountStart = FullMath.mulDiv(_deposit, 1e18, ratioStart);
+            amountEnd = FullMath.mulDiv(_deposit, 1e18, ratioEnd);
         }
-      } else {
-        uint256 ratioStart;
-        uint256 ratioEnd;
-        if (token == address(hypervisor.token0())) {
-          ratioStart = FullMath.mulDiv(total0.mul(depositDelta), 1e18, total1.mul(deltaScale));
-          ratioEnd = FullMath.mulDiv(total0.mul(deltaScale), 1e18, total1.mul(depositDelta));
-        } else {
-          ratioStart = FullMath.mulDiv(total1.mul(depositDelta), 1e18, total0.mul(deltaScale));
-          ratioEnd = FullMath.mulDiv(total1.mul(deltaScale), 1e18, total0.mul(depositDelta));
-        }
-        amountStart = FullMath.mulDiv(_deposit, 1e18, ratioStart);
-        amountEnd = FullMath.mulDiv(_deposit, 1e18, ratioEnd);
-      }
     }
 
     /// @notice Pull liquidity tokens from liquidity and receive the tokens
@@ -145,15 +146,15 @@ contract AutoRebal {
     /// @return limit0 amount of token0 received from limit position
     /// @return limit1 amount of token1 received from limit position
     function pullLiquidity(
-      uint256 shares,
-      uint256[4] memory minAmounts 
+        uint256 shares,
+        uint256[4] memory minAmounts 
     ) external onlyAdvisor returns(
         uint256 base0,
         uint256 base1,
         uint256 limit0,
         uint256 limit1
       ) {
-      (base0, base1, limit0, limit1) = hypervisor.pullLiquidity(shares, minAmounts);
+        (base0, base1, limit0, limit1) = hypervisor.pullLiquidity(shares, minAmounts);
     }
 
     /// @notice Add tokens to base liquidity
@@ -232,7 +233,7 @@ contract AutoRebal {
 
     /// @param _recipient fee recipient 
     function setRecipient(address _recipient) external onlyAdmin {
-      feeRecipient = _recipient;
+        feeRecipient = _recipient;
     }
 
 }
