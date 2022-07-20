@@ -45,32 +45,31 @@ contract AutoRebal {
         hypervisor = IHypervisor(_hypervisor);
     }
 
-    function liquidityOptions() public view returns(uint128 liquidity0, uint128 liquidity1, int24 currentTick) {
+    function liquidityOptions() public view returns(bool, int24 currentTick) {
 
         (uint256 total0, uint256 total1) = hypervisor.getTotalAmounts();
 
-        (uint256 compliment0, )  = getDepositAmount(address(hypervisor.token0()), total0);
-
-        (uint256 compliment1, )  = getDepositAmount(address(hypervisor.token1()), total1);
-        
         uint160 sqrtRatioX96;
         (sqrtRatioX96, currentTick, , , , , ) = hypervisor.pool().slot0();
 
-        liquidity0 = LiquidityAmounts.getLiquidityForAmounts(
+        uint128 liquidity = LiquidityAmounts.getLiquidityForAmounts(
             sqrtRatioX96,
             TickMath.getSqrtRatioAtTick(hypervisor.baseLower()),
             TickMath.getSqrtRatioAtTick(hypervisor.baseUpper()),
             total0,
-            compliment0 > total1 ? total1 : compliment0
+            total1 
         );
-
-        liquidity1 = LiquidityAmounts.getLiquidityForAmounts(
+  
+        (uint256 amount0, uint256 amount1) = LiquidityAmounts.getAmountsForLiquidity(
             sqrtRatioX96,
             TickMath.getSqrtRatioAtTick(hypervisor.baseLower()),
             TickMath.getSqrtRatioAtTick(hypervisor.baseUpper()),
-            compliment1 > total0 ? total0 : compliment1,
-            total1
+            liquidity
         );
+
+        uint256 price = FullMath.mulDiv(uint256(sqrtRatioX96).mul(uint256(sqrtRatioX96)), hypervisor.PRECISION(), 2**(96 * 2));
+        return (amount0 * price > amount1, currentTick);
+
     }
 
     /// @param  outMin min amount0,1 returned for shares of liq 
@@ -78,9 +77,9 @@ contract AutoRebal {
         uint256[4] memory outMin
     ) external onlyAdvisor returns(int24 limitLower, int24 limitUpper) {
       
-        (uint256 liquidity0, uint256 liquidity1, int24 currentTick) = liquidityOptions(); 
+        (bool token0Limit, int24 currentTick) = liquidityOptions(); 
 
-        if(liquidity0 > liquidity1) {
+        if(!token0Limit) {
             // extra token1 in limit position = limit below
             limitUpper = (currentTick / hypervisor.tickSpacing()) * hypervisor.tickSpacing() - hypervisor.tickSpacing();
             if(limitUpper == currentTick) limitUpper = limitUpper - hypervisor.tickSpacing();
