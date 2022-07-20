@@ -59,6 +59,9 @@ describe('Hypervisor', () => {
         // someone to swap with
         await token0.mint(carol.address, ethers.utils.parseEther('1000000000000'))
         await token1.mint(carol.address, ethers.utils.parseEther('1000000000000'))
+
+        await token0.mint(uniswapPool.address, ethers.utils.parseEther('1000000'))
+        await token1.mint(uniswapPool.address, ethers.utils.parseEther('1000000'))
     })
 
     it('deposit with an incorrect proportion will revert', async () => {
@@ -677,6 +680,140 @@ describe('Hypervisor', () => {
         expect(baseUpperAfter).to.equal(baseUpperBefore)
         expect(limitLowerAfter).to.lt(limitLowerBefore)
         expect(limitUpperAfter).to.lt(limitUpperBefore)
+    })
+
+    it('auto rebalance; should fail when limit token0 bug on contract', async () => {
+        let autoRebalFactory = await ethers.getContractFactory('AutoRebal')
+        let autoRebal = (await autoRebalFactory.deploy(wallet.address, wallet.address, hypervisor.address))
+        
+        // set fee recipient
+        await autoRebal.setRecipient(alice.address)
+
+        await token0.mint(alice.address, ethers.utils.parseEther('1000000'))
+        await token1.mint(alice.address, ethers.utils.parseEther('1000000'))
+
+        await token0.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
+        await token1.connect(alice).approve(hypervisor.address, ethers.utils.parseEther('1000000'))
+
+        // alice should start with 0 hypervisor tokens
+        let alice_liq_balance = await hypervisor.balanceOf(alice.address)
+        expect(alice_liq_balance).to.equal(0)
+
+        // whitelist alice
+        await hypervisor.setWhitelist(alice.address)
+
+        // initial deposit & rebalance
+        // deposit 1000 token0 & token1
+        // set baseLower, baseUpper and limitLower, limitUpper
+        await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address, [0,0,0,0])
+        await hypervisor.rebalance(-1800, 1800, 0, 600, bob.address, [0, 0, 0, 0], [0, 0, 0, 0])
+
+        let baseLower = await hypervisor.baseLower()
+        let baseUpper = await hypervisor.baseUpper()
+        let limitLower = await hypervisor.limitLower()
+        let limitUpper = await hypervisor.limitUpper()
+        console.log("baseLower: " + baseLower)
+        console.log("baseUpper: " + baseUpper)
+        console.log("limitLower: " + limitLower)
+        console.log("limitUpper: " + limitUpper)
+        // Transfer Ownership of hyeprvisor to autoRebal
+
+        await hypervisor.transferOwnership(autoRebal.address)
+
+        let unusedToken0 = await token0.balanceOf(hypervisor.address)
+        let unusedToken1 = await token1.balanceOf(hypervisor.address)
+
+        console.log("Unused Token0: " + ethers.utils.formatEther(unusedToken0))
+        console.log("Unused Token1: " + ethers.utils.formatEther(unusedToken1))
+
+        // mint 1000 token1 & autoRebalance
+        await token1.mint(hypervisor.address, ethers.utils.parseEther('1000'))
+        await autoRebal.rebalance([0, 0, 0, 0])
+
+        baseLower = await hypervisor.baseLower()
+        baseUpper = await hypervisor.baseUpper()
+        limitLower = await hypervisor.limitLower()
+        limitUpper = await hypervisor.limitUpper()
+        console.log("baseLower: " + baseLower)
+        console.log("baseUpper: " + baseUpper)
+        console.log("limitLower: " + limitLower)
+        console.log("limitUpper: " + limitUpper)
+
+        unusedToken0 = await token0.balanceOf(hypervisor.address)
+        unusedToken1 = await token1.balanceOf(hypervisor.address)
+
+        console.log("Unused Token0: " + ethers.utils.formatEther(unusedToken0))
+        console.log("Unused Token1: " + ethers.utils.formatEther(unusedToken1))
+
+        await token0.mint(hypervisor.address, ethers.utils.parseEther('100'))
+        await token1.mint(hypervisor.address, ethers.utils.parseEther('100'))
+
+        await autoRebal.addLimitLiquidity(ethers.utils.parseEther('100'), ethers.utils.parseEther('100'), [0, 0])
+        
+        // mint 1000 token0 & autoRebalance
+        await token0.mint(hypervisor.address, ethers.utils.parseEther('1000'))
+        await autoRebal.rebalance([0, 0, 0, 0])
+
+        baseLower = await hypervisor.baseLower()
+        baseUpper = await hypervisor.baseUpper()
+        limitLower = await hypervisor.limitLower()
+        limitUpper = await hypervisor.limitUpper()
+        console.log("baseLower: " + baseLower)
+        console.log("baseUpper: " + baseUpper)
+        console.log("limitLower: " + limitLower)
+        console.log("limitUpper: " + limitUpper)
+
+        unusedToken0 = await token0.balanceOf(hypervisor.address)
+        unusedToken1 = await token1.balanceOf(hypervisor.address)
+
+        console.log("Unused Token0: " + ethers.utils.formatEther(unusedToken0))
+        console.log("Unused Token1: " + ethers.utils.formatEther(unusedToken1))
+
+        // mint 1000 token1 & autoRebalance
+        await token1.mint(hypervisor.address, ethers.utils.parseEther('1000'))
+        await autoRebal.rebalance([0, 0, 0, 0])
+
+        baseLower = await hypervisor.baseLower()
+        baseUpper = await hypervisor.baseUpper()
+        limitLower = await hypervisor.limitLower()
+        limitUpper = await hypervisor.limitUpper()
+        console.log("baseLower: " + baseLower)
+        console.log("baseUpper: " + baseUpper)
+        console.log("limitLower: " + limitLower)
+        console.log("limitUpper: " + limitUpper)
+
+        unusedToken0 = await token0.balanceOf(hypervisor.address)
+        unusedToken1 = await token1.balanceOf(hypervisor.address)
+
+        console.log("Unused Token0: " + ethers.utils.formatEther(unusedToken0))
+        console.log("Unused Token1: " + ethers.utils.formatEther(unusedToken1))
+
+        // mint 2000 token0 & autoRebalance
+        await token0.mint(hypervisor.address, ethers.utils.parseEther('2000'))
+        await autoRebal.rebalance([0, 0, 0, 0])
+
+        baseLower = await hypervisor.baseLower()
+        baseUpper = await hypervisor.baseUpper()
+        limitLower = await hypervisor.limitLower()
+        limitUpper = await hypervisor.limitUpper()
+        console.log("baseLower: " + baseLower)
+        console.log("baseUpper: " + baseUpper)
+        console.log("limitLower: " + limitLower)
+        console.log("limitUpper: " + limitUpper)
+
+        unusedToken0 = await token0.balanceOf(hypervisor.address)
+        unusedToken1 = await token1.balanceOf(hypervisor.address)
+
+        console.log("Unused Token0: " + ethers.utils.formatEther(unusedToken0))
+        console.log("Unused Token1: " + ethers.utils.formatEther(unusedToken1))
+
+        await autoRebal.addLimitLiquidity(0, 0, [0,0])
+
+        unusedToken0 = await token0.balanceOf(hypervisor.address)
+        unusedToken1 = await token1.balanceOf(hypervisor.address)
+
+        console.log("Unused Token0: " + ethers.utils.formatEther(unusedToken0))
+        console.log("Unused Token1: " + ethers.utils.formatEther(unusedToken1))
     })
 
 })

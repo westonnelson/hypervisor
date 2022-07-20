@@ -24,6 +24,8 @@ contract AutoRebal {
     IUniswapV3Pool public pool;
     IHypervisor public hypervisor;
     uint256[4] public inMin = [0,0,0,0];
+    int24 public limitWidth = 1;
+
     modifier onlyAdvisor {
         require(msg.sender == advisor, "only advisor");
         _;
@@ -66,13 +68,13 @@ contract AutoRebal {
             sqrtRatioX96,
             TickMath.getSqrtRatioAtTick(hypervisor.baseLower()),
             TickMath.getSqrtRatioAtTick(hypervisor.baseUpper()),
-            total1,
-            compliment1 > total0 ? total0 : compliment1
+            compliment1 > total0 ? total0 : compliment1,
+            total1
         );
     }
 
     /// @param  outMin min amount0,1 returned for shares of liq 
-    function rebalance(
+    function autoRebalance(
         uint256[4] memory outMin
     ) external onlyAdvisor returns(int24 limitLower, int24 limitUpper) {
       
@@ -83,14 +85,14 @@ contract AutoRebal {
             limitUpper = (currentTick / hypervisor.tickSpacing()) * hypervisor.tickSpacing() - hypervisor.tickSpacing();
             if(limitUpper == currentTick) limitUpper = limitUpper - hypervisor.tickSpacing();
 
-            limitLower = limitUpper - hypervisor.tickSpacing(); 
+            limitLower = limitUpper - hypervisor.tickSpacing() * limitWidth; 
         }
         else {
             // extra token0 in limit position = limit above
             limitLower = (currentTick / hypervisor.tickSpacing()) * hypervisor.tickSpacing() + hypervisor.tickSpacing();
             if(limitLower == currentTick) limitLower = limitLower + hypervisor.tickSpacing();
 
-            limitUpper = limitLower + hypervisor.tickSpacing(); 
+            limitUpper = limitLower + hypervisor.tickSpacing() * limitWidth; 
         } 
 
         hypervisor.rebalance(
@@ -102,6 +104,25 @@ contract AutoRebal {
             inMin,
             outMin 
         ); 
+    }
+
+    /// @param _hypervisor Hypervisor Address
+    /// @param _baseLower The lower tick of the base position
+    /// @param _baseUpper The upper tick of the base position
+    /// @param _limitLower The lower tick of the limit position
+    /// @param _limitUpper The upper tick of the limit position
+    /// @param _feeRecipient Address of recipient of 10% of earned fees since last rebalance
+    function rebalance(
+        address _hypervisor,
+        int24 _baseLower,
+        int24 _baseUpper,
+        int24 _limitLower,
+        int24 _limitUpper,
+        address _feeRecipient,
+        uint256[4] memory inMin, 
+        uint256[4] memory outMin
+    ) external onlyAdvisor {
+        IHypervisor(_hypervisor).rebalance(_baseLower, _baseUpper, _limitLower, _limitUpper, _feeRecipient, inMin, outMin);
     }
 
     /// @notice Get the amount of token to deposit for the given amount of pair token
@@ -224,6 +245,14 @@ contract AutoRebal {
     function rescueERC20(IERC20 token, address recipient) external onlyAdmin {
         require(recipient != address(0), "recipient should be non-zero");
         require(token.transfer(recipient, token.balanceOf(address(this))));
+    }
+
+    function setLimitWidth(int24 _limitWidth) external onlyAdmin {
+        limitWidth = _limitWidth;
+    }
+
+    function setHypervisor(address _hypervisor) external onlyAdmin {
+        hypervisor = IHypervisor(_hypervisor);
     }
 
     /// @param newFee fee amount 
