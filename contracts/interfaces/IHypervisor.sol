@@ -73,6 +73,8 @@ interface IHypervisor {
 
   function pool() external view returns (IUniswapV3Pool);
 
+  function PRECISION() external view returns(uint256);
+
   function currentTick() external view returns (int24 tick);
   
   function tickSpacing() external view returns (int24 spacing);
