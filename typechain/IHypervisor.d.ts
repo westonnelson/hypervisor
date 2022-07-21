@@ -21,6 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface IHypervisorInterface extends ethers.utils.Interface {
   functions: {
+    "PRECISION()": FunctionFragment;
     "addBaseLiquidity(uint256,uint256,uint256[2])": FunctionFragment;
     "addLimitLiquidity(uint256,uint256,uint256[2])": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
@@ -52,6 +53,7 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     "withdraw(uint256,address,address,uint256[4])": FunctionFragment;
   };
 
+  encodeFunctionData(functionFragment: "PRECISION", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "addBaseLiquidity",
     values: [BigNumberish, BigNumberish, [BigNumberish, BigNumberish]]
@@ -173,6 +175,7 @@ interface IHypervisorInterface extends ethers.utils.Interface {
     ]
   ): string;
 
+  decodeFunctionResult(functionFragment: "PRECISION", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "addBaseLiquidity",
     data: BytesLike
@@ -292,6 +295,8 @@ export class IHypervisor extends BaseContract {
   interface: IHypervisorInterface;
 
   functions: {
+    PRECISION(overrides?: CallOverrides): Promise<[BigNumber]>;
+
     addBaseLiquidity(
       amount0: BigNumberish,
       amount1: BigNumberish,
@@ -434,6 +439,8 @@ export class IHypervisor extends BaseContract {
     ): Promise<ContractTransaction>;
   };
 
+  PRECISION(overrides?: CallOverrides): Promise<BigNumber>;
+
   addBaseLiquidity(
     amount0: BigNumberish,
     amount1: BigNumberish,
@@ -570,6 +577,8 @@ export class IHypervisor extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    PRECISION(overrides?: CallOverrides): Promise<BigNumber>;
+
     addBaseLiquidity(
       amount0: BigNumberish,
       amount1: BigNumberish,
@@ -724,6 +733,8 @@ export class IHypervisor extends BaseContract {
   filters: {};
 
   estimateGas: {
+    PRECISION(overrides?: CallOverrides): Promise<BigNumber>;
+
     addBaseLiquidity(
       amount0: BigNumberish,
       amount1: BigNumberish,
@@ -851,6 +862,8 @@ export class IHypervisor extends BaseContract {
   };
 
   populateTransaction: {
+    PRECISION(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
     addBaseLiquidity(
       amount0: BigNumberish,
       amount1: BigNumberish,

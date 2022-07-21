@@ -67,8 +67,8 @@ contract AutoRebal {
             liquidity
         );
 
-        uint256 price = FullMath.mulDiv(uint256(sqrtRatioX96).mul(uint256(sqrtRatioX96)), hypervisor.PRECISION(), 2**(96 * 2));
-        return (amount0 * price > amount1, currentTick);
+        uint256 price = FullMath.mulDiv(uint256(sqrtRatioX96), (uint256(sqrtRatioX96)), 2**(96 * 2));
+        return (total0 * price > total1, currentTick);
 
     }
 

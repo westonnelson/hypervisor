@@ -8,6 +8,19 @@ import type { IHypervisor, IHypervisorInterface } from "../IHypervisor";
 
 const _abi = [
   {
+    inputs: [],
+    name: "PRECISION",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "uint256",
