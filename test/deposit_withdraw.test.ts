@@ -599,7 +599,7 @@ describe('Hypervisor', () => {
         let limitLowerBefore = await hypervisor.limitLower()
         let limitUpperBefore = await hypervisor.limitUpper()
 
-        await autoRebal.rebalance([0, 0, 0, 0])
+        await autoRebal.autoRebalance([0, 0, 0, 0])
 
         let baseLowerAfter = await hypervisor.baseLower()
         let baseUpperAfter = await hypervisor.baseUpper()
@@ -669,7 +669,7 @@ describe('Hypervisor', () => {
         let limitLowerBefore = await hypervisor.limitLower()
         let limitUpperBefore = await hypervisor.limitUpper()
 
-        await autoRebal.rebalance([0, 0, 0, 0])
+        await autoRebal.autoRebalance([0, 0, 0, 0])
 
         let baseLowerAfter = await hypervisor.baseLower()
         let baseUpperAfter = await hypervisor.baseUpper()
@@ -728,7 +728,7 @@ describe('Hypervisor', () => {
 
         // mint 1000 token1 & autoRebalance
         await token1.mint(hypervisor.address, ethers.utils.parseEther('1000'))
-        await autoRebal.rebalance([0, 0, 0, 0])
+        await autoRebal.autoRebalance([0, 0, 0, 0])
 
         baseLower = await hypervisor.baseLower()
         baseUpper = await hypervisor.baseUpper()
@@ -752,7 +752,7 @@ describe('Hypervisor', () => {
         
         // mint 1000 token0 & autoRebalance
         await token0.mint(hypervisor.address, ethers.utils.parseEther('1000'))
-        await autoRebal.rebalance([0, 0, 0, 0])
+        await autoRebal.autoRebalance([0, 0, 0, 0])
 
         baseLower = await hypervisor.baseLower()
         baseUpper = await hypervisor.baseUpper()
@@ -771,7 +771,7 @@ describe('Hypervisor', () => {
 
         // mint 1000 token1 & autoRebalance
         await token1.mint(hypervisor.address, ethers.utils.parseEther('1000'))
-        await autoRebal.rebalance([0, 0, 0, 0])
+        await autoRebal.autoRebalance([0, 0, 0, 0])
 
         baseLower = await hypervisor.baseLower()
         baseUpper = await hypervisor.baseUpper()
@@ -790,7 +790,7 @@ describe('Hypervisor', () => {
 
         // mint 2000 token0 & autoRebalance
         await token0.mint(hypervisor.address, ethers.utils.parseEther('2000'))
-        await autoRebal.rebalance([0, 0, 0, 0])
+        await autoRebal.autoRebalance([0, 0, 0, 0])
 
         baseLower = await hypervisor.baseLower()
         baseUpper = await hypervisor.baseUpper()
