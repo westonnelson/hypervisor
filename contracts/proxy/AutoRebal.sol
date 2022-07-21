@@ -68,7 +68,7 @@ contract AutoRebal {
         );
 
         uint256 price = FullMath.mulDiv(uint256(sqrtRatioX96), (uint256(sqrtRatioX96)), 2**(96 * 2));
-        return (total0 * price > total1, currentTick);
+        return ((total0-amount0) * price > (total1-amount1), currentTick);
 
     }
 
