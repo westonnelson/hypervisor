@@ -18,12 +18,9 @@ contract AutoRebal {
 
     address public admin;
     address public advisor;
-    uint256 public depositDelta = 1010;
-    uint256 public deltaScale = 1000; /// must be a power of 10
     address public feeRecipient;
     IUniswapV3Pool public pool;
     IHypervisor public hypervisor;
-    uint256[4] public inMin = [0,0,0,0];
     int24 public limitWidth = 1;
 
     modifier onlyAdvisor {
@@ -94,6 +91,7 @@ contract AutoRebal {
             limitUpper = limitLower + hypervisor.tickSpacing() * limitWidth; 
         } 
 
+        uint256[4] memory inMin;
         hypervisor.rebalance(
             hypervisor.baseLower(),
             hypervisor.baseUpper(),
@@ -103,92 +101,6 @@ contract AutoRebal {
             inMin,
             outMin 
         ); 
-    }
-
-    /// @param _hypervisor Hypervisor Address
-    /// @param _baseLower The lower tick of the base position
-    /// @param _baseUpper The upper tick of the base position
-    /// @param _limitLower The lower tick of the limit position
-    /// @param _limitUpper The upper tick of the limit position
-    /// @param _feeRecipient Address of recipient of 10% of earned fees since last rebalance
-    function rebalance(
-        address _hypervisor,
-        int24 _baseLower,
-        int24 _baseUpper,
-        int24 _limitLower,
-        int24 _limitUpper,
-        address _feeRecipient,
-        uint256[4] memory inMin, 
-        uint256[4] memory outMin
-    ) external onlyAdvisor {
-        IHypervisor(_hypervisor).rebalance(_baseLower, _baseUpper, _limitLower, _limitUpper, _feeRecipient, inMin, outMin);
-    }
-
-    /// @notice Get the amount of token to deposit for the given amount of pair token
-    /// @param token Address of token to deposit
-    /// @param _deposit Amount of token to deposit
-    /// @return amountStart Minimum amounts of the pair token to deposit
-    /// @return amountEnd Maximum amounts of the pair token to deposit
-    function getDepositAmount(
-        address token,
-        uint256 _deposit
-    ) public view returns (uint256 amountStart, uint256 amountEnd) {
-        require(token == address(hypervisor.token0()) || token == address(hypervisor.token1()), "token mistmatch");
-        require(_deposit > 0, "deposits can't be zero");
-        (, uint256 total0, uint256 total1) = hypervisor.getBasePosition();
-        //TODO add token0 balanceOf, token1 balanceof
-        if (hypervisor.totalSupply() == 0 || total0 == 0 || total1 == 0) {
-            amountStart = 0;
-            if (token == address(hypervisor.token0())) {
-                amountEnd = hypervisor.deposit1Max();
-            } else {
-                amountEnd = hypervisor.deposit0Max();
-            }
-        } else {
-            uint256 ratioStart;
-            uint256 ratioEnd;
-            if (token == address(hypervisor.token0())) {
-                ratioStart = FullMath.mulDiv(total0.mul(depositDelta), 1e18, total1.mul(deltaScale));
-                ratioEnd = FullMath.mulDiv(total0.mul(deltaScale), 1e18, total1.mul(depositDelta));
-            } else {
-                ratioStart = FullMath.mulDiv(total1.mul(depositDelta), 1e18, total0.mul(deltaScale));
-                ratioEnd = FullMath.mulDiv(total1.mul(deltaScale), 1e18, total0.mul(depositDelta));
-            }
-            amountStart = FullMath.mulDiv(_deposit, 1e18, ratioStart);
-            amountEnd = FullMath.mulDiv(_deposit, 1e18, ratioEnd);
-        }
-    }
-
-    /// @notice Pull liquidity tokens from liquidity and receive the tokens
-    /// @param shares Number of liquidity tokens to pull from liquidity
-    /// @return base0 amount of token0 received from base position
-    /// @return base1 amount of token1 received from base position
-    /// @return limit0 amount of token0 received from limit position
-    /// @return limit1 amount of token1 received from limit position
-    function pullLiquidity(
-        uint256 shares,
-        uint256[4] memory minAmounts 
-    ) external onlyAdvisor returns(
-        uint256 base0,
-        uint256 base1,
-        uint256 limit0,
-        uint256 limit1
-      ) {
-        (base0, base1, limit0, limit1) = hypervisor.pullLiquidity(shares, minAmounts);
-    }
-
-    /// @notice Add tokens to base liquidity
-    /// @param amount0 Amount of token0 to add
-    /// @param amount1 Amount of token1 to add
-    function addBaseLiquidity(uint256 amount0, uint256 amount1, uint256[2] memory inMin) external onlyAdvisor {
-        hypervisor.addBaseLiquidity(amount0, amount1, inMin);
-    }
-
-    /// @notice Add tokens to limit liquidity
-    /// @param amount0 Amount of token0 to add
-    /// @param amount1 Amount of token1 to add
-    function addLimitLiquidity(uint256 amount0, uint256 amount1, uint256[2] memory inMin) external onlyAdvisor {
-        hypervisor.addLimitLiquidity(amount0, amount1, inMin);
     }
 
     /// @notice compound pending fees 
@@ -202,43 +114,13 @@ contract AutoRebal {
         hypervisor.compound();
     }
 
-    function compound(uint256[4] memory inMin)
-      external onlyAdvisor returns(
-        uint128 baseToken0Owed,
-        uint128 baseToken1Owed,
-        uint128 limitToken0Owed,
-        uint128 limitToken1Owed
-    ) {
-        hypervisor.compound(inMin);
-    }
-
-    /// @param _address Array of addresses to be appended
-    function setWhitelist(address _address) external onlyAdmin {
-        hypervisor.setWhitelist(_address);
-    }
-
-    function removeWhitelisted() external onlyAdmin {
-        hypervisor.removeWhitelisted();
-    }
-
     /// @param newAdmin New Admin Address
     function transferAdmin(address newAdmin) external onlyAdmin {
         require(newAdmin != address(0), "newAdmin should be non-zero");
         admin = newAdmin;
     }
 
-    /// @param newAdvisor New Advisor Address
-    function transferAdvisor(address newAdvisor) external onlyAdmin {
-        require(newAdvisor != address(0), "newAdvisor should be non-zero");
-        advisor = newAdvisor;
-    }
-
-    /// @param newOwner New Owner Address
-    function transferHypervisorOwner(address newOwner) external onlyAdmin {
-        hypervisor.transferOwnership(newOwner);
-    }
-
-    /// @notice Transfer tokens to the recipient from the contract
+    /// @notice Transfer tokens to recipient from the contract
     /// @param token Address of token
     /// @param recipient Recipient Address
     function rescueERC20(IERC20 token, address recipient) external onlyAdmin {
@@ -246,21 +128,9 @@ contract AutoRebal {
         require(token.transfer(recipient, token.balanceOf(address(this))));
     }
 
-    function setLimitWidth(int24 _limitWidth) external onlyAdmin {
-        limitWidth = _limitWidth;
-    }
-
-    function setHypervisor(address _hypervisor) external onlyAdmin {
-        hypervisor = IHypervisor(_hypervisor);
-    }
-
-    /// @param newFee fee amount 
-    function setFee(uint8 newFee) external onlyAdmin {
-        hypervisor.setFee(newFee);
-    }
-
     /// @param _recipient fee recipient 
     function setRecipient(address _recipient) external onlyAdmin {
+        require(feeRecipient == address(0), "fee recipient already set");
         feeRecipient = _recipient;
     }
 
