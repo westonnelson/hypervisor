@@ -3,6 +3,7 @@ import '@nomiclabs/hardhat-etherscan'
 import '@nomiclabs/hardhat-waffle'
 import '@typechain/hardhat'
 import "hardhat-watcher"
+import "hardhat-gas-reporter"
 import './scripts/copy-uniswap-v3-artifacts.ts'
 import './tasks/hypervisor'
 import './tasks/swap'
@@ -25,6 +26,10 @@ const config: HardhatUserConfig = {
       },
       goerli: {
         url: `https://eth-goerli.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+        accounts: [process.env.MAINNET_PRIVATE_KEY as string],
+      },
+      optimism: {
+        url: `https://opt-mainnet.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
         accounts: [process.env.MAINNET_PRIVATE_KEY as string],
       },
   },
@@ -61,6 +66,11 @@ const config: HardhatUserConfig = {
   },
   mocha: {
     timeout: 2000000
+  },
+  gasReporter: {
+    currency: 'USD',
+    gasPrice: 21,
+    enabled: (process.env.REPORT_GAS) ? true : false
   }
 }
 export default config;

@@ -8,6 +8,19 @@ import type { IHypervisor, IHypervisorInterface } from "../IHypervisor";
 
 const _abi = [
   {
+    inputs: [],
+    name: "PRECISION",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "uint256",
@@ -94,6 +107,66 @@ const _abi = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "baseLower",
+    outputs: [
+      {
+        internalType: "int24",
+        name: "tick",
+        type: "int24",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "baseUpper",
+    outputs: [
+      {
+        internalType: "int24",
+        name: "tick",
+        type: "int24",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256[4]",
+        name: "inMin",
+        type: "uint256[4]",
+      },
+    ],
+    name: "compound",
+    outputs: [
+      {
+        internalType: "uint128",
+        name: "baseToken0Owed",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "baseToken1Owed",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "limitToken0Owed",
+        type: "uint128",
+      },
+      {
+        internalType: "uint128",
+        name: "limitToken1Owed",
+        type: "uint128",
+      },
+    ],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -204,6 +277,29 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "getBasePosition",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "liquidity",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "total0",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "total1",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "getTotalAmounts",
     outputs: [
       {
@@ -215,6 +311,32 @@ const _abi = [
         internalType: "uint256",
         name: "total1",
         type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "limitLower",
+    outputs: [
+      {
+        internalType: "int24",
+        name: "tick",
+        type: "int24",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "limitUpper",
+    outputs: [
+      {
+        internalType: "int24",
+        name: "tick",
+        type: "int24",
       },
     ],
     stateMutability: "view",
@@ -325,6 +447,19 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "uint8",
+        name: "newFee",
+        type: "uint8",
+      },
+    ],
+    name: "setFee",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "_address",
         type: "address",
@@ -333,6 +468,19 @@ const _abi = [
     name: "setWhitelist",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "tickSpacing",
+    outputs: [
+      {
+        internalType: "int24",
+        name: "spacing",
+        type: "int24",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {

@@ -22,6 +22,23 @@ interface IHypervisor {
     uint256[4] memory
   ) external returns (uint256, uint256);
 
+  function compound() external returns (
+
+    uint128 baseToken0Owed,
+    uint128 baseToken1Owed,
+    uint128 limitToken0Owed,
+    uint128 limitToken1Owed
+  );
+
+  function compound(uint256[4] memory inMin) external returns (
+
+    uint128 baseToken0Owed,
+    uint128 baseToken1Owed,
+    uint128 limitToken0Owed,
+    uint128 limitToken1Owed
+  );
+
+
   function rebalance(
     int24 _baseLower,
     int24 _baseUpper,
@@ -54,17 +71,21 @@ interface IHypervisor {
     uint256 limit1
   );
 
-  function compound() external returns (
-
-    uint128 baseToken0Owed,
-    uint128 baseToken1Owed,
-    uint128 limitToken0Owed,
-    uint128 limitToken1Owed
-  );
-
   function pool() external view returns (IUniswapV3Pool);
 
+  function PRECISION() external view returns(uint256);
+
   function currentTick() external view returns (int24 tick);
+  
+  function tickSpacing() external view returns (int24 spacing);
+
+  function baseLower() external view returns (int24 tick);
+
+  function baseUpper() external view returns (int24 tick);
+
+  function limitLower() external view returns (int24 tick);
+
+  function limitUpper() external view returns (int24 tick);
 
   function token0() external view returns (IERC20);
 
@@ -83,10 +104,14 @@ interface IHypervisor {
   function transfer(address, uint256) external returns (bool);
 
   function getTotalAmounts() external view returns (uint256 total0, uint256 total1);
+  
+  function getBasePosition() external view returns (uint256 liquidity, uint256 total0, uint256 total1);
 
   function totalSupply() external view returns (uint256 );
 
   function setWhitelist(address _address) external;
+  
+  function setFee(uint8 newFee) external;
   
   function removeWhitelisted() external;
 

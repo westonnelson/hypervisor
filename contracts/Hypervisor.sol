@@ -27,7 +27,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     IUniswapV3Pool public pool;
     IERC20 public token0;
     IERC20 public token1;
-    uint24 public fee;
+    uint8 public fee = 10;
     int24 public tickSpacing;
 
     int24 public baseLower;
@@ -86,7 +86,6 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         token1 = IERC20(pool.token1());
         require(address(token0) != address(0));
         require(address(token1) != address(0));
-        fee = pool.fee();
         tickSpacing = pool.tickSpacing();
 
         owner = _owner;
@@ -321,8 +320,8 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         _burnLiquidity(limitLower, limitUpper, limitLiquidity, address(this), true, outMin[2], outMin[3]);
 
         /// transfer 10% of fees for VISR buybacks
-        if (fees0 > 0) token0.safeTransfer(feeRecipient, fees0.div(10));
-        if (fees1 > 0) token1.safeTransfer(feeRecipient, fees1.div(10));
+        if (fees0 > 0) token0.safeTransfer(feeRecipient, fees0.div(fee));
+        if (fees1 > 0) token1.safeTransfer(feeRecipient, fees1.div(fee));
 
         emit Rebalance(
             currentTick(),
@@ -662,6 +661,11 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     /// @notice Remove Whitelisted
     function removeWhitelisted() external onlyOwner {
         whitelistedAddress = address(0);
+    }
+
+    /// @notice set fee 
+    function setFee(uint8 newFee) external onlyOwner {
+        fee = newFee;
     }
 
     /// @notice Toggle Direct Deposit
