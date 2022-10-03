@@ -150,7 +150,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
               token0.balanceOf(address(this)),
               token1.balanceOf(address(this))
             );
-            _mintLiquidity(limitLower, limitUpper, liquidity, address(this), inMin[0], inMin[1]);
+            _mintLiquidity(limitLower, limitUpper, liquidity, address(this), inMin[2], inMin[3]);
           }
         }
         _mint(to, shares);
@@ -347,23 +347,22 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     ) {
         // update fees for compounding
         zeroBurn();
-        
-        addLiquidity(
+
+        uint128 liquidity = _liquidityForAmounts(
           baseLower,
-          baseUpper,
-          address(this),
+          baseUpper, 
           token0.balanceOf(address(this)),
-          token1.balanceOf(address(this)),
-          [inMin[0],inMin[1]]
+          token1.balanceOf(address(this))
         );
-        addLiquidity(
+        _mintLiquidity(baseLower, baseUpper, liquidity, address(this), inMin[0], inMin[1]);
+
+        liquidity = _liquidityForAmounts(
           limitLower,
-          limitUpper,
-          address(this),
+          limitUpper, 
           token0.balanceOf(address(this)),
-          token1.balanceOf(address(this)),
-          [inMin[2],inMin[3]]
+          token1.balanceOf(address(this))
         );
+        _mintLiquidity(limitLower, limitUpper, liquidity, address(this), inMin[2], inMin[3]);
     }
 
     /// @notice Add Liquidity
