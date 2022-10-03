@@ -195,7 +195,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         int24 tickUpper,
         uint128 shares,
         uint256[2] memory amountMin
-    ) external returns (uint256 amount0, uint256 amount1) {
+    ) external onlyOwner returns (uint256 amount0, uint256 amount1) {
         zeroBurn();
         (amount0, amount1) = _burnLiquidity(
           tickLower,
