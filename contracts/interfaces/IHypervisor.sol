@@ -62,13 +62,13 @@ interface IHypervisor {
   ) external;   
 
   function pullLiquidity(
-    uint256 shares,
-    uint256[4] memory minAmounts
+    int24 tickLower,
+    int24 tickUpper,
+    uint128 shares,
+    uint256[2] memory amountMin
   ) external returns (
     uint256 base0,
-    uint256 base1,
-    uint256 limit0,
-    uint256 limit1
+    uint256 base1
   );
 
   function pool() external view returns (IUniswapV3Pool);
