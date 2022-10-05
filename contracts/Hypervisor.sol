@@ -369,13 +369,12 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     function addLiquidity(
         int24 tickLower,
         int24 tickUpper,
-        address payer,
         uint256 amount0,
         uint256 amount1,
         uint256[2] memory inMin
     ) public onlyOwner {        
         uint128 liquidity = _liquidityForAmounts(tickLower, tickUpper, amount0, amount1);
-        _mintLiquidity(tickLower, tickUpper, liquidity, payer, inMin[0], inMin[1]);
+        _mintLiquidity(tickLower, tickUpper, liquidity, address(this), inMin[0], inMin[1]);
     }
 
     /// @notice Adds the liquidity for the given position
