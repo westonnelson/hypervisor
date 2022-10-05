@@ -172,8 +172,6 @@ describe('Hypervisor', () => {
         fees0 = await token0.balanceOf(bob.address)
         fees1 = await token1.balanceOf(bob.address)
         // we are expecting VISR fees of 3 bips
-console.log(fees0.toString(), fees1.toString())
-
         expect(fees0).to.gt(ethers.utils.parseEther('0.3'))
         expect(fees0).to.lt(ethers.utils.parseEther('0.305'))
         expect(fees1).to.equal(0)

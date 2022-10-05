@@ -159,28 +159,23 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         require(maxTotalSupply == 0 || total <= maxTotalSupply, "max");
     }
 
+    function _zeroBurn(int24 tickLower, int24 tickUpper) internal returns(uint128 liquidity) {
+      /// update fees for inclusion
+      (liquidity, ,) = _position(tickLower, tickUpper);
+      if(liquidity > 0) {
+        pool.burn(tickLower, tickUpper, 0);
+        (uint256 owed0, uint256 owed1) = pool.collect(address(this), tickLower, tickUpper, type(uint128).max, type(uint128).max);
+        if (owed0.div(fee) > 0 && token0.balanceOf(address(this)) > 0) token0.safeTransfer(defaultRecipient, owed0.div(fee));
+        if (owed1.div(fee) > 0 && token1.balanceOf(address(this)) > 0) token1.safeTransfer(defaultRecipient, owed1.div(fee));
+      }      
+    }
+
     /// @notice Update fees of the positions
     /// @return baseLiquidity Fee of base position
     /// @return limitLiquidity Fee of limit position
     function zeroBurn() internal returns(uint128 baseLiquidity, uint128 limitLiquidity) {
-      /// update fees for inclusion
-      (baseLiquidity, ,) = _position(baseLower, baseUpper);
-      uint256 owed0;
-      uint256 owed1;
-      if (baseLiquidity > 0) {
-          pool.burn(baseLower, baseUpper, 0);
-          (owed0, owed1) = pool.collect(address(this), baseLower, baseUpper, type(uint128).max, type(uint128).max);
-          if (owed0.div(fee) > 0 && token0.balanceOf(address(this)) > 0) token0.safeTransfer(defaultRecipient, owed0.div(fee));
-          if (owed1.div(fee) > 0 && token1.balanceOf(address(this)) > 0) token1.safeTransfer(defaultRecipient, owed1.div(fee));
-
-      }
-      (limitLiquidity, , ) = _position(limitLower, limitUpper);
-      if (limitLiquidity > 0) {
-          pool.burn(limitLower, limitUpper, 0);
-          (owed0, owed1) = pool.collect(address(this), limitLower, limitUpper, type(uint128).max, type(uint128).max);
-          if (owed0.div(fee) > 0 && token0.balanceOf(address(this)) > 0) token0.safeTransfer(defaultRecipient, owed0.div(fee));
-          if (owed1.div(fee) > 0 && token1.balanceOf(address(this)) > 0) token1.safeTransfer(defaultRecipient, owed1.div(fee));
-      }
+      baseLiquidity = _zeroBurn(baseLower, baseUpper);
+      limitLiquidity = _zeroBurn(limitLower, limitUpper); 
     }
 
     /// @notice Pull liquidity tokens from liquidity and receive the tokens
@@ -196,6 +191,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         uint128 shares,
         uint256[2] memory amountMin
     ) external onlyOwner returns (uint256 amount0, uint256 amount1) {
+        _zeroBurn(tickLower, tickUpper);
         (amount0, amount1) = _burnLiquidity(
           tickLower,
           tickUpper,
@@ -372,6 +368,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         uint256 amount1,
         uint256[2] memory inMin
     ) public onlyOwner {        
+        _zeroBurn(tickLower, tickUpper);
         uint128 liquidity = _liquidityForAmounts(tickLower, tickUpper, amount0, amount1);
         _mintLiquidity(tickLower, tickUpper, liquidity, address(this), inMin[0], inMin[1]);
     }
