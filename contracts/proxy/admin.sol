@@ -50,22 +50,22 @@ contract Admin {
 
     /// @notice Pull liquidity tokens from liquidity and receive the tokens
     /// @param _hypervisor Hypervisor Address
+    /// @param tickLower lower tick
+    /// @param tickUpper upper tick
     /// @param shares Number of liquidity tokens to pull from liquidity
     /// @return base0 amount of token0 received from base position
     /// @return base1 amount of token1 received from base position
-    /// @return limit0 amount of token0 received from limit position
-    /// @return limit1 amount of token1 received from limit position
     function pullLiquidity(
       address _hypervisor,
-      uint256 shares,
-      uint256[4] memory minAmounts 
+      int24 tickLower,
+      int24 tickUpper,
+      uint128 shares,
+      uint256[2] memory minAmounts
     ) external onlyAdvisor returns(
         uint256 base0,
-        uint256 base1,
-        uint256 limit0,
-        uint256 limit1
+        uint256 base1
       ) {
-      (base0, base1, limit0, limit1) = IHypervisor(_hypervisor).pullLiquidity(shares, minAmounts);
+      (base0, base1) = IHypervisor(_hypervisor).pullLiquidity(tickLower, tickUpper, shares, minAmounts);
     }
 
     /// @notice Add tokens to base liquidity
@@ -82,6 +82,28 @@ contract Admin {
     /// @param amount1 Amount of token1 to add
     function addLimitLiquidity(address _hypervisor, uint256 amount0, uint256 amount1, uint256[2] memory inMin) external onlyAdvisor {
         IHypervisor(_hypervisor).addLimitLiquidity(amount0, amount1, inMin);
+    }
+
+    /// @notice compound pending fees 
+    /// @param _hypervisor Hypervisor Address
+    function compound( address _hypervisor) external onlyAdvisor returns(
+        uint128 baseToken0Owed,
+        uint128 baseToken1Owed,
+        uint128 limitToken0Owed,
+        uint128 limitToken1Owed,
+        uint256[4] memory inMin
+    ) {
+        IHypervisor(_hypervisor).compound();
+    }
+
+    function compound( address _hypervisor, uint256[4] memory inMin)
+      external onlyAdvisor returns(
+        uint128 baseToken0Owed,
+        uint128 baseToken1Owed,
+        uint128 limitToken0Owed,
+        uint128 limitToken1Owed
+    ) {
+        IHypervisor(_hypervisor).compound(inMin);
     }
 
     /// @param _hypervisor Hypervisor Address
@@ -121,4 +143,9 @@ contract Admin {
         require(token.transfer(recipient, token.balanceOf(address(this))));
     }
 
+    /// @param _hypervisor Hypervisor Address
+    /// @param newFee fee amount 
+    function setFee(address _hypervisor, uint8 newFee) external onlyAdmin {
+        IHypervisor(_hypervisor).setFee(newFee);
+    }
 }

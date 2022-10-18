@@ -179,6 +179,7 @@ describe('Hypervisor', () => {
         expect(fees0).to.lt(ethers.utils.parseEther('0.305'))
         expect(fees1).to.equal(0)
         // have the positions been updated? Are the token amounts unchanged?
+// return;
         basePosition = await hypervisor.getBasePosition()
         limitPosition = await hypervisor.getLimitPosition()
         // the limit position should have 0 liquidity because we are left with
@@ -419,7 +420,8 @@ describe('Hypervisor', () => {
         let limitPosition = await hypervisor.getLimitPosition()
         expect(basePosition[0]).to.be.gt(0)
 
-        await hypervisor.pullLiquidity(ethers.utils.parseEther('2000'), [0,0,0,0])
+        await hypervisor.pullLiquidity((await hypervisor.baseLower()), (await hypervisor.baseUpper()), ethers.utils.parseEther('2000'), [0,0])
+        await hypervisor.pullLiquidity((await hypervisor.limitLower()), (await hypervisor.limitUpper()), ethers.utils.parseEther('2000'), [0,0])
 
         basePosition = await hypervisor.getBasePosition()
         limitPosition = await hypervisor.getLimitPosition()
@@ -439,19 +441,20 @@ describe('Hypervisor', () => {
         expect(aliceToken1.sub(tokenAmount).abs()).to.be.lte(ethers.utils.parseEther('1'))
 
         await hypervisor.connect(alice).deposit(ethers.utils.parseEther('1000'), ethers.utils.parseEther('1000'), alice.address, alice.address, [0,0,0,0])
-
+////TODO
         // add base liquidity
-        await hypervisor.addBaseLiquidity(0, 0, [0,0])
+         await hypervisor.addLiquidity((await hypervisor.baseLower()), (await hypervisor.baseUpper()),(await token0.balanceOf(hypervisor.address)),(await token1.balanceOf(hypervisor.address)), [0,0])
 
         basePosition = await hypervisor.getBasePosition()
         limitPosition = await hypervisor.getLimitPosition()
         expect(basePosition[0]).to.gt(0)
         expect(limitPosition[0]).to.equal(0)
 
-        await hypervisor.pullLiquidity(ethers.utils.parseEther('2000'), [0,0,0,0])
+        await hypervisor.pullLiquidity((await hypervisor.baseLower()), (await hypervisor.baseUpper()), ethers.utils.parseEther('2000'), [0,0])
+        await hypervisor.pullLiquidity((await hypervisor.limitLower()), (await hypervisor.limitUpper()), ethers.utils.parseEther('2000'), [0,0])
 
         // add limit liquidity
-        await hypervisor.addLimitLiquidity(0, 0, [0,0])
+        await hypervisor.addLiquidity((await hypervisor.limitLower()), (await hypervisor.limitUpper()),(await token0.balanceOf(hypervisor.address)),(await token1.balanceOf(hypervisor.address)), [0,0])
         basePosition = await hypervisor.getBasePosition()
         limitPosition = await hypervisor.getLimitPosition()
         expect(basePosition[0]).to.equal(0)
