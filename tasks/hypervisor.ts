@@ -433,3 +433,44 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
     console.log('Success')
 
   });
+
+task('deploy-auto-rebal', 'Deploy AutoRebal contract')
+  .addParam('hypervisor', 'hypervisor address')
+  .setAction(async (cliArgs, { ethers, run, network }) => {
+
+    // compile
+
+    await run('compile')
+
+    // get signer
+
+    const signer = (await ethers.getSigners())[0]
+    console.log('Signer')
+    console.log('  at', signer.address)
+    console.log('  ETH', formatEther(await signer.getBalance()))
+
+    const args = {
+      admin: signer.address,
+      advisor: signer.address,
+      hypervisor: cliArgs.hypervisor
+    }
+
+    console.log('Network')
+    console.log('  ', network.name)
+    console.log('Task Args')
+    console.log(args)
+
+    const hypervisor = await deployContract(
+      'AutoRebal',
+      await ethers.getContractFactory('AutoRebal'),
+      signer,
+      [args.admin, args.advisor, args.hypervisor]
+    )
+
+    await hypervisor.deployTransaction.wait(5)
+    await run('verify:verify', {
+      address: hypervisor.address,
+      constructorArguments: [args.admin, args.advisor, args.hypervisor],
+    })
+
+  }); 

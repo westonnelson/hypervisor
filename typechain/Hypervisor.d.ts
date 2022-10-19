@@ -54,6 +54,7 @@ interface HypervisorInterface extends ethers.utils.Interface {
     "pullLiquidity(uint256,uint256[4])": FunctionFragment;
     "rebalance(int24,int24,int24,int24,address,uint256[4],uint256[4])": FunctionFragment;
     "removeWhitelisted()": FunctionFragment;
+    "setFee(uint8)": FunctionFragment;
     "setWhitelist(address)": FunctionFragment;
     "symbol()": FunctionFragment;
     "tickSpacing()": FunctionFragment;
@@ -197,6 +198,10 @@ interface HypervisorInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "setFee",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setWhitelist",
     values: [string]
   ): string;
@@ -323,6 +328,7 @@ interface HypervisorInterface extends ethers.utils.Interface {
     functionFragment: "removeWhitelisted",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "setFee", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "setWhitelist",
     data: BytesLike
@@ -611,6 +617,11 @@ export class Hypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    setFee(
+      newFee: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     setWhitelist(
       _address: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -807,6 +818,11 @@ export class Hypervisor extends BaseContract {
   ): Promise<ContractTransaction>;
 
   removeWhitelisted(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  setFee(
+    newFee: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -1022,6 +1038,8 @@ export class Hypervisor extends BaseContract {
     ): Promise<void>;
 
     removeWhitelisted(overrides?: CallOverrides): Promise<void>;
+
+    setFee(newFee: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
     setWhitelist(_address: string, overrides?: CallOverrides): Promise<void>;
 
@@ -1346,6 +1364,11 @@ export class Hypervisor extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    setFee(
+      newFee: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     setWhitelist(
       _address: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1531,6 +1554,11 @@ export class Hypervisor extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     removeWhitelisted(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    setFee(
+      newFee: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
