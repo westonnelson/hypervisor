@@ -16,8 +16,7 @@ import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@uniswap/v3-core/contracts/libraries/FullMath.sol";
 import "@uniswap/v3-periphery/contracts/libraries/LiquidityAmounts.sol";
 
-
-/// @title Hypervisor v1.2.1
+/// @title Hypervisor v1.3
 /// @notice A Uniswap V2-like interface with fungible liquidity to Uniswap V3
 /// which allows for arbitrary liquidity provision: one-sided, lop-sided, and balanced
 contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
@@ -28,7 +27,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     IUniswapV3Pool public pool;
     IERC20 public token0;
     IERC20 public token1;
-    uint8 public fee = 10;
+    uint8 public fee = 20;
     int24 public tickSpacing;
 
     int24 public baseLower;
@@ -72,6 +71,10 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
         uint256 feeAmount1,
         uint256 totalSupply
     );
+
+    event ZeroBurn(uint8 fee, uint256 fees0, uint256 fees1);
+    event SetFee(uint8 newFee);
+
 
     /// @param _pool Uniswap V3 pool for which liquidity is managed
     /// @param _owner Owner of the Hypervisor
@@ -166,6 +169,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
       if(liquidity > 0) {
         pool.burn(tickLower, tickUpper, 0);
         (uint256 owed0, uint256 owed1) = pool.collect(address(this), tickLower, tickUpper, type(uint128).max, type(uint128).max);
+        emit ZeroBurn(fee, owed0, owed1);
         if (owed0.div(fee) > 0 && token0.balanceOf(address(this)) > 0) token0.safeTransfer(feeRecipient, owed0.div(fee));
         if (owed1.div(fee) > 0 && token1.balanceOf(address(this)) > 0) token1.safeTransfer(feeRecipient, owed1.div(fee));
       }      
@@ -604,6 +608,7 @@ contract Hypervisor is IUniswapV3MintCallback, ERC20Permit, ReentrancyGuard {
     /// @notice set fee 
     function setFee(uint8 newFee) external onlyOwner {
         fee = newFee;
+        emit SetFee(fee);
     }
 
     /// @notice Toggle Direct Deposit
