@@ -17,6 +17,203 @@ import {
   limitTicksFromCurrentTick
 } from './shared/tick'
 
+task('deploy-router', 'Deploy Hypervisor contract')
+  .addParam('token0', 'token address')
+  .addParam('token1', 'token address')
+  .addParam('pos', 'token address')
+  .setAction(async (cliArgs, { ethers, run, network }) => {
+
+    const args = {
+      token0: cliArgs.token0,
+      token1: cliArgs.token1, 
+      pos: cliArgs.pos 
+    };
+    console.log('Network')
+    console.log('  ', network.name)
+    console.log('Task Args')
+    console.log(args)
+
+    // compile
+
+    await run('compile')
+
+    // get signer
+
+    const signer = (await ethers.getSigners())[0]
+    console.log('Signer')
+    console.log('  at', signer.address)
+    console.log('  ETH', formatEther(await signer.getBalance()))
+
+    // deploy contracts
+    const router = await deployContract(
+      'Router',
+      await ethers.getContractFactory('Router'),
+      signer,
+      [args.token0, args.token1, args.pos]
+    )
+
+    await router.deployTransaction.wait(5)
+    await run('verify:verify', {
+      address: router.address,
+      constructorArguments: [args.token0, args.token1, args.pos]
+    })
+})
+
+task('deploy-timelock', 'Deploy timelock contract')
+  .addParam('chef', 'chef')
+  .addParam('mindelay', 'min delay')
+  .addParam('proposer', 'proposer address')
+  .addParam('executor', 'exec address')
+  .setAction(async (args, { ethers, run, network }) => {
+
+    console.log('Network')
+    console.log('  ', network.name)
+    console.log('Task Args')
+    console.log(args)
+
+    // compile
+
+    await run('compile')
+
+    // get signer
+
+    const signer = (await ethers.getSigners())[0]
+    console.log('Signer')
+    console.log('  at', signer.address)
+    console.log('  ETH', formatEther(await signer.getBalance()))
+
+    // deploy contracts
+    const timelock = await deployContract(
+      'TimeLock',
+      await ethers.getContractFactory('Timelock'),
+      signer,
+      [args.chef, args.mindelay, [args.proposer], [args.executor]]
+    )
+    await timelock.deployTransaction.wait(5)
+    await run('verify:verify', {
+      address: timelock.address,
+      constructorArguments: [args.chef, args.mindelay, [args.proposer], [args.executor]]
+    })
+})
+
+
+task('add-chef-pool', 'Deploy admin contract')
+  .addParam('chef', 'token address')
+  .addParam('rewardPerBlock', 'token address')
+  .addParam('lpToken', 'token address')
+  .addParam('withUpdate', 'token address')
+  .setAction(async (args, { ethers, run, network }) => {
+
+    console.log('Network')
+    console.log('  ', network.name)
+    console.log('Task Args')
+    console.log(args)
+
+    // compile
+
+    await run('compile')
+
+    // get signer
+
+    const signer = (await ethers.getSigners())[0]
+    console.log('Signer')
+    console.log('  at', signer.address)
+    console.log('  ETH', formatEther(await signer.getBalance()))
+
+
+    const chef = await ethers.getContractAt(
+      'MasterChef',
+      args.chef,
+      signer,
+    )
+
+    await chef.add(args.rewardPerBlock, args.lpToken, args.withUpdate);
+});
+
+task('deploy-masterchef', 'Deploy admin contract')
+  .addParam('rewardToken', 'reward rate')
+  .addParam('rewardPerBlock', 'reward rate')
+  .addParam('startBlock', 'start block')
+  .addParam('endBlock', 'end block')
+  .setAction(async (args, { ethers, run, network }) => {
+    console.log('Network')
+    console.log('  ', network.name)
+    console.log('Task Args')
+    console.log(args)
+
+    // compile
+
+    await run('compile')
+
+    // get signer
+
+    const signer = (await ethers.getSigners())[0]
+    console.log('Signer')
+    console.log('  at', signer.address)
+    console.log('  ETH', formatEther(await signer.getBalance()))
+
+    // deploy contracts
+
+    const chefFactory = await ethers.getContractFactory('MasterChef')
+
+    const chef = await deployContract(
+      'MasterChef',
+      await ethers.getContractFactory('MasterChef'),
+      signer,
+      [args.rewardToken, args.rewardPerBlock, args.startBlock, args.endBlock]
+    )
+
+    await chef.deployTransaction.wait(5)
+    await run('verify:verify', {
+      address: chef.address,
+      constructorArguments: [args.rewardToken, args.rewardPerBlock, args.startBlock, args.endBlock]
+
+    })
+
+});
+
+
+task('deploy-token', 'Deploy admin contract')
+  .addParam('name', 'admin account')
+  .addParam('symbol', 'advisor account')
+  .addParam('decimals', 'advisor account')
+  .setAction(async (args, { ethers, run, network }) => {
+    console.log('Network')
+    console.log('  ', network.name)
+    console.log('Task Args')
+    console.log(args)
+
+    // compile
+
+    await run('compile')
+
+    // get signer
+
+    const signer = (await ethers.getSigners())[0]
+    console.log('Signer')
+    console.log('  at', signer.address)
+    console.log('  ETH', formatEther(await signer.getBalance()))
+
+    // deploy contracts
+
+    const adminFactory = await ethers.getContractFactory('MockToken')
+
+    const admin = await deployContract(
+      'MockToken',
+      await ethers.getContractFactory('MockToken'),
+      signer,
+      [args.name, args.symbol, args.decimals]
+    )
+
+    await admin.deployTransaction.wait(5)
+    await run('verify:verify', {
+      address: admin.address,
+      constructorArguments: [args.name, args.symbol, args.decimals]
+    })
+
+});
+
+
 task('deploy-admin', 'Deploy admin contract')
   .addParam('admin', 'admin account')
   .addParam('advisor', 'advisor account')
@@ -287,7 +484,7 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
   .addParam('amount0', 'the amount of token0')
   .addParam('amount1', 'the amount of token1')
   .addParam('uniproxy', 'the uniproxy')
-  .addParam('adminaddress', 'the admin address')
+  .addParam('admin', 'the admin address')
   .setAction(async (cliArgs, { ethers, run, network }) => {
 
     console.log('Network')
@@ -308,7 +505,7 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
       amount0: cliArgs.amount0,
       amount1: cliArgs.amount1,
       uniproxy: cliArgs.uniproxy,
-      adminaddress: cliArgs.adminaddress
+      admin: cliArgs.admin
     }
 
     console.log('Task Args')
@@ -356,6 +553,11 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
 
     // Make First Deposit
     console.log('First Depositing...')
+    console.log(      parseUnits(cliArgs.amount0, (await token0.decimals())),
+      parseUnits(cliArgs.amount1, (await token1.decimals())),
+      signer.address,
+      signer.address)
+
     await hypervisor.deposit(
       parseUnits(cliArgs.amount0, (await token0.decimals())),
       parseUnits(cliArgs.amount1, (await token1.decimals())),
@@ -398,10 +600,10 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
     console.log(limitUpper)
     
     // await hypervisor.rebalance(
-    //   -1000,
-    //   1000,
-    //   1000,
-    //   1500,
+    //   -6000,
+    //   6000,
+    //   -600,
+    //   600,
     //   signer.address,
     //   [0, 0, 0, 0],
     //   [0, 0, 0, 0]
@@ -423,54 +625,13 @@ task('initialize-hypervisor', 'Initialize Hypervisor contract')
     await hypervisor.setWhitelist(cliArgs.uniproxy)
     console.log('Success')
 
+    // TransferOnwership
+    console.log('Transferring Ownership')
+    await hypervisor.transferOwnership(cliArgs.admin)
+    console.log('Success')
+
     console.log('Add to uniproxy');
     await uniproxy.addPosition(hypervisor.address,4);
     console.log('Success')
 
-    // TransferOnwership
-    console.log('Transferring Ownership')
-    await hypervisor.transferOwnership(cliArgs.adminaddress)
-    console.log('Success')
-
   });
-
-task('deploy-auto-rebal', 'Deploy AutoRebal contract')
-  .addParam('hypervisor', 'hypervisor address')
-  .setAction(async (cliArgs, { ethers, run, network }) => {
-
-    // compile
-
-    await run('compile')
-
-    // get signer
-
-    const signer = (await ethers.getSigners())[0]
-    console.log('Signer')
-    console.log('  at', signer.address)
-    console.log('  ETH', formatEther(await signer.getBalance()))
-
-    const args = {
-      admin: signer.address,
-      advisor: signer.address,
-      hypervisor: cliArgs.hypervisor
-    }
-
-    console.log('Network')
-    console.log('  ', network.name)
-    console.log('Task Args')
-    console.log(args)
-
-    const hypervisor = await deployContract(
-      'AutoRebal',
-      await ethers.getContractFactory('AutoRebal'),
-      signer,
-      [args.admin, args.advisor, args.hypervisor]
-    )
-
-    await hypervisor.deployTransaction.wait(5)
-    await run('verify:verify', {
-      address: hypervisor.address,
-      constructorArguments: [args.admin, args.advisor, args.hypervisor],
-    })
-
-  }); 
