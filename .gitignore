@@ -1,6 +1,16 @@
-node_modules/
-.env
-package-lock.json
-typechain
-artifacts
-cache
+*.*
+
+# include only following dirs/files
+!/audits/*
+!/contracts/*
+!/scripts/*
+!/tasks/*
+!/test/*
+!/.gitignore
+!/.env.example
+!/hardhat.config.ts
+!/LICENSE
+!/package.json
+!/yarn.lock
+!/README.md
+!/tsconfig.json
